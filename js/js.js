@@ -1,0 +1,473 @@
+var last_message_id = 0;
+var load_in_process = false;
+var olmap;
+var kmllayer;
+var nick;
+var selectedFeature;
+var selectCtrl;
+var color = ["#ff0000","#ff4c00","#ff8600","#ffc000","#ffee00","#ffff00","#cbff00","#97ff00","#5fff00","#00ff00"];
+var users = [];
+var isEnd;
+
+function LoadSettings() {
+    if (localStorage.style) {
+        if ($('#sstyle').val() != localStorage.style) {
+            $('#sstyle').val(localStorage.style);
+            SetStyle();
+        }
+    }
+    else {
+        localStorage.style = $('#sstyle').val();
+        if ($('#sstyle').val() != "smoothness") {
+            SetStyle();
+        }
+    }
+    if (localStorage.lang) {
+        $('#slang').val(localStorage.lang);
+        LoadLanguage();
+    }
+    else {
+        $('#slang').val(navigator.language ? navigator.language : (navigator.browserLanguage ? navigator.browserLanguage : "en"));
+        localStorage.lang = $('#slang').val();
+        LoadLanguage();
+    }
+}
+
+function ApplySettings() {
+    if ($('#sstyle').val() != localStorage.style) {
+        localStorage.style = $('#sstyle').val();
+        SetStyle();
+    }
+    if ($('#slang').val() != localStorage.lang) {
+        localStorage.lang = $('#slang').val();
+        LoadLanguage();
+    }
+}
+
+function LoadLanguage() {
+    $.get("js/lang/" + $('#slang').val() + ".js", {}, function() {
+        $('#dchat').dialog("option", "title", ldata[4]);
+        $('#duserlist').dialog("option", "title", ldata[5]);
+        $('#dprop').dialog("option", "title", ldata[6]);
+        $('#dsettings').dialog("option", "title", ldata[7]);
+        $('#dnick').dialog("option", "title", ldata[8]);
+        $('#dstatus').dialog("option", "title", ldata[9]);
+        $('#bremote').button("option", "label", ldata[10]);
+        $('#bsettings').button("option", "label", ldata[7]);
+        $('#bpie').button("option", "label", ldata[11]);
+        $('#bowner').button("option", "label", ldata[12]);
+        $('#bcomment').button("option", "label", ldata[13]);
+        $('#lnick').text(ldata[14]);
+        $('#lowner').text(ldata[15]);
+        $('#lreadiness').text(ldata[16]);
+        $('#lcomments').text(ldata[17]);
+        $('#lname').text(ldata[18]);
+        $('#lpieces').text(ldata[19]);
+        $('#lclaims').text(ldata[20]);
+        $('#ltheme').text(ldata[21]);
+        $('#llang').text(ldata[22]);
+        $('#comment_text').attr('placeholder', ldata[23]);
+        $('#ltake').text(ldata[24]);
+        $('#lclaim').text(ldata[25]);
+        $('#lrefuse').text(ldata[26]);
+    });
+}
+
+function ChatMsg(text, name, type) {
+    $('#chat tbody').append("<tr><td>" + name + "</td><td class='" + type + "'>" + text + "</td><td> </td></tr>");
+    ScrollDown();
+}
+
+function PromptNick() {
+    $('#newnick').removeAttr('disabled');
+    $('#newnick').val(nick);
+    $('#dnick').dialog("open");
+    $('#newnick').get(0).selectionStart = 0;
+    $('#newnick').get(0).selectionEnd = nick.length;
+}
+
+function PromptColor() {
+    $('#dcolor').dialog("open");
+}
+
+OpenLayers.Layer.Vector.prototype.getFeaturesByAttribute = function getFeaturesByAttribute(attrName, attrValue, strict) {
+    var i,
+        feature,
+        doStrictComparison = !!(typeof strict !== 'undefined'),
+        useAttrValue = !!(typeof attrValue !== 'undefined'),
+        len = this.features.length,
+        foundFeatures = [];
+    for( i = 0; i < len; i++ ) {
+        feature = this.features[i];
+        if(feature && feature.attributes && typeof feature.attributes[attrName] !== 'undefined'){
+            if (useAttrValue) {
+                if (doStrictComparison) {
+                    if ( feature.attributes[attrName] === attrValue) {
+                        foundFeatures.push(feature);
+                    }
+                } else {
+                    if ( feature.attributes[attrName] == attrValue) {
+                        foundFeatures.push(feature);
+                    }
+                }
+            } else {
+                foundFeatures.push(feature);
+            }
+        }
+    }
+    return foundFeatures;
+};
+
+function SelectPiece(num) {
+    pieces = kmllayer.getFeaturesByAttribute('name', num);
+    if (pieces.length > 0)
+    {
+        selectCtrl.select(pieces[0]);
+    }
+}
+
+function OpenViaRemote() {
+    if (selectedFeature != null)
+    {
+        var from = new OpenLayers.Projection("EPSG:900913");
+        var to = new OpenLayers.Projection("EPSG:4326");
+        var bounds = selectedFeature.geometry.getBounds().toArray()
+        var p1 = (new OpenLayers.LonLat(bounds[0], bounds[1])).transform(from, to);
+        var p2 = (new OpenLayers.LonLat(bounds[2], bounds[3])).transform(from, to);
+        $.get("http://127.0.0.1:8111/load_and_zoom", {left: p1.lon, right: p2.lon, top: p2.lat, bottom: p1.lat});
+    }
+}
+
+function SetNick() {
+    var newnick = $("#newnick").val().substr(0, 64);
+    if (newnick != "" && newnick != nick)
+    {
+        $("#newnick").attr('disabled', 'disabled');
+        $.post("ajax.php", { act: "setnick", nick: nick, newnick: newnick }, function (result)
+            {
+            localStorage.nick = nick;
+            $('#dnick').dialog("close");
+            });
+    }
+    else
+        $('#dnick').dialog("close");
+}
+
+function Debug(data) {
+    $("#debug").text(data.toString());
+}
+
+function Enter() {
+    if (localStorage.nick)
+        nick = localStorage.nick;
+    $.post("ajax.php", { act: "enter", nick: nick }, function (result)
+        {
+        localStorage.nick = nick;
+        $("#pac_form").submit(Send);
+        $("#pac_text").focus();
+        Load();
+        });
+}
+
+function Vote(nickname, number, vote) {
+    $.post("ajax.php", { act: "vote", nickname: nickname, number: number, vote: vote }, function (result) {});
+}
+
+function CloseClaim(id) {
+    $.post("ajax.php", { act: "closeclaim", nick: nick, id: id });
+}
+
+function RenewUserlist() {
+    $.post("ajax.php", { act: "getuserlist", nick: nick }, function (result)
+        {
+        users = [];
+        newhtml = "<table><tr><td id='lname'>" + ldata[18] + "</td><td id='lpieces'>" + ldata[19] + "</td><td id='lclaims'>" + ldata[20] + "</td></tr>";
+        for (var key in userlist)
+        {
+            users.push(key);
+            var owns = "";
+            var claims = "";
+            for (var i = 0; i < userlist[key][0].length; i++)
+            {
+                owns += ("<span class='num'>" + userlist[key][0][i] + "</span> ");
+            }
+            for (var i = 0; i < userlist[key][1].length; i++)
+            {
+                if (key == nick)
+                    claims += ("<span class='claim ui-state-default'><span class='num'>" + userlist[key][1][i] + "</span>&nbsp;[" + userlist[key][2][i] + "&nbsp;<div title='Снять заявку' class='close'></div>]</span> ");
+                else
+                    claims += ("<span class='claim ui-state-default'><span class='num'>" + userlist[key][1][i] + "</span>&nbsp;[<div title='За' class='up'></div>&nbsp;" + userlist[key][2][i] + "&nbsp;<div title='Против' class='down'></div>]</span><br />");
+            }
+            newhtml += ("<tr><td class='nick'>" + (userlist[key][3]==1 ? "<img src='img/onl.png'>&nbsp;" : "") + "<span class='nickname'>" + key + "</span></td><td class='msg'>" + owns + "</td><td>" + claims + "</td></tr>");
+        }
+        newhtml += "</table>";
+        $('#userlist').html(newhtml);
+        $('#pac_text').autocomplete('option', 'source', users);
+        $('.nickname').click( function() { $('#pac_text').val($('#pac_text').val() + $(this).text() + ': '); $("#pac_text").focus(); } );
+        $('.up').click( function() {
+            Vote($(this).parent().parent().parent().find('span.nickname').text(), $(this).parent().find('span.num').text(), 1);
+            $(this).remove(); } );
+        $('.down').click( function() {
+            Vote($(this).parent().parent().parent().find('span.nickname').text(), $(this).parent().find('span.num').text(), -1);
+            $(this).remove(); } );
+        $('.close').click( function() {
+            CloseClaim($(this).parent().find('span.num').text());
+            $(this).remove(); } );
+        $('.num').click( function() {
+        if (selectedFeature != null) selectCtrl.unselect(selectedFeature); SelectPiece($(this).text()); } );
+        });
+}
+
+function RenewKML() {
+    kmllayer.refresh(true);
+    kmllayer.redraw(true);
+}
+
+function Send() {
+    $.post("ajax.php", { act: "send", nick: nick, text: $("#pac_text").val() }, Load ); 
+    $("#pac_text").val("");
+    $("#pac_text").focus();
+    return false;
+}
+
+function SetStatus(e) {
+    $.post("ajax.php", { act: "setstatus", nick: nick, id: selectedFeature.attributes.name, status: $('#sstatus').slider('value') }, function(result) { Debug(result); } ); 
+}
+
+function ScrollDown() {
+    if (isEnd)
+        $("#chat").scrollTop($("#chat").attr("scrollHeight") - $("#chat").height());
+}
+
+function Load() {
+    if(!load_in_process)
+    {
+        load_in_process = true;
+        isEnd = ($("#chat").scrollTop() == $("#chat").attr("scrollHeight") - $("#chat").height());
+        $.post("load.php", { last: last_message_id, nick: nick, rand: (new Date()).getTime() }, function (result)
+        {
+            ScrollDown();
+            load_in_process = false;
+            Load();
+        });
+    }
+}
+
+function TakePiece() {
+    $.post("ajax.php", { act: "takepiece", nick: nick, id: selectedFeature.attributes.name });
+}
+
+function ClaimPiece() {
+    $.post("ajax.php", { act: "claimpiece", nick: nick, id: selectedFeature.attributes.name });
+}
+
+function RefusePiece() {
+    $.post("ajax.php", { act: "refusepiece", nick: nick, id: selectedFeature.attributes.name });
+}
+
+function GetComments() {
+    $.post("ajax.php", { act: "getcomments", nick: nick, id: selectedFeature.attributes.name });
+}
+
+function PostComment() {
+    $.post("ajax.php", { act: "postcomment", nick: nick, id: selectedFeature.attributes.name, text: $("#comment_text").val() } ); 
+    $("#comment_text").val("");
+    return false;
+}
+
+function onSelectPiece(e) {
+    selectedFeature = e;
+    e.style.fillOpacity = "0.8";
+    e.style.strokeWidth = "3";
+    kmllayer.redraw(true);
+    $("#comments").html("<div class='loading'></div>");
+    $('#bowner').button("enable");
+    $('#bowner').click( function() { $(e.attributes.owner ? (e.attributes.owner == nick ? '#drefuse' : '#dclaim') : '#dtake').dialog('open'); });
+    $('#bowner').button("option", "label", e.attributes.owner ? e.attributes.owner : "Нет");
+    $('#bowner').button("option", "icons", { primary: (e.attributes.owner ? (e.attributes.owner == nick ? 'ui-icon-closethick' : 'ui-icon-circle-check') : 'ui-icon-flag')});
+    $("#dprop").dialog("option", "title", "Свойства: " + e.attributes.name);
+    $("#dprop").dialog("open");
+    $('#bstatus').button("enable");
+    $('#bremote').button("enable");
+    $('#bcomment').button("enable");
+    $("#status").text(e.attributes.description);
+    GetComments();
+}
+
+function onUnselectPiece(e) {
+    selectedFeature = null;
+    e.style.fillOpacity = "0.5";
+    e.style.strokeWidth = "1";
+    kmllayer.redraw(true);
+    $('#bowner').button("option", "label", "Нет");
+    $('#bowner').button("option", "icons", {primary: 'ui-icon-flag'});
+    $('#bowner').unbind('click');
+    $('#status').text("0");
+    $('#dprop').dialog("option", "title", "Свойства");
+    $('#comments').html("");
+    $('#bowner').button("disable");
+    $('#bstatus').button("disable");
+    $('#bremote').button("disable");
+    $('#bcomment').button("disable");
+}
+
+function SetStyle() {
+    $('head>link.ui-theme').remove();
+    var link = $('<link href="css/' + $('#sstyle').val() + '/jquery-ui-1.8.11.custom.css" type="text/css" media="screen, projection" rel="Stylesheet" class="ui-theme" />');
+    var linkpatch = $('<link rel="stylesheet" href="css/jquery-theme-patch.css" class="ui-theme" type="text/css" media="screen, projection" />');
+    $('head').append(link);
+    $('head').append(linkpatch);
+}
+
+$(document).ready(function () {
+    Enter();
+
+    var options = {controls: [new OpenLayers.Control.Navigation(), new OpenLayers.Control.ScaleLine(), new OpenLayers.Control.Permalink(), new OpenLayers.Control.Attribution()], projection: new OpenLayers.Projection("EPSG:900913"), displayProjection: new OpenLayers.Projection("EPSG:4326"), units: "m", numZoomLevels: 18, maxResolution: 156543.0339, maxExtent: new OpenLayers.Bounds(-20037508, -20037508, 20037508, 20037508.34) };
+    olmap = new OpenLayers.Map(document.getElementById('olmap'), options);
+    var mapnik = new OpenLayers.Layer.OSM();
+    // var mapnik = new OpenLayers.Layer.XYZ( "XYZ", "http://hind.org.ru/1.0.0/Mew/${z}/${x}/${y}.png");
+    kmllayer = new OpenLayers.Layer.Vector("Pie", { strategies: [new OpenLayers.Strategy.Fixed()], protocol: new OpenLayers.Protocol.HTTP({url: "http://mapcraft.nanodesu.ru/pie.kml", format: new OpenLayers.Format.KML({extractStyles: true, extractAttributes: true, maxDepth: 0})}), projection: "EPSG:4326" });
+    olmap.addLayers([mapnik, kmllayer]);
+
+    selectCtrl = new OpenLayers.Control.SelectFeature(kmllayer, {clickout: true, onSelect: onSelectPiece, onUnselect: onUnselectPiece });
+    selectCtrl.handlers.feature.stopDown = false; 
+
+    olmap.addControl(selectCtrl);
+    selectCtrl.activate();
+
+	if (!olmap.getCenter()) {olmap.zoomToMaxExtent()}
+
+    var ww = $(window).width();
+    var wh = $(window).height();
+    $('#dchat').dialog({
+        autoOpen: true,
+        width: 0.4*ww,
+        height: 200+0.05*wh,
+        minHeight: 200,
+        minWidth: 300,
+        resizable: true,
+        closeOnEscape: false,
+        position: ['left', 'bottom']
+    });
+    $('#duserlist').dialog({
+        autoOpen: true,
+        width: 150+0.05*ww,
+        height: 0.25*wh,
+        minHeight: 200,
+        minWidth: 150,
+        resizable: true,
+        position: ['right', 'bottom']
+    });
+    $('#dnick').dialog({
+        autoOpen: false,
+        modal: true,
+        width: 300,
+        resizable: false,
+        draggable: false,
+        position: 'center',
+        buttons: { "OK": function() { SetNick(); }, "Cancel": function() { $(this).dialog("close"); } }
+    });
+    $('#dstatus').dialog({
+        autoOpen: false,
+        modal: true,
+        width: 410,
+        resizable: false,
+        draggable: false,
+        position: 'center',
+        buttons: { "OK": function() { SetStatus(); }, "Cancel": function() { $(this).dialog("close"); } }
+    });
+    $('#dtake').dialog({
+        autoOpen: false,
+        modal: true,
+        width: 250,
+        resizable: false,
+        draggable: false,
+        position: 'center',
+        buttons: { "Yes": function() { TakePiece(); }, "No": function() { $(this).dialog("close"); } }
+    });
+    $('#dclaim').dialog({
+        autoOpen: false,
+        modal: true,
+        width: 250,
+        resizable: false,
+        draggable: false,
+        position: 'center',
+        buttons: { "Yes": function() { ClaimPiece(); }, "No": function() { $(this).dialog("close"); } }
+    });
+    $('#drefuse').dialog({
+        autoOpen: false,
+        modal: true,
+        width: 250,
+        resizable: false,
+        draggable: false,
+        position: 'center',
+        buttons: { "Yes": function() { RefusePiece(); }, "No": function() { $(this).dialog("close"); } }
+    });
+    $('#dprop').dialog({
+        autoOpen: true,
+        width: 150+0.05*ww,
+        height: 0.7*wh,
+        minWidth: 190,
+        minHeight: 280,
+        resizable: true,
+        position: ['right', 'top']
+    });
+    $('#dsettings').dialog({
+        autoOpen: false,
+        modal: true,
+        width: 0.5*ww,
+        height: 0.5*wh,
+        minWidth: 190,
+        minHeight: 280,
+        resizable: true,
+        position: 'center',
+        buttons: { "OK": function() {$('#dsettings').dialog("close"); ApplySettings(); }, "Cancel": function() { $(this).dialog("close");} }
+    });
+    $('#chat').height($('#dchat').height() - 45);
+    $('#chat').width($('#dchat').width() - 30);
+    $('#comments').width($('#dprop').width() - 15);
+    $('#comments').height($('#dprop').height() - 215);
+    $('#bcomment').button({ disabled: true });
+    $('#bcomment').click(PostComment);
+    $('#bremote').button({ disabled: true, icons: { primary: 'ui-icon-signal'}});
+    $('#bremote').click(OpenViaRemote);
+    $('#bstatus').button({disabled: true});
+    $('#bstatus').click(function() { $('#sstatus').slider('value', $('#status').text()); $('#vcolor').css({ color: color[$('#sstatus').slider('value')] }); $('#newstatus').text($('#sstatus').slider('value')); $('#dstatus').dialog('open'); });
+    $('#pac_nick').button({ icons: { primary: 'ui-icon-person'} });
+    $('#pac_nick').click(PromptNick);
+    $('#pac_color').button();
+    $('#pac_color').click(PromptColor);
+    $('#dchat').dialog( { resize: function(event, ui) { $('#chat').height($(this).height() - 45); $('#chat').width($(this).width() - 30); } } );
+    $('#dprop').dialog( { resize: function(event, ui)
+        {
+        $('#comments').width($('#dprop').width() - 15);
+        $('#comments').height($('#dprop').height() - 215);
+        },
+    beforeClose: function(event, ui)
+        {
+        if (selectedFeature != null)
+            selectCtrl.unselect(selectedFeature);
+        }
+    } );
+    $('#bzoomp').button();
+    $('#bzoomp').click( function () { olmap.zoomIn(); } );
+    $('#bzoomm').button();
+    $('#bzoomm').click( function () { olmap.zoomOut(); } );
+    $('#bsettings').button( { icons: { primary: 'ui-icon-wrench'} } );
+    $('#bsettings').click( function () { $('#dsettings').dialog('open'); } );
+    $('#bpie').button( { icons: { primary: 'ui-icon-clock'} } );
+    $('#bpie').click( function() { kmllayer.setVisibility($(this).attr("checked")); });
+    $('#rfull').button({icons: { primary: 'ui-icon-bullet'}});
+    $('#rfull').change( function() { $("div#dchat,div#duserlist,div#dprop").dialog("open"); $("div[id^='d']").parent().css({ opacity: $('#rtrans').attr("checked") ? 0.6 : 1.0 }); });
+    $('#rtrans').button({icons: { primary: 'ui-icon-radio-off'}});
+    $('#rtrans').change( function() { $("div#dchat,div#duserlist").dialog("open"); $("div[id^='d']").parent().css({ opacity: $(this).attr("checked") ? 0.6 : 1.0 }); });
+    $('#rnone').button({icons: { primary: 'ui-icon-radio-on'}});
+    $('#rnone').change( function() { $("div[id^='d']").dialog("close"); });
+    $('#vis').buttonset();
+    $('#sstatus').slider({ min: 0, max: 9, slide: function(event, ui) { $('#vcolor').css({color: color[ui.value]}); $('#newstatus').text(ui.value); } });
+    $('#bowner').button({ disabled: true, icons: { primary: 'ui-icon-flag'}});
+    $('#pac_text').autocomplete({ source: users, position: { my : "right bottom", at: "right top"} });
+    $('#nick_form').submit( function () { SetNick(); return false; } );
+
+    LoadSettings();
+});

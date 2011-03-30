@@ -1,0 +1,7 @@
+.ui-widget { font-family: Myriad Pro,Verdana,Arial,sans; font-size: 0.8em; }
+.ui-dialog { padding: 0; width: 300px; }
+.ui-dialog .ui-dialog-titlebar { padding: .2em .1em .1em 1em; position: relative; -moz-border-radius:4px 4px 0 0; border-radius:4px 4px 0 0; border-style:none none solid; padding:0.2em 0.3em 0.1em 0.6em; }
+.ui-dialog .ui-dialog-content { border: 0; padding: .2em .3em 1em .3em; background: none; overflow: auto; zoom: 1; }
+.ui-button-text-only .ui-button-text { padding: .2em .5em !important; }
+.ui-button-text-icon-primary .ui-button-text { padding: .2em .5em .2em 2em !important; }
+.ui-widget-overlay { opacity: .50; filter:Alpha(Opacity=50); }
