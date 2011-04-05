@@ -7,20 +7,20 @@
  */
 
 PieHub = {
+    options: {
+        pieid: null,
+        hub_url: '/hub',
+        poll_callback: null
+    },
     sesid: null,
-    pieid: null,
-    hub_url: '/hub',
-
     polling: false,
-    poll_callback: null,
 
     /*
      * init (PieId, poll_callback)
      */
-    init: function(pieid, callback) {
+    init: function(options) {
+        $.extend(this.options, options);
         this.sesid = this.get_sesid();
-        this.pieid = pieid;
-        this.poll_callback = callback;
     },
 
     /*
@@ -36,9 +36,11 @@ PieHub = {
             cache: false,
             dataType: 'json',
             success: function (data) {
-                self.poll_callback(data);
+                console.info("Succ!", data);
+                self.options.poll_callback(data);
             },
             error: function(data) {
+                console.error("Error in poll:", data);
                 timeout = 5000;
             },
             complete: function(res) {
@@ -84,7 +86,7 @@ PieHub = {
      * Getters
      */
     get_poll_url: function(part) {
-        return this.hub_url + '/' + part + '/' + this.pieid + '/' + this.sesid;
+        return this.options.hub_url + '/' + part + '/' + this.options.pieid + '/' + this.sesid;
     },
     get_sesid: function() {
         var id = this.load_sesid() || this.gen_sesid();
@@ -96,7 +98,7 @@ PieHub = {
      * Setters
      */
     set_pieid: function(pieid) {
-        this.pieid = pieid;
+        this.options.pieid = pieid;
         this.restart_poll();
     },
 

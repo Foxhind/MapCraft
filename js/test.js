@@ -13,10 +13,13 @@ function get_msg_cmd(msg) {
 
 $(function() {
     // инициализация пирога
-    PieHub.init(5,  // ID пирога
-        function(data) { printResult("Got: ", data); }); // callback на poll ответы
+    PieHub.init({
+        pieid: 5,
+        hub_url: 'http://localhost:8080/hub',   // CORS!
+        poll_callback: function(data) { printResult("Got: ", data); }
+    });
 
-    // Запуск поллинга. Раз в 30 секунд будет приходить [nop, reason]. пока ничего больше
+    // Запуск поллинга. Раз в 30 секунд будет приходить [nop, reason].
     PieHub.poll();
 
     // Pie set -- меняет пирог и перезапускает poll соединение
