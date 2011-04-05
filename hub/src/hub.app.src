@@ -1,0 +1,9 @@
+%% -*- erlang -*-
+{application, hub,
+ [{description, "hub"},
+  {vsn, "0.1"},
+  {modules, []},
+  {registered, []},
+  {mod, {'hub_app', []}},
+  {env, []},
+  {applications, [kernel, stdlib, crypto]}]}.
