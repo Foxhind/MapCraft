@@ -9,7 +9,7 @@
  */
 function respond($msg)
 {
-    return sprintf('respond!json:%s',
+    return sprintf('response!json:%s',
                    json_encode($msg));
 }
 
@@ -42,18 +42,19 @@ function to_all($msg)
 /*
  * Message generators
  */
+$_message_id_counter = 1;
 function _gen_new_msg_id()
 {
-    return 1;
+    global $LOGIC_ID, $_message_id_counter;
+    return sprintf("%s-%s", $LOGIC_ID, $_message_id_counter++);
 }
 function _gen_new_msg_date()
 {
-    return 'Пятница 13';
+    return time();
 }
 
 function _generic_msg($type, $msg)
 {
-    print_r($msg);
     if (gettype($msg) == 'string') {
         return _generic_msg($type, array('message' => $msg));
     }
@@ -72,6 +73,7 @@ function _generic_msg($type, $msg)
 
         $msg['author'] = $msg['from']['nick'];
     }
+    unset($msg['from']);
 
     // Verify that message is set
     if( is_null($msg['message']) ) {
@@ -80,8 +82,8 @@ function _generic_msg($type, $msg)
 
     // Fill other fields structure
     $msg['class']   = $type;
-    $msg['id']      = $msg['id'] || _gen_new_msg_id();
-    $msg['date']    = $msg['date'] || _gen_new_msg_date();
+    if( !isset($msg['id']) )   $msg['id']   = _gen_new_msg_id();
+    if( !isset($msg['date']) ) $msg['date'] = _gen_new_msg_date();
 
     return $msg;
 }

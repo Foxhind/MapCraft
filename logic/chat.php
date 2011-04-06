@@ -4,12 +4,12 @@
 function send_chat_message($cmd, $type, $from, $data) {
 	$msg = chat_msg(array(
                           'from' => $from,
-                          'message' => $data->message,
+                          'message' => $data['message'],
                           ));
 
 	$res = array(respond($msg));
 
-    if ($data->type == 'public') {
+    if ($data['type'] == 'public') {
         array_push($res, to_pie($from, $msg));
     } else {
         $to = find_session_by_nick($from, $data['target_nick']);

@@ -5,10 +5,10 @@ function split_hub_message($str)
     $decoded = NULL;
 
     // Split and last 'json:' part if there is one
-    list($before, $after) = split("!json:", $str, 2);
-    if ($after) {
-        $str = $before;
-        $decoded = json_decode($after);
+    $parts = split("!json:", $str, 2);
+    if (isset($parts[1])) {
+        $str = $parts[0];
+        $decoded = json_decode($parts[1], true);
     }
 
     // Split parts separated using '!'
@@ -43,12 +43,6 @@ function handle_hub_message($str) {
         $json = array_shift($args);
 
         return $dispatcher->route($json[0], $type, $from, $json[1]);
-    case 'session_timeout':
-        // TODO
-        break;
-    case 'pie_timeout':
-        // TODO
-        break;
     default:
         throw new Exception("Hub command '$cmd' is not implemented");
     }
