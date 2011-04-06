@@ -1,16 +1,23 @@
 <?php
 
-$cmd_dispatch_table = {};
-
-function register_callback($cmd, $cb)
+class DispatcherClass
 {
-    //TODO
-}
+    private $table = array();
 
-function dispatch($cmd, $cb)
-{
-    //TODO
+    public function register($cmd, $cb) {
+        $this->table[$cmd] = $cb;
+    }
+
+    public function route($cmd, $type, $from, $data) {
+        $cb = $this->table[$cmd];
+        if(is_null($cb)) {
+            throw new Exception("Command '$cmd' is not implemented yet");
+        }
+
+        return $cb($cmd, $type, $from, $data);
+    }
 }
+$dispatcher = new DispatcherClass();
 
 
 ?>

@@ -9,18 +9,29 @@
  */
 function respond($msg)
 {
+    return sprintf('respond!json:%s',
+                   json_encode($msg));
 }
 
-function to_user($from, $msg)
+function to_session($from, $msg)
 {
+    return sprintf('to_session!%s!%s!json:%s',
+                   $from['pie_id'],
+                   $from['session_id'],
+                   json_encode($msg));
 }
 
-function to_chat($from, $msg)
+function to_pie($from, $msg)
 {
+    return sprintf('to_pie!%s!json:%s',
+                   $from['pie_id'],
+                   json_encode($msg));
 }
 
 function to_all($msg)
 {
+    return sprintf('to_all!json:%s',
+                   json_encode($msg));
 }
 
 
@@ -42,6 +53,7 @@ function _gen_new_msg_date()
 
 function _generic_msg($type, $msg)
 {
+    print_r($msg);
     if (gettype($msg) == 'string') {
         return _generic_msg($type, array('message' => $msg));
     }
@@ -50,11 +62,11 @@ function _generic_msg($type, $msg)
 
     // Set author
     if($type == 'chat') {
-        if( !defined($msg['from']) ) {
+        if( is_null($msg['from']) ) {
             throw new Exception('Missed value for "from" key for type=chat');
         }
 
-        if( !defined($msg['from']['nick']) ) {
+        if( is_null($msg['from']['nick']) ) {
             throw new Exception('Missed value for "from->nick" key for type=chat');
         }
 
@@ -62,7 +74,7 @@ function _generic_msg($type, $msg)
     }
 
     // Verify that message is set
-    if( !defined($msg['message']) ) {
+    if( is_null($msg['message']) ) {
         throw new Exception('Missed value for "message" key');
     }
 

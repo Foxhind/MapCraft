@@ -1,23 +1,23 @@
 <?php
 
 // Просто пример простой обработки
-function send_message($cmd, $type, $from, $data) {
+function send_chat_message($cmd, $type, $from, $data) {
 	$msg = chat_msg(array(
                           'from' => $from,
-                          'message' => $data['message'],
+                          'message' => $data->message,
                           ));
 
 	$res = array(respond($msg));
 
-    if ($data['type'] == 'public') {
+    if ($data->type == 'public') {
         array_push($res, to_pie($from, $msg));
     } else {
-        $to = nick_to_addr($data['target_nick']);
-        array_push($res, to_user($to, $msg));
+        $to = find_session_by_nick($from, $data['target_nick']);
+        array_push($res, to_session($to, $msg));
     }
 
     return $res;
 }
-register_callback('msg', 'send_message');
+$dispatcher->register('msg', 'send_chat_message');
 
 ?>
