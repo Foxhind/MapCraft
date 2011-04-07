@@ -8,6 +8,8 @@
 start_link() ->
 	gen_server:start_link(logic_worker, [], []).
 
+-record(state, {id}).
+
 %% ------- Interface ---------
 
 execute(Worker, _Task) ->
@@ -16,8 +18,10 @@ execute(Worker, _Task) ->
 %% ------- gen_server callbacks ----
 
 init(_Options) ->
+	Id = stats:incr(logic_starts),
+	State = #state{id = Id},
 	logic:add_me(),
-	{ok, []}.
+	{ok, State}.
 
 handle_call(sleep, _From, State) ->
 	io:format("Worker ~p going to sleep ~n", [self()]),

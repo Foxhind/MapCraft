@@ -42,7 +42,7 @@ upgrade() ->
 %% @doc supervisor callback.
 init([]) ->
     Web = web_specs(hub_web, 8080),
-    Processes = [Web] ++ logic_procs() ++ pie_procs(),
+    Processes = stats_specs() ++ [Web] ++ logic_procs() ++ pie_procs(),
     Strategy = {one_for_one, 10, 10},
     {ok,
      {Strategy, lists:flatten(Processes)}}.
@@ -68,7 +68,12 @@ pie_procs() ->
 	   permanent, brutal_kill, worker, [pie_hub]},
 	  sup(pie_sup, [])].
 
+stats_specs() ->
+	[ {stats, {stats, start_link, []},
+	   permanent, brutal_kill, worker, [stats]} ].
+
 sup(Mod, Args) ->
 	{Mod,
 	 {Mod, start_link, Args},
 	  permanent, 10000, supervisor, [Mod]}.
+
