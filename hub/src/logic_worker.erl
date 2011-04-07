@@ -2,23 +2,23 @@
 -behaviour(gen_server).
 
 -export([start_link/0]).
--export([process/2, sleep/1]).
+-export([process/2]).
 -export([init/1, handle_cast/2]).
+
+-include("hub.hrl").
+-record(state, {id, port}).
 
 start_link() ->
 	gen_server:start_link(logic_worker, [], []).
 
--record(state, {id, port}).
 
 %%
 %%  Interface
 %%
-process(Worker, Cmd) ->
-	{ok, Cmd2} = sanitize_cmd(Cmd),
-	gen_server:cast(Worker, {process, Cmd2}).
-
-sleep(Worker) ->
-	gen_server:cast(Worker, sleep).
+process(Worker, HubReq) ->
+	{ok, Cmd} = sanitize_cmd(HubReq#hub_req.cmd),
+	HubReq1 = HubReq#hub_req{cmd = Cmd},
+	gen_server:cast(Worker, {process, HubReq1}).
 
 %%
 %% gen_server callbacks
@@ -30,23 +30,10 @@ init(_Options) ->
 	{ok, #state{id = Id, port = Port}}.
 
 
-handle_cast(sleep, State) ->
-	io:format("Worker ~p going to sleep ~n", [self()]),
-	gen_server:cast(self(), {awake, 10000}),
-	{noreply, State};
-
-handle_cast({process, Cmd}, State) ->
-	{ok, Res} = process_cmd(State#state.port, Cmd),
+handle_cast({process, HubReq}, State) ->
+	{ok, Res} = process_req(State#state.port, HubReq#hub_req.cmd),
 	io:format("Result of worker: ~p~n", [Res]),
 	logic:add_me(),
-	{noreply, State};
-
-handle_cast({awake, T}, State) ->
-	receive
-	after T ->
-			io:format("Worker ~p is awake ~n", [self()]),
-			logic:add_me()
-	end,
 	{noreply, State}.
 
 %% TODO: trapexit for Port, handle terminate (close port)
@@ -82,6 +69,6 @@ read_response(Port, RespAcc, LineAcc) ->
 			timeout
 	end.
 
-process_cmd(Port, Cmd) ->
+process_req(Port, Cmd) ->
 	port_command(Port, Cmd),
 	read_response(Port, [], []).

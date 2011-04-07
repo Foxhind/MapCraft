@@ -32,7 +32,7 @@ handle_call({lookup, Id}, _From, List) ->
 	case Res of
 		[] ->
 			{reply, notfound, List};
-		[Pid] ->
+		[{Id, Pid}] ->
 			{reply, {ok, Pid}, List}
 	end;
 

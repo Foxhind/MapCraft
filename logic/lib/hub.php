@@ -40,9 +40,12 @@ function handle_hub_message($str) {
     case 'from':
         $type = array_shift($args);
         $from = ids_to_from(array_shift($args), array_shift($args));
-        $json = array_shift($args);
 
-        return $dispatcher->route($json[0], $type, $from, $json[1]);
+        $json = array_shift($args);
+        $json_cmd = $json[0];
+        $json_arg = isset($json[1]) ? $json[1] : array();
+
+        return $dispatcher->route($json_cmd, $type, $from, $json_arg);
     default:
         throw new Exception("Hub command '$cmd' is not implemented");
     }

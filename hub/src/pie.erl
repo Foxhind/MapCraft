@@ -4,6 +4,7 @@
 -compile(export_all).
 
 -record(state, {id, list}).
+-include("hub.hrl").
 
 start_link(PieId) ->
 	gen_server:start_link(?MODULE, [PieId], []).
@@ -11,15 +12,12 @@ start_link(PieId) ->
 %%
 %% Interface
 %%
+subscribe(ChanId) ->
+	Pie = pie_hub:get_or_create(ChanId#hub_chan.pieid),
+	ok = gen_server:call(Pie, {subscribe, ChanId#hub_chan.sesid}).
 
-login(Pie, SessionId) ->
-	ok = gen_server:call(Pie, {login, SessionId}).
-
-logout(Pie, _SessionId) ->
-	ok = gen_server:call(Pie, logout).
-
-lookup(Pie, SessionId) ->
-	{ok, Pid} = gen_server:call(Pie, {lookup, SessionId}),
+lookup(Pie, SesId) ->
+	{ok, Pid, _} = gen_server:call(Pie, {lookup, SesId}),
 	Pid.
 
 all(Pie) ->
@@ -36,14 +34,21 @@ init(PieId) ->
 	   list = idpid_list:new()
 	  }}.
 
-handle_call({login, Id}, From, State) ->
-	idpid_list:insert(State#state.list, {Id, From}),
+handle_call({subscribe, SesId}, From, State) ->
+	{Pid, _} = From,
+	link(Pid),
+	idpid_list:insert(State#state.list, {SesId, Pid, active}),
 	{reply, ok, State};
 
 handle_call(logout, From, State) ->
-	idpid_list:delete(State#state.list, {pid, From}),
+	{Pid, _} = From,
+	idpid_list:delete(State#state.list, {pid, Pid}),
 	{reply, ok, State};
 
-handle_call({lookup, Id}, _From, State) ->
-	[Pid] = idpid_list:lookup(State#state.list, {id, Id}),
-	{reply, {ok, Pid}, State}.
+handle_call({lookup, SesId}, _From, State) ->
+	[{SesId, Pid, State}] = idpid_list:lookup(State#state.list, {id, SesId}),
+	{reply, {ok, Pid, State}, State}.
+
+handle_info(Info, State) ->
+	io:write("Pie got ~p~n", [Info]),
+	{noreply, State}.

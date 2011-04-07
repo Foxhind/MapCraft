@@ -15,33 +15,34 @@ start_link() ->
 add_me() ->
 	gen_server:call(logic, {add_worker, self()}).
 
-process(Task) ->
-	case gen_server:call(logic, {process, Task}) of
+process(HubReq) ->
+	case gen_server:call(logic, {process, HubReq}) of
 		wait ->
 			error_logger:warning_report(["all logic workers are busy. Please increase logic workers count",
 										 {self, self()},
-										 {task, Task}]),
+										 {hubreq, HubReq}]),
 			receive
 			after 1000 ->
-					process(Task)
+					process(HubReq)
 			end;
 		Res ->
 			Res
 	end.
 
-%% ------- gen_server callbacks ----
-
+%%
+%% gen_server callbacks
+%%
 init(Options) ->
 	{ok, _Pool = []}.
 
 handle_call({add_worker, Worker}, _From, Pool) ->
 	{reply, ok, [Worker|Pool]};
 
-handle_call({process, Task}, _From, Pool) ->
+handle_call({process, HubReq}, _From, Pool) ->
 	case Pool of
 		[] ->
 			{reply, wait, Pool};
 		[Head|Tail] ->
-			logic_worker:process(Head, Task),
+			logic_worker:process(Head, HubReq),
 			{reply, ok, Tail}
 	end.

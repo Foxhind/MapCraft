@@ -85,7 +85,7 @@ function _generic_msg($type, $msg)
     if( !isset($msg['id']) )   $msg['id']   = _gen_new_msg_id();
     if( !isset($msg['date']) ) $msg['date'] = _gen_new_msg_date();
 
-    return $msg;
+    return array('chat', $msg);
 }
 
 function chat_msg($msg)  { return _generic_msg('chat',  $msg); }

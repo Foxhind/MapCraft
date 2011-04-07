@@ -9,11 +9,11 @@ class DispatcherClass
     }
 
     public function route($cmd, $type, $from, $data) {
-        $cb = $this->table[$cmd];
-        if(is_null($cb)) {
+        if(!isset($this->table[$cmd])) {
             throw new Exception("Command '$cmd' is not implemented yet");
         }
 
+        $cb = $this->table[$cmd];
         return $cb($cmd, $type, $from, $data);
     }
 }

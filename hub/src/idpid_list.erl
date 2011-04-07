@@ -4,8 +4,8 @@
 -record(idpid, {byid, bypid}).
 
 new() ->
-	ById =  ets:new(list, [set, private]),
-	ByPid = ets:new(list, [set, private, {keypos, 2}]),
+	ById =  ets:new(id2all, [set, protected]),
+	ByPid = ets:new(pid2id, [set, protected, {keypos, 2}]),
  	#idpid{byid = ById, bypid = ByPid}.
 
 lookup(List, {id, Id}) ->

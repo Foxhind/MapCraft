@@ -50,10 +50,10 @@ init([]) ->
 %
 % Private
 %
+% {docroot, hub_deps:local_path(["priv", "www"])
 web_specs(Mod, Port) ->
     WebConfig = [{ip, {0,0,0,0}},
-                 {port, Port},
-                 {docroot, hub_deps:local_path(["priv", "www"])}],
+                 {port, Port}],
     {Mod,
      {Mod, start, [WebConfig]},
      permanent, 5000, worker, dynamic}.
