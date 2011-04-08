@@ -26,8 +26,13 @@ function ids_to_from($pie_id, $session_id) {
     return array(
                  'pie_id' => $pie_id,
                  'session_id' => $session_id,
-                 'nick' => "Anon_$session_id",
+                 'nick' => "Anon_$session_id",  // TODO! load data from BD
                  );
+}
+
+function _get_head($str) {
+    $parts = split("!", $str, 2);
+    return $parts[0];
 }
 
 function handle_hub_message($str) {
@@ -45,7 +50,17 @@ function handle_hub_message($str) {
         $json_cmd = $json[0];
         $json_arg = isset($json[1]) ? $json[1] : array();
 
-        return $dispatcher->route($json_cmd, $type, $from, $json_arg);
+        $res = $dispatcher->route($json_cmd, $type, $from, $json_arg);
+
+        // Add simple 'respond' if it missed and it's a sync call
+        if ($type == 'sync') {
+            $heads = array_map('_get_head', $res);
+            if(!in_array('respond', $heads)) {
+                array_push($res, respond("ok"));
+            }
+        };
+
+        return $res;
     default:
         throw new Exception("Hub command '$cmd' is not implemented");
     }
