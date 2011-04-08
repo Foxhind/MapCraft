@@ -91,7 +91,7 @@ wait_for_event(Req, Chan) ->
 			From ! {self(), not_me},
 			wait_for_event(Req, Chan)
 	after 30000 ->
-			Msg = io_lib:format("event!json:[\"nop\", {\"reason\": \"timeout\", \"pid\": \"~w\", \"id\": {~p, ~p}}]~n",
+			Msg = io_lib:format("event!json:[\"nop\", {\"reason\": \"timeout\", \"pid\": \"~w\", \"id\": [~p, ~p]}]~n",
 								[self(), Chan#hub_chan.pieid,  Chan#hub_chan.sesid]),
 			ok(Req, Msg)
 	end.

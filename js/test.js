@@ -2,14 +2,13 @@
 
 function printResult(msg, data) {
     if(data != null) {
-        msg = msg + data; //JSON.stringify(data);
+        msg = msg + JSON.stringify(data);
     }
     $('#container').prepend($('<pre/>').append(msg));
 }
 
 function get_msg_cmd(msg) {
     var res = ['msg', { type: 'public', message: msg }];
-    console.log(res);
     return res;
 }
 

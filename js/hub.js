@@ -13,7 +13,6 @@ PieHub = {
         poll_callback: null
     },
     sesid: null,
-    polling: false,
 
     /*
      * init (PieId, poll_callback)
@@ -26,9 +25,10 @@ PieHub = {
     /*
      * Polling: poll - after first call it will be called periodically
      */
+    progressive_timeout: 100,
     poll: function() {
         var self=this;
-        var timeout = 0;
+        var timeout = 10;
 
         this.poll_xhr = jQuery.ajax({
             type: 'GET',
@@ -36,12 +36,12 @@ PieHub = {
             cache: false,
             //dataType: 'json',
             success: function (data) {
-                console.info("Succ!", data);
-                self.options.poll_callback(data);
+                self.progressive_timeout = 100;
+                self.handle_event(data);
             },
             error: function(data) {
-                console.error("Error in poll:", data);
-                timeout = 100;
+                timeout = self.progressive_timeout;
+                self.progressive_timeout += 100;
             },
             complete: function(res) {
                 setTimeout(function() {self.poll();}, timeout);
@@ -82,6 +82,22 @@ PieHub = {
             success: cb,
             error: err_cb
         });
+    },
+
+    /*
+     * Event handling
+     */
+    handle_event: function (event) {
+        // Simplest implementation for now
+        matches = event.match(/^event!json:(.+)\n/);
+        if( !matches[1] ) {
+            console.error("Failed to parse event: " + event);
+        }
+
+        var json = matches[1];
+        var data = JSON.parse(json);
+
+        this.options.poll_callback(data);
     },
 
     /*
