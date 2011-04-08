@@ -37,7 +37,7 @@ PieHub = {
             //dataType: 'json',
             success: function (data) {
                 self.progressive_timeout = 100;
-                self.handle_event(data);
+                self.handle_events(data);
             },
             error: function(data) {
                 timeout = self.progressive_timeout;
@@ -87,16 +87,33 @@ PieHub = {
     /*
      * Event handling
      */
+    handle_events: function (data) {
+        var events = data.split("\n");
+        for ( i in events ) {
+            try {
+                this.handle_event(events[i]);
+            } catch (err) {
+                console.error("Error while handling event: ", events[i], err);
+            }
+        }
+    },
     handle_event: function (event) {
         // Simplest implementation for now
-        matches = event.match(/^event!json:(.+)\n/);
-        if( !matches[1] ) {
+        if (event == '') {
+            return;
+        }
+
+        m = event.match(/^event!json:(.+)/);
+        if( m == null) {
             console.error("Failed to parse event: " + event);
         }
 
-        var json = matches[1];
-        var data = JSON.parse(json);
+        var json = m[1];
+        if ( json == null ) {
+            console.error("Failed to find json in event: " + event);
+        }
 
+        var data = JSON.parse(json);
         this.options.poll_callback(data);
     },
 

@@ -97,21 +97,21 @@ wait_for_event(Req, Chan) ->
 	end.
 
 accomulate_events(From, Chan, Acc) ->
-	MonRef = erlang:monitor(process, From),
-	accomulate_events(MonRef, From, Chan, Acc).
+	erlang:monitor(process, From),
+	accomulate_events0(From, Chan, Acc).
 
-accomulate_events(MonRef, From, Chan, Acc) ->
+accomulate_events0(From, Chan, Acc) ->
 	receive
 		{send, From, Chan, Line} ->
 			From ! {self(), ok},
-			accomulate_events(From, Chan, [Line | Acc]);
+			accomulate_events0(From, Chan, [Line | Acc]);
 		{send, _, Chan, _} ->
 			From ! {self(), defer},
-			accomulate_events(From, Chan, Acc);
+			accomulate_events0(From, Chan, Acc);
 		{send, _, _, _} ->
 			From ! {self(), not_me},
-			accomulate_events(From, Chan, Acc);
-		{'DOWN', MonRef, process, From, _} ->
+			accomulate_events0(From, Chan, Acc);
+		{'DOWN', _, process, From, _} ->
 			{ok, lists:reverse(Acc)};
 		Any ->
 			error_logger:error_report(["Unknown message in event accomulation",
