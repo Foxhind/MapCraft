@@ -73,7 +73,7 @@ process_req(PieId, SesId, ["async", Msg]) ->
 	"ok";
 
 process_req(PieId, SesId, ["sync", Msg]) ->
-	HubReq = format_hub_req(async, PieId, SesId, Msg),
+	HubReq = format_hub_req(sync, PieId, SesId, Msg),
 	ok = logic:process(HubReq),
 	receive
 		{answer, HubReq, Data} ->
@@ -111,7 +111,7 @@ format_hub_req(Type, PieId, SesId, Msg) ->
 	  sesid = SesId,
 	  type = Type,
 	  caller = self(),
-	  cmd = api:format_line(["from", atom_to_list(Type), PieId, SesId, Msg])
+	  cmd = api:format_line(["from", atom_to_list(Type), PieId, SesId, Msg]) ++ "\n"
 	 }.
 
 

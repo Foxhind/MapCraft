@@ -16,9 +16,7 @@ start_link() ->
 %%  Interface
 %%
 process(Worker, HubReq) ->
-	{ok, Cmd} = sanitize_cmd(HubReq#hub_req.cmd),
-	HubReq1 = HubReq#hub_req{cmd = Cmd},
-	gen_server:cast(Worker, {process, HubReq1}).
+	gen_server:cast(Worker, {process, HubReq}).
 
 %%
 %% gen_server callbacks
@@ -32,7 +30,7 @@ init(_Options) ->
 
 handle_cast({process, HubReq}, State) ->
 	{ok, Res} = process_req(State#state.port, HubReq#hub_req.cmd),
-	io:format("Result of worker: ~p~n", [Res]),
+	router:route_all(HubReq, Res),
 	logic:add_me(),
 	{noreply, State}.
 
@@ -48,9 +46,6 @@ get_logic_cmd(Id) ->
 get_timeout() ->
 	1000.
 
-sanitize_cmd(Cmd) ->
-	{ok, Cmd ++ "\n"}.
-
 %% We are recieving response lines splitted by 1000 bytes.
 %% join them and return all lines
 read_response(Port, RespAcc, LineAcc) ->
@@ -59,7 +54,7 @@ read_response(Port, RespAcc, LineAcc) ->
 			{ok, RespAcc};
 
 		{Port, {data, {eol, Line}}} ->
-			Response = lists:reverse([Line | LineAcc]),
+			Response = lists:flatten(lists:reverse([Line | LineAcc])),
 			read_response(Port, [Response | RespAcc], []);
 
 		{Port, {data, {noeol, LinePart}}} ->
