@@ -28,20 +28,20 @@ PieHub = {
      */
     poll: function() {
         var self=this;
-        var timeout = 10;
+        var timeout = 0;
 
         this.poll_xhr = jQuery.ajax({
             type: 'GET',
             url: this.get_poll_url('pie'),
             cache: false,
-            dataType: 'json',
+            //dataType: 'json',
             success: function (data) {
                 console.info("Succ!", data);
                 self.options.poll_callback(data);
             },
             error: function(data) {
                 console.error("Error in poll:", data);
-                timeout = 5000;
+                timeout = 100;
             },
             complete: function(res) {
                 setTimeout(function() {self.poll();}, timeout);
@@ -58,10 +58,11 @@ PieHub = {
      * Pushing: just call this func. Answer will be sent using poll connection
      */
     push: function(data) {
+        var event = "async!json:" +  JSON.stringify(data);
         jQuery.ajax({
             type: 'POST',
             url: this.get_poll_url('pie'),
-            data: JSON.stringify(['async', data]),
+            data: event,
             //dataType: 'json',
             //success: cb,
             //error: err_cb
@@ -72,10 +73,11 @@ PieHub = {
      * Sync call -- will wait for answer
      */
     call: function(data, cb, err_cb) {
+        var event = "sync!json:" +  JSON.stringify(data);
         jQuery.ajax({
             type: 'POST',
-            url: this.get_poll_url('call'),
-            data: JSON.stringify(['sync', data]),
+            url: this.get_poll_url('pie'),
+            data: event,
             dataType: 'json',
             success: cb,
             error: err_cb

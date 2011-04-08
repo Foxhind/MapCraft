@@ -22,6 +22,10 @@ format_line([{json, Head} | Rest], Acc) ->
 	Part = "json:" ++ Head,
 	format_line(Rest, ["!", Part | Acc]);
 
+format_line([Atom | Rest], Acc) when is_atom(Atom)->
+	Head = atom_to_list(Atom),
+	format_line(Rest, ["!", Head | Acc]);
+
 format_line([Head | Rest], Acc) ->
 	format_line(Rest, ["!", Head | Acc]);
 
@@ -46,6 +50,11 @@ parse_test_() ->
 
 format_test_() ->
 	[ ?_assert(Cmd =:= format_line(Parts)) || {Cmd, Parts} <- tests()].
+
+format_add_test_() ->
+	[ ?_assert( "a!b!c" =:= format_line(["a", b, "c"]) ),
+	  ?_assert( "a!json:b" =:= format_line([a, {json, "b"}]) )
+	].
 
 -endif.
 

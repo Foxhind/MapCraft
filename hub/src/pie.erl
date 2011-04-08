@@ -38,7 +38,7 @@ init(PieId) ->
 	  }}.
 
 handle_call({subscribe, SesId}, {Pid, _}, State) ->
-	link(Pid),
+	%link(Pid),
 	idpid_list:insert(State#state.list, {SesId, Pid, active}),
 	{reply, ok, State};
 
@@ -51,8 +51,8 @@ handle_call({lookup, SesId}, _From, State) ->
 	{reply, {ok, Elem}, State};
 
 handle_call(get_all, _From, State) ->
-	%TODO
-	{reply, {ok, []}, State}.
+	Elems = idpid_list:all(State#state.list),
+	{reply, {ok, Elems}, State}.
 
 handle_info(Info, State) ->
 	io:write("Pie got ~p~n", [Info]),

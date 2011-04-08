@@ -13,6 +13,9 @@ lookup(List, {id, Id}) ->
 lookup(List, {pid, Pid}) ->
 	ets:lookup(List#idpid.bypid, Pid).
 
+all(List) ->
+	ets:tab2list(List#idpid.byid).
+
 insert(List, Elem) ->
 	[ets:insert(T, Elem) || T <- [List#idpid.byid, List#idpid.bypid]],
 	true.

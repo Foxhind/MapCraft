@@ -2,6 +2,8 @@
 
 // Просто пример простой обработки
 function send_chat_message($cmd, $type, $from, $data) {
+    validate_required($data, array('message') );
+
 	$msg = chat_msg(array(
                           'from' => $from,
                           'message' => $data['message'],

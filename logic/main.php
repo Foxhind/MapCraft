@@ -1,6 +1,7 @@
 #!/usr/bin/env php
 <?php
 include("./lib/dispatcher.php");
+include("./lib/validators.php");
 include("./lib/api.php");
 include("./lib/hub.php");
 

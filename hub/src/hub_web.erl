@@ -83,11 +83,42 @@ process_req(PieId, SesId, ["sync", Msg]) ->
 
 wait_for_event(Req, Chan) ->
 	receive
+		{send, From, Chan, Line} ->
+			From ! {self(), ok},
+			{ok, Events} = accomulate_events(From, Chan, [Line]),
+			ok(Req, lists:flatten(Events));
+		{send, From, _, Line} ->
+			From ! {self(), not_me},
+			wait_for_event(Req, Chan)
 	after 30000 ->
-			Msg = io_lib:format("[\"nop\", {\"reason\": \"timeout\", \"pid\": \"~p\", \"id\": ~p}]~n", [self(), Chan]),
+			Msg = io_lib:format("event!json:[\"nop\", {\"reason\": \"timeout\", \"pid\": \"~w\", \"id\": {~p, ~p}}]~n",
+								[self(), Chan#hub_chan.pieid,  Chan#hub_chan.sesid]),
 			ok(Req, Msg)
 	end.
-	%wait_for_event(Req, Id).
+
+accomulate_events(From, Chan, Acc) ->
+	MonRef = erlang:monitor(process, From),
+	accomulate_events(MonRef, From, Chan, Acc).
+
+accomulate_events(MonRef, From, Chan, Acc) ->
+	receive
+		{send, From, Chan, Line} ->
+			From ! {self(), ok},
+			accomulate_events(From, Chan, [Line | Acc]);
+		{send, _, Chan, _} ->
+			From ! {self(), defer},
+			accomulate_events(From, Chan, Acc);
+		{send, _, _, _} ->
+			From ! {self(), not_me},
+			accomulate_events(From, Chan, Acc);
+		{'DOWN', MonRef, process, From, _} ->
+			{ok, lists:reverse(Acc)};
+		Any ->
+			error_logger:error_report(["Unknown message in event accomulation",
+									   {msg, Any}])
+	after 1000 ->
+			{error, timeout}
+	end.
 
 
 %%

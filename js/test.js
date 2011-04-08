@@ -2,13 +2,15 @@
 
 function printResult(msg, data) {
     if(data != null) {
-        msg = msg + JSON.stringify(data);
+        msg = msg + data; //JSON.stringify(data);
     }
     $('#container').prepend($('<pre/>').append(msg));
 }
 
 function get_msg_cmd(msg) {
-    return ['msg', { type: 'public', message: msg }];
+    var res = ['msg', { type: 'public', message: msg }];
+    console.log(res);
+    return res;
 }
 
 $(function() {
@@ -32,20 +34,17 @@ $(function() {
 
     // push -- отправило и всё. Ничего не ждёт
     $('#push').click(function() {
-        var msg = $('msg').val();
-        msg = get_msg_cmd(msg),
+        var msg = $('#msg').val();
 
-        PieHub.push(msg);
-
+        PieHub.push(get_msg_cmd(msg));
         printResult("Pushed!");
     });
 
     // call -- отправило и ждёт ответа. Пока только ["ok"].
     $('#call').click(function() {
-        var msg = $('msg').val();
-        msg = get_msg_cmd(msg),
+        var msg = $('#msg').val();
 
-        PieHub.call(msg, function(data) {
+        PieHub.call(get_msg_cmd(msg), function(data) {
             printResult("Call res: ", data);
         });
     });

@@ -9,7 +9,7 @@
  */
 function respond($msg)
 {
-    return sprintf('response!json:%s',
+    return sprintf('respond!json:%s',
                    json_encode($msg));
 }
 
