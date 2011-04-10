@@ -14,31 +14,32 @@
 %% External API
 %%
 start(Options) ->
-    mochiweb_http:start([{name, ?MODULE}, {loop, ?LOOP} | Options]).
+	mochiweb_http:start([{name, ?MODULE}, {loop, ?LOOP} | Options]).
 
 stop() ->
-    mochiweb_http:stop(?MODULE).
+	mochiweb_http:stop(?MODULE).
 
 loop(Req) ->
-    Path = Req:get(path),
-    try
+	Path = Req:get(path),
+	Hub_prefix = config:get(hub_prefix),
+	try
 		case string:tokens(Path, "/") of
-			["hub" | Rest ] ->
+			[ Hub_prefix | Rest ] ->
 				handle_hub_req(Req:get(method), Req, Rest);
-			 _ ->
+			_ ->
 				Req:not_found()
 		end
-    catch
-        Type:What ->
-            Report = ["web request failed",
-                      {path, Path},
-                      {type, Type}, {what, What},
-                      {trace, erlang:get_stacktrace()}],
-            error_logger:error_report(Report),
-            %% NOTE: mustache templates need \ because they are not awesome.
-            Req:respond({500, [{"Content-Type", "text/plain"}],
-                         "request failed, sorry\n"})
-    end.
+	catch
+		Type:What ->
+			Report = ["web request failed",
+					  {path, Path},
+					  {type, Type}, {what, What},
+					  {trace, erlang:get_stacktrace()}],
+			error_logger:error_report(Report),
+			%% NOTE: mustache templates need \ because they are not awesome.
+			Req:respond({500, [{"Content-Type", "text/plain"}],
+						 "request failed, sorry\n"})
+	end.
 
 %%
 %% Internal API - handling requests to hub/
@@ -124,12 +125,9 @@ accomulate_events0(From, Chan, Acc) ->
 %%
 %% Helpers
 %%
-get_option(Option, Options) ->
-    {proplists:get_value(Option, Options), proplists:delete(Option, Options)}.
-
 std_headers() ->
 	[{"Server", "MapCraft Hub (Mochiweb)"},
-	 {"Access-Control-Allow-Origin", "http://localhost"}].
+	 {"Access-Control-Allow-Origin", config:get(origin)}].
 
 ok(Req, Msg) ->
 	Req:ok({_Content = "test/plain",

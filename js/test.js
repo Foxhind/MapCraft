@@ -16,7 +16,7 @@ $(function() {
     // инициализация пирога
     PieHub.init({
         pieid: 5,
-        hub_url: 'http://localhost:8080/hub',   // CORS!
+        //hub_url: 'http://localhost:8080/hub',   // CORS!
         poll_callback: function(data) { printResult("Got: ", data); }
     });
 

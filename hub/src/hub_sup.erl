@@ -41,22 +41,19 @@ upgrade() ->
 %% @spec init([]) -> SupervisorTree
 %% @doc supervisor callback.
 init([]) ->
-    Web = web_specs(hub_web, 8080),
-    Processes = stats_specs() ++ [Web] ++ logic_procs() ++ pie_procs(),
+    Processes = stats_specs() ++ web_specs() ++ logic_procs() ++ pie_procs(),
     Strategy = {one_for_one, 10, 10},
-    {ok,
-     {Strategy, lists:flatten(Processes)}}.
+    {ok, {Strategy, lists:flatten(Processes)}}.
 
 %
 % Private
 %
-% {docroot, hub_deps:local_path(["priv", "www"])
-web_specs(Mod, Port) ->
-    WebConfig = [{ip, {0,0,0,0}},
-                 {port, Port}],
-    {Mod,
-     {Mod, start, [WebConfig]},
-     permanent, 5000, worker, dynamic}.
+web_specs() ->
+    WebConfig = [{ip, config:get(listen)},
+                 {port, config:get(port)}],
+    [ {hub_web,
+	   {hub_webd, start, [WebConfig]},
+	   permanent, 5000, worker, dynamic}].
 
 logic_procs() ->
 	[ {logic, {logic, start_link, []},

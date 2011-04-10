@@ -1,9 +1,15 @@
-%% -*- erlang -*-
+%% -*- mode: erlang; indent-tabs-mode: nil  -*-
 {application, hub,
  [{description, "hub"},
   {vsn, "0.1"},
   {modules, []},
   {registered, []},
   {mod, {'hub_app', []}},
-  {env, []},
-  {applications, [kernel, stdlib, crypto]}]}.
+  {applications, [kernel, stdlib, crypto]}]},
+  {env, [
+         {port, 8080},
+         {listen, {0,0,0,0}},
+         {hub_prefix, "hub"},
+         {origin, "http://localhost"},
+        ]}.
+
