@@ -50,8 +50,3 @@ delete(Type, Id) ->
 						   ets:delete_object(BySes, Entry)
 				   end, Entries ),
 	ok.
-
-update(Entry, Changes) ->
-	ets:update_element(ByChan, Entry, Changes),
-	ets:update_element(BySes, Entry, Changes),
-	ok.
