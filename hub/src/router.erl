@@ -10,13 +10,13 @@ spawn_new(HubReq, Lines) ->
 	spawn(?MODULE, route_all, [HubReq, Lines]).
 
 got_it(Pid) ->
-	Pid ! ok.
+	Pid ! {self(), ok}.
 
 not_me(Pid) ->
-	Pid ! not_me.
+	Pid !  {self(), not_me}.
 
 defer(Pid) ->
-	Pid ! defer.
+	Pid !  {self(), defer}.
 
 %%
 %% Routing
@@ -68,7 +68,7 @@ push_event_to_chans(Dests, Msg) ->
 	[ push(Dest, Cmd) || Dest <- Dests ].
 
 push({_, ChanId, offline}, Cmd) ->
-	error_logger:error_report([ "LOST EVENT! It should be deferred",
+	error_logger:error_report([ "LOST EVENT! It's offline. The event should be deferred",
 								{chan, ChanId}, {cmd, Cmd}]);
 
 push({Pid, ChanId, online}, Cmd) ->
@@ -82,6 +82,12 @@ push({Pid, ChanId, online}, Cmd) ->
 										{answer, Ans} ])
 	after 50 ->
 			error_logger:error_report([ "LOST EVENT! Answer timeout, should be deferred",
-										{chan, ChanId}, {cmd, Cmd} ])
-
+										{chan, ChanId}, {cmd, Cmd} ]),
+			%% try to suspend it
+			case pie:suspend(ChanId, Pid) of
+				ok ->
+					ok;
+				{new_pid, NewPid} ->
+					push({NewPid, ChanId, online}, Cmd)
+			end
 	end.

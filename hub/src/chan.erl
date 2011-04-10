@@ -45,7 +45,7 @@ format_hub_req(Type, Msg) ->
 			  sesid = SesId,
 			  type = list_to_atom(Type),
 			  caller = self(),
-			  cmd = api:format_line(["from", atom_to_list(Type), PieId, SesId, Msg])
+			  cmd = api:format_line(["from", Type, PieId, SesId, Msg])
 			}.
 
 

@@ -52,7 +52,7 @@ web_specs() ->
     WebConfig = [{ip, config:get(listen)},
                  {port, config:get(port)}],
     [ {hub_web,
-	   {hub_webd, start, [WebConfig]},
+	   {hub_web, start, [WebConfig]},
 	   permanent, 5000, worker, dynamic}].
 
 logic_procs() ->
