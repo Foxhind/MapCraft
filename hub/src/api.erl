@@ -41,6 +41,7 @@ format_line([], ["!" | Rest]) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
+
 tests() ->
 	[ {"a!b",  ["a", "b"]},
 	  {"a", ["a"]},
@@ -50,11 +51,11 @@ parse_test_() ->
 	[ ?_assert(Parts =:= parse_line(Cmd)) || {Cmd, Parts} <- tests()].
 
 format_test_() ->
-	[ ?_assert(Cmd =:= format_line(Parts)) || {Cmd, Parts} <- tests()].
+	[ ?_assert(Cmd ++ "\n" =:= binary_to_list(format_line(Parts))) || {Cmd, Parts} <- tests()].
 
 format_add_test_() ->
-	[ ?_assert( "a!b!c" =:= format_line(["a", b, "c"]) ),
-	  ?_assert( "a!json:b" =:= format_line([a, {json, "b"}]) )
+	[ ?_assert( <<"a!b!c\n">> =:= format_line(["a", b, "c"]) ),
+	  ?_assert( <<"a!json:b\n">> =:= format_line([a, {json, "b"}]) )
 	].
 
 -endif.
