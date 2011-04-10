@@ -2,7 +2,8 @@
 
 -record(hub_chan, {
 		  pieid,
-		  sesid
+		  sesid,
+		  tabid
 		 }).
 
 -record(hub_req, {

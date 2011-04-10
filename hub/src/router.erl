@@ -3,16 +3,31 @@
 
 -include("hub.hrl").
 
+%%
+%% Interface
+%%
 spawn_new(HubReq, Lines) ->
 	spawn(?MODULE, route_all, [HubReq, Lines]).
 
+got_it(Pid) ->
+	Pid ! ok.
+
+not_me(Pid) ->
+	Pid ! not_me.
+
+defer(Pid) ->
+	Pid ! defer.
+
+%%
+%% Routing
+%%
 route_all(HubReq, Lines) ->
 	[ route_one_safely(HubReq, Line) || Line <- Lines ].
 
-
-
 route_one_safely(HubReq, Line) ->
-	try ok = route_one(HubReq, api:parse_line(Line))
+	try
+		[Cmd | Rest] =  api:parse_line(Line),
+		ok = route_one(Cmd, HubReq, Rest)
 	catch
 		Type:What ->
 			Report = [ "failed to route answer line",
@@ -23,43 +38,50 @@ route_one_safely(HubReq, Line) ->
 			error_logger:error_report(Report)
 	end.
 
-route_one(HubReq, ["respond", {json, Json}]) when HubReq#hub_req.type == sync ->
+route_one("respond", HubReq = #hub_req{type = sync}, [{json, Json}]) ->
 	HubReq#hub_req.caller ! {answer, HubReq, Json},
 	ok;
 
-route_one(H, ["respond", A]) ->
+route_one("respond", #hub_req{type = async}, _) ->
 	% response in async req is skipped
 	ok;
 
-route_one(_, ["to_session", PieId, SesId, Msg]) ->
-	Line = api:format_line([event, Msg]),
-	{SesId, Pid, _} = pie:lookup(PieId, SesId),
-	push(Pid, PieId, SesId, Line),
+route_one("to_session", _, [PieId, SesId, Msg]) ->
+	Dests = pie:lookup(PieId, SesId),
+	push_event_to_chans(Dests, Msg),
 	ok;
 
-route_one(_, ["to_pie", PieId, Msg]) ->
-	Line = api:format_line([event, Msg]),
-	Elems = pie:get_all(PieId),
-	[ push(Pid, PieId, SesId, Line) || {SesId, Pid, _} <- Elems ],
-	ok;
-
-route_one(_, ["to_all", Msg]) ->
-	Line = api:format_line([event, Msg]),
-	% TODO
+route_one("to_pie", _, [PieId, Msg]) ->
+	Dests = pie:lookup(PieId),
+	push_event_to_chans(Dests, Msg),
 	ok.
 
-push(Pid, PieId, SesId, Line) ->
-	Chan = #hub_chan{pieid = PieId, sesid = SesId},
-	Pid ! {send, self(), Chan, Line ++ "\n"},
+%route_one("to_all", _, [_Msg]) ->
+%   TODO
+%	ok.
+
+%%
+%% Pushing event to channels
+%%
+push_event_to_chans(Dests, Msg) ->
+	Cmd = api:format_line([event, Msg]),
+	[ push(Dest, Cmd) || Dest <- Dests ].
+
+push({_, ChanId, offline}, Cmd) ->
+	error_logger:error_report([ "LOST EVENT! It should be deferred",
+								{chan, ChanId}, {cmd, Cmd}]);
+
+push({Pid, ChanId, online}, Cmd) ->
+	Pid ! {send, self(), ChanId, Cmd},
 	receive
 		{Pid, ok} ->
 			ok;
 		{Pid, Ans} ->
 			error_logger:error_report([ "LOST EVENT! It should be deferred",
-										{chan, Chan}, {line, Line},
+										{chan, ChanId}, {cmd, Cmd},
 										{answer, Ans} ])
 	after 50 ->
 			error_logger:error_report([ "LOST EVENT! Answer timeout, should be deferred",
-										{chan, Chan}, {line, Line} ])
+										{chan, ChanId}, {cmd, Cmd} ])
 
 	end.

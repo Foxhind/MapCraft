@@ -30,7 +30,8 @@ format_line([Head | Rest], Acc) ->
 	format_line(Rest, ["!", Head | Acc]);
 
 format_line([], ["!" | Rest]) ->
-	lists:flatten(lists:reverse(Rest)).
+	List = lists:flatten(lists:reverse(Rest)) ++ "\n",
+	list_to_binary(List).
 
 
 

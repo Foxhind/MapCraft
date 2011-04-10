@@ -5,11 +5,13 @@
   {modules, []},
   {registered, []},
   {mod, {'hub_app', []}},
-  {applications, [kernel, stdlib, crypto]}]},
+  {applications, [kernel, stdlib, crypto]},
   {env, [
          {port, 8080},
          {listen, {0,0,0,0}},
          {hub_prefix, "hub"},
          {origin, "http://localhost"},
-        ]}.
+         {poll_timeout, 30}
+        ]}
+ ]}.
 
