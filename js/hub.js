@@ -12,14 +12,14 @@ PieHub = {
         hub_url: '/hub',
         poll_callback: null
     },
-    sesid: null,
+    myid: null,
 
     /*
      * init (PieId, poll_callback)
      */
     init: function(options) {
         $.extend(this.options, options);
-        this.sesid = this.get_sesid();
+        this.myid = this.gen_myid();
     },
 
     /*
@@ -121,12 +121,7 @@ PieHub = {
      * Getters
      */
     get_poll_url: function(part) {
-        return this.options.hub_url + '/' + part + '/' + this.options.pieid + '/' + this.sesid;
-    },
-    get_sesid: function() {
-        var id = this.load_sesid() || this.gen_sesid();
-        this.store_sesid(id);
-        return id;
+        return this.options.hub_url + '/' + part + '/' + this.options.pieid + '/' + this.myid;
     },
 
     /*
@@ -141,14 +136,18 @@ PieHub = {
 	 * Session save and restore sessionID
 	 */
 	store_sesid: function(id) {
-        localStorage.sesid = id || this.sesid;
+        localStorage.sesid = id;
 	},
 	load_sesid: function() {
 		return localStorage.sesid;
 	},
-    gen_sesid: function() {
-        var templ = 'xxxxxxxxxxxxx';
-        var id = templ.replace(/x/g, function(c) { return (Math.random()*16|0).toString(16); });
-        return id;
+    gen_random: function(templ) {
+        return templ.replace(/X/g, function(c) { return (Math.random()*16|0).toString(16); });
+    },
+    // MyID = SesId/TabId
+    gen_myid: function() {
+        var id = this.load_sesid() || this.gen_random("XXXXXXXXXXXXXX");
+        this.store_sesid(id);
+        return id + "/" + this.gen_random("XXXXXX");
     }
 };
