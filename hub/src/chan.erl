@@ -9,8 +9,13 @@ handle('POST') ->
 	handle_api(Type, Rest);
 
 handle('GET') ->
-	pie:subscribe(ChanId),
-	wait_loop().
+	case mqueue:check_for_me(ChanId) of
+		{ok, []} ->
+			pie:subscribe(ChanId),
+			wait_loop();
+		{ok, Msgs} ->
+			hub_web:ok(Req, lists:flatten(Msgs))
+	end.
 
 %%
 %% API handlers

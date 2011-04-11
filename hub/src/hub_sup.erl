@@ -41,7 +41,7 @@ upgrade() ->
 %% @spec init([]) -> SupervisorTree
 %% @doc supervisor callback.
 init([]) ->
-    Processes = stats_specs() ++ web_specs() ++ logic_procs() ++ pie_procs(),
+    Processes = stats_specs() ++ mqueue_specs() ++ web_specs() ++ logic_procs() ++ pie_procs(),
     Strategy = {one_for_one, 10, 10},
     {ok, {Strategy, lists:flatten(Processes)}}.
 
@@ -68,6 +68,10 @@ pie_procs() ->
 stats_specs() ->
 	[ {stats, {stats, start_link, []},
 	   permanent, brutal_kill, worker, [stats]} ].
+
+mqueue_specs() ->
+	[ {mqueue, {mqueue, start_link, []},
+	   permanent, brutal_kill, worker, [mqueue]} ].
 
 sup(Mod, Args) ->
 	{Mod,

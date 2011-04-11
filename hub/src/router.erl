@@ -68,8 +68,7 @@ push_event_to_chans(Dests, Msg) ->
 	[ push(Dest, Cmd) || Dest <- Dests ].
 
 push({_, ChanId, offline}, Cmd) ->
-	error_logger:error_report([ "LOST EVENT! It's offline. The event should be deferred",
-								{chan, ChanId}, {cmd, Cmd}]);
+	ok = mqueue:store(ChanId, Cmd);
 
 push({Pid, ChanId, online}, Cmd) ->
 	Pid ! {send, self(), ChanId, Cmd},
@@ -77,16 +76,11 @@ push({Pid, ChanId, online}, Cmd) ->
 		{Pid, ok} ->
 			ok;
 		{Pid, Ans} ->
-			error_logger:error_report([ "LOST EVENT! It should be deferred",
-										{chan, ChanId}, {cmd, Cmd},
-										{answer, Ans} ])
+			ok = mqueue:store(ChanId, Cmd)
 	after 50 ->
-			error_logger:error_report([ "LOST EVENT! Answer timeout, should be deferred",
-										{chan, ChanId}, {cmd, Cmd} ]),
-			%% try to suspend it
 			case pie:suspend(ChanId, Pid) of
 				ok ->
-					ok;
+					ok = mqueue:store(ChanId, Cmd);
 				{new_pid, NewPid} ->
 					push({NewPid, ChanId, online}, Cmd)
 			end
