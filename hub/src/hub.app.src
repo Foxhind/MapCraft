@@ -11,7 +11,9 @@
          {listen, {0,0,0,0}},
          {hub_prefix, "hub"},
          {origin, "http://localhost"},
-         {poll_timeout, 30}
+         {poll_timeout, 30},
+         {logic_cmd, "priv/logic.sh"},
+         {logic_pool_size, {3,10}}
         ]}
  ]}.
 

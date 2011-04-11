@@ -23,7 +23,8 @@ process(Worker, HubReq) ->
 %%
 init(_Options) ->
 	Id = stats:get_next({logic, starts}),
-	Port = open_port({spawn, get_logic_cmd(Id)}, [stream, {line, 1000}, exit_status]),
+	Cmd = config:get(logic_cmd) ++ " -i " ++ integer_to_list(Id),
+	Port = open_port({spawn, Cmd}, [stream, {line, 1000}, exit_status]),
 	logic:add_me(),
 	{ok, #state{id = Id, port = Port}}.
 

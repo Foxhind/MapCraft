@@ -8,12 +8,13 @@ start_link() ->
 	supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
 init(_Args) ->
-	Workers = generate_workers(4),
+	Workers = initial_workers_specs(),
 	Strategy = {one_for_one, 5, 60},
 	{ok, {Strategy, Workers}}.
 
-generate_workers(N) ->
-	[worker_spec(I) || I <- lists:seq(1,N)].
+initial_workers_specs() ->
+	{Min, _} = config:get(logic_pool_size),
+	[worker_spec(I) || I <- lists:seq(1,Min)].
 
 worker_spec(Index) ->
 	Id = list_to_atom("logic_worker" ++ integer_to_list(Index)),
