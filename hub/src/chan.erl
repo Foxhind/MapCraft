@@ -4,11 +4,13 @@
 
 
 handle('POST') ->
+	stats:incr({chan, pushes}),
 	Data = binary_to_list(Req:recv_body()),
 	[Type | Rest] = api:parse_line(Data),
 	handle_api(Type, Rest);
 
 handle('GET') ->
+	stats:incr({chan, polls}),
 	case mqueue:check_for_me(ChanId) of
 		{ok, []} ->
 			pie:subscribe(ChanId),
@@ -29,10 +31,12 @@ handle_api(Type, [Msg]) when Type =:= "async"; Type =:= "sync" ->
 %% Pushing
 %%
 push(HubReq = #hub_req{type = async}) ->
+	stats:incr({chan, pushes, async}),
 	ok = logic:process(HubReq),
 	hub_web:ok(Req, "ok");
 
 push(HubReq = #hub_req{type = sync}) ->
+	stats:incr({chan, pushes, sync}),
 	ok = logic:process(HubReq),
 	wait_for_answer(HubReq).
 
@@ -97,7 +101,3 @@ accomulate_events0(Router, Acc) ->
 	after 1000 ->
 			{error, timeout}
 	end.
-
-
-
-

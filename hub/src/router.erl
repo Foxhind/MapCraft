@@ -22,6 +22,7 @@ defer(Pid) ->
 %% Routing
 %%
 route_all(HubReq, Lines) ->
+	stats:incr({router, spawns}),
 	[ route_one_safely(HubReq, Line) || Line <- Lines ].
 
 route_one_safely(HubReq, Line) ->
@@ -47,11 +48,13 @@ route_one("respond", #hub_req{type = async}, _) ->
 	ok;
 
 route_one("to_session", _, [PieId, SesId, Msg]) ->
+	stats:incr({router, to_session}),
 	Dests = pie:lookup(PieId, SesId),
 	push_event_to_chans(Dests, Msg),
 	ok;
 
 route_one("to_pie", _, [PieId, Msg]) ->
+	stats:incr({router, to_pie}),
 	Dests = pie:lookup(PieId),
 	push_event_to_chans(Dests, Msg),
 	ok.
@@ -74,6 +77,7 @@ push({Pid, ChanId, online}, Cmd) ->
 	Pid ! {send, self(), ChanId, Cmd},
 	receive
 		{Pid, ok} ->
+			stats:incr({router, routed}),
 			ok;
 		{Pid, Ans} ->
 			ok = mqueue:store(ChanId, Cmd)
