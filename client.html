@@ -1,0 +1,107 @@
+<!doctype html>
+<!--[if lt IE 7 ]> <html lang="en" class="no-js ie6"> <![endif]-->
+<!--[if IE 7 ]>    <html lang="en" class="no-js ie7"> <![endif]-->
+<!--[if IE 8 ]>    <html lang="en" class="no-js ie8"> <![endif]-->
+<!--[if IE 9 ]>    <html lang="en" class="no-js ie9"> <![endif]-->
+<!--[if (gt IE 9)|!(IE)]><!-->
+<html lang="en"> <!--<![endif]-->
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<title>MapCraft Dev</title>
+	<meta name="description" content="Massively mapping service">
+	<meta name="author" content="Hind">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="css/style.css" type="text/css" media="screen, projection" />
+    <link rel="stylesheet" href="css/smoothness/jquery-ui-1.8.11.custom.css" class="ui-theme" type="text/css" media="screen, projection" />
+    <link rel="stylesheet" href="css/jquery-theme-patch.css" class="ui-theme" type="text/css" media="screen, projection" />
+	<script type="text/javascript" src="http://openlayers.org/api/OpenLayers.js"></script>
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.5.1.min.js"></script>
+	<script type="text/javascript" src="js/jquery-ui-1.8.11.custom.min.js"></script>
+	<script type="text/javascript" src="js/hub.js"></script>
+	<script type="text/javascript" src="js/lang/en.js"></script>
+</head>
+<body>
+<div id="olmap">
+</div>
+
+<div id="dchat">
+<table cellpadding="2"><tbody>
+<tr id="chatline"><td colspan="3">
+<div id="chat"><table><tbody><tr><td class="nick"></td><td class="msg"></td><td></td></tr></tbody></table></div>
+</td></tr>
+<tr id="inputline"><td style="width: 100px;"><div id="pac_nick"></div></td><td><div id="pac_color"></div></td><td><form id="pac_form"><input id="pac_text" type="text" maxlength="1024"></form></td></tr></tbody></table>
+</div>
+<div id="duserlist">
+<div id="userlist"></div>
+</div>
+<div id="dnick">
+<div id="question"></div>
+<span id="lnick">New nick:</span><br />
+<form id="nick_form"><input type="text" id="newnick"></form>
+</div>
+<div id="dprop">
+<table><tbody>
+<tr class="property"><td id="lowner">Owner:</td><td><button id="bowner"></button></td></tr>
+<tr class="property"><td id="lreadiness">Readiness:</td><td><button id="bstatus"><span id="status">0</span>/9</button></td></tr>
+<tr class="property"><td id="lcomments" colspan="2">Comments:</td><td></td></tr>
+<tr class="maxima"><td colspan="2"><div id='comments'></div></td><td></td></tr>
+<tr><td colspan="2"><form id='comment_form'><textarea id='comment_text' rows='3' placeholder='Your comment'></textarea></form></td><td></td></tr>
+<tr><td><button id="bremote"></button></td><td><button id="bcomment"></button></td></tr>
+</tbody></table>
+</div>
+<div id="dstatus" title="Смена статуса">
+<div id="question"></div>
+New status:&nbsp;<span id="newstatus"></span>&nbsp;<span id="vcolor">██</span><br />
+<div id="sstatus"></div>
+</div>
+
+<div id="dtake" title="Взятие сектора">
+<div id="question"></div>
+<span id="ltake">Are you sure you want to take this piece?</span><br />
+</div>
+<div id="dclaim" title="Заявка на сектор">
+<div id="exclamation"></div>
+<span id="lclaim">This piece has an owner already!<br />Put to the vote the transfer for you?</span>
+</div>
+<div id="drefuse" title="Отказ от сектора">
+<div id="question"></div>
+<span id="lrefuse">Are you sure you want to abandon the piece?</span><br />
+</div>
+
+<div id="dsettings">
+<table>
+<tr class="property"><td id="ltheme">Theme:</td><td>
+<select id="sstyle">
+<option value="cupertino">cupertino</option>
+<option value="redmond">redmond</option>
+<option value="smoothness" selected>smoothness</option>
+<option value="ui-lightness">ui-lightness</option>
+</select>
+</td></tr>
+<tr class="property"><td id="llang">Language:</td><td>
+<select id="slang">
+<option value="en" selected>English</option>
+<option value="jp">日本語</option>
+<option value="ru">Русский</option>
+</select>
+</td></tr>
+</table>
+</div>
+
+<table id="panel">
+<tr>
+<td><button id="bzoomp">+</button></td>
+<td><button id="bzoomm">&minus;</button></td>
+<td><input type="checkbox" id="bpie" checked /><label for="bpie"></label></td>
+<td><button id="bsettings"></button></td>
+<td><div id="vis">
+<input type="radio" id="rfull" name="vis" checked /><label for="rfull"> </label>
+<input type="radio" id="rtrans" name="vis" /><label for="rtrans"> </label>
+<input type="radio" id="rnone" name="vis" /><label for="rnone"> </label>
+</div></td></tr>
+</table>
+
+<script type="text/javascript" src="js/main.js"></script>
+</body>
+</html>
