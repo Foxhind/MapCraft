@@ -2,6 +2,7 @@
 -behaviour(gen_server).
 
 -compile(export_all).
+-export([init/1, handle_call/3, handle_cast/2, handle_info/2, code_change/3, terminate/2]).
 
 start_link() ->
 	gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
@@ -65,6 +66,15 @@ handle_cast({set, Key, Value}, Tab) ->
 	ets:update_element(Tab, Key, {2, Value}),
 	{noreply, Tab}.
 
+handle_info(_Msg, State) ->
+	{noreply, State}.
+
+code_change(_, State, _) ->
+	{ok, State}.
+
+terminate(_Reason, _State) ->
+	ok.
+
 %%
 %% Implementation
 %%
@@ -72,6 +82,6 @@ ensure_key(Tab, Key) ->
 	case ets:lookup(Tab, Key) of
 		[] ->
 			ets:insert(Tab, {Key, 0});
-		[Obj] ->
+		[_Obj] ->
 			ok
 	end.

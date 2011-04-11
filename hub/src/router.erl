@@ -79,7 +79,7 @@ push({Pid, ChanId, online}, Cmd) ->
 		{Pid, ok} ->
 			stats:incr({router, routed}),
 			ok;
-		{Pid, Ans} ->
+		{Pid, _Ans} ->
 			ok = mqueue:store(ChanId, Cmd)
 	after 50 ->
 			case pie:suspend(ChanId, Pid) of

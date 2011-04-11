@@ -3,7 +3,7 @@
 
 -export([start_link/0]).
 -export([process/2]).
--export([init/1, handle_cast/2, handle_info/2, terminate/2]).
+-export([init/1, handle_call/3, handle_cast/2, handle_info/2, code_change/3, terminate/2]).
 
 -include("hub.hrl").
 -record(state, {id, port}).
@@ -46,15 +46,17 @@ terminate({port_terminated, _}, _) ->
 terminate(_Reason, #state{port = Port}) ->
 	port_close(Port).
 
+handle_call(_Msg, _From, State) ->
+	{noreply, State}.
+
+code_change(_, State, _) ->
+	{ok, State}.
+
 %% TODO: trapexit for Port, handle terminate (close port)
 
 %%
 %% private
 %%
-
-get_logic_cmd(Id) ->
-	"priv/logic.sh -i " ++ integer_to_list(Id).
-
 get_timeout() ->
 	1000.
 
