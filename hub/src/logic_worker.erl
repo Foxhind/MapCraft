@@ -57,8 +57,6 @@ code_change(_, State, _) ->
 %%
 %% private
 %%
-get_timeout() ->
-	1000.
 
 %% We are recieving response lines splitted by 1000 bytes.
 %% join them and return all lines
@@ -74,7 +72,7 @@ read_response(Port, RespAcc, LineAcc) ->
 		{Port, {data, {noeol, LinePart}}} ->
 			read_response(Port, RespAcc, [LinePart | LineAcc])
 
-	after get_timeout() ->
+	after config:get(logic_timeout) * 1000 ->
 			timeout
 	end.
 
