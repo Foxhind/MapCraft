@@ -3,7 +3,7 @@
 
 
 parse_line(Line) ->
-	{ok, Parts} = regexp:split(Line, "!json:"),
+	Parts = re:split(Line, "!json:", [{return, list}]),
 	case Parts of
 		[Cmd, Json] ->
 			split_cmd(Cmd) ++ [{json, Json}];

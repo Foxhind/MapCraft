@@ -67,7 +67,7 @@ wait_loop() ->
 			router:got_it(Router),
 			{ok, Events} = accomulate_events(Router, [Line]),
 			hub_web:ok(Req, lists:flatten(Events));
-		{send, AnotherRouter, _, Line} ->
+		{send, AnotherRouter, _, _} ->
 			router:not_me(AnotherRouter),
 			wait_loop()
 	after config:get(poll_timeout) * 1000 ->

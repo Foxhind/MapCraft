@@ -3,7 +3,7 @@
 
 -export([start_link/0]).
 -export([add_me/0, process/1]).
--export([init/1, handle_call/3]).
+-export([init/1, handle_call/3, handle_cast/2, handle_info/2, code_change/3, terminate/2]).
 
 start_link() ->
 	gen_server:start_link({local, logic}, logic, [], []).
@@ -32,7 +32,7 @@ process(HubReq) ->
 %%
 %% gen_server callbacks
 %%
-init(Options) ->
+init(_Args) ->
 	{ok, _Pool = []}.
 
 handle_call({add_worker, Worker}, _From, Pool) ->
@@ -46,3 +46,15 @@ handle_call({process, HubReq}, _From, Pool) ->
 			logic_worker:process(Head, HubReq),
 			{reply, ok, Tail}
 	end.
+
+handle_info(_Msg, State) ->
+	{noreply, State}.
+
+handle_cast(_Msg, State) ->
+	{noreply, State}.
+
+code_change(_, State, _) ->
+	{ok, State}.
+
+terminate(_Reason, _State) ->
+	ok.

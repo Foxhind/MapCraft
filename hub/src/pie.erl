@@ -2,8 +2,9 @@
 -behaviour(gen_server).
 
 -compile(export_all).
--include("hub.hrl").
+-export([init/1, handle_call/3, handle_cast/2, handle_info/2, code_change/3, terminate/2]).
 
+-include("hub.hrl").
 -record(state, {id, list}).
 
 
@@ -63,10 +64,17 @@ handle_call(get_all, _From, #state{list = List} = State) ->
 	{reply, Res, State}.
 
 
-handle_info(Info, State) ->
-	io:write("Pie got ~p~n", [Info]),
+handle_info(_Msg, State) ->
 	{noreply, State}.
 
+handle_cast(_Msg, State) ->
+	{noreply, State}.
+
+code_change(_, State, _) ->
+	{ok, State}.
+
+terminate(_Reason, _State) ->
+	ok.
 
 %%
 %% Helpers
