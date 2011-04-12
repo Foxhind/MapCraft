@@ -7,7 +7,7 @@
 -author("Mochi Media <dev@mochimedia.com>").
 
 -export([start/1, stop/0, loop/1]).
--export([ok/2]).
+-export([ok/2, fail/1]).
 
 -include("hub.hrl").
 -define(LOOP, {?MODULE, loop}).
@@ -74,6 +74,10 @@ ok(Req, Msg) ->
 	Req:ok({_Content = "test/plain",
 			_Headers = std_headers(),
 			Msg}).
+
+fail(Req) ->
+	Req:respond({500, [{"Content-Type", "text/plain"}] ++ std_headers(),
+				 "request failed, sorry\n"}).
 
 std_headers() ->
 	[{"Server", "MapCraft Hub (Mochiweb)"},
