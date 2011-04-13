@@ -31,6 +31,7 @@ init(_Options) ->
 
 handle_cast({process, HubReq}, State) ->
 	stats:incr({logic, requests}),
+	HubReq#hub_req.caller ! {follow_me, self()},
 	{ok, Res} = process_req(State#state.port, HubReq#hub_req.cmd),
 	router:spawn_new(HubReq, Res),
 	logic:add_me(),
@@ -57,8 +58,6 @@ code_change(_, State, _) ->
 %%
 %% private
 %%
-get_timeout() ->
-	1000.
 
 %% We are recieving response lines splitted by 1000 bytes.
 %% join them and return all lines
@@ -74,7 +73,7 @@ read_response(Port, RespAcc, LineAcc) ->
 		{Port, {data, {noeol, LinePart}}} ->
 			read_response(Port, RespAcc, [LinePart | LineAcc])
 
-	after get_timeout() ->
+	after config:get(logic_timeout) * 1000 ->
 			timeout
 	end.
 

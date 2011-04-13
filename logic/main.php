@@ -20,8 +20,9 @@ $LOGIC_ID= isset($opts['i']) ? $opts['i'] : (string) rand(1,65535);
 $TEST_MODE = isset($opts['t']);
 
 // Main pipe reading/writing loop
-while(1) {
-    $cmd = readline("");
+$fp=fopen("php://stdin","r");
+while(!feof($fp)) {
+    $cmd = stream_get_line($fp, 4 * 1024 * 1024, "\n");
     $res = array();
 
     // Try to handle command. catch all exceptions
@@ -45,6 +46,6 @@ while(1) {
     if($TEST_MODE)
         break;
 }
-
+fclose($fp);
 
 ?>

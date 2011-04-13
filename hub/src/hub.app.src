@@ -13,7 +13,8 @@
          {origin, "http://localhost"},
          {poll_timeout, 30},
          {logic_cmd, "priv/logic.sh"},
-         {logic_pool_size, {3,10}}
+         {logic_pool_size, {3,10}},
+         {logic_timeout, 10}
         ]}
  ]}.
 
