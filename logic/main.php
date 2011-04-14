@@ -1,6 +1,5 @@
 #!/usr/bin/env php
 <?php
-include("./lib/dispatcher.php");
 include("./lib/validators.php");
 include("./lib/api.php");
 include("./lib/hub.php");
@@ -28,7 +27,7 @@ while(!feof($fp)) {
 
     // Try to handle command. catch all exceptions
     try {
-        $res = handle_hub_message($cmd);
+        $res = process_hub_message($cmd);
     }
     catch(Exception $e) {
         $msg = error_msg(array(

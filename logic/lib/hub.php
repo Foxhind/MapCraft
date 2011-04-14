@@ -35,7 +35,12 @@ function _get_head($str) {
     return $parts[0];
 }
 
-function handle_hub_message($str) {
+function dispatch($cmd, $type, $from, $data) {
+    $cb = 'handle_' . $cmd;
+    return $cb($type, $from, $data);
+}
+
+function process_hub_message($str) {
     global $dispatcher;
 
     $args = split_hub_message($str);
@@ -50,7 +55,7 @@ function handle_hub_message($str) {
         $json_cmd = $json[0];
         $json_arg = isset($json[1]) ? $json[1] : array();
 
-        $res = $dispatcher->route($json_cmd, $type, $from, $json_arg);
+        $res = dispatch($json_cmd, $type, $from, $json_arg);
 
         // Add simple 'respond' if it missed and it's a sync call
         if ($type == 'sync') {
@@ -65,12 +70,12 @@ function handle_hub_message($str) {
         $from = ids_to_from(array_shift($args), array_shift($args));
         $data = array( 'reason' =>  array_shift($args) );
 
-        $res = $dispatcher->route('session_exit', 'async', $from, $data);
+        $res = dispatch('session_exit', 'async', $from, $data);
         return $res;
     case 'pie_exit':
         $data = array( 'pie_id' =>  array_shift($args) );
 
-        $res = $dispatcher->route('pie_exit', 'async', null, $data);
+        $res = dispatch('pie_exit', 'async', null, $data);
         return $res;
     default:
         throw new Exception("Hub command '$cmd' is not implemented");

@@ -1,7 +1,7 @@
 <?php
 
 // Просто пример простой обработки
-function send_chat_message($cmd, $type, $from, $data) {
+function handle_msg($type, $from, $data) {
     validate_required($data, array('message') );
 
 	$msg = chat_msg(array(
@@ -20,6 +20,5 @@ function send_chat_message($cmd, $type, $from, $data) {
 
     return $res;
 }
-$dispatcher->register('msg', 'send_chat_message');
 
 ?>

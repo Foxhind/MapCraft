@@ -1,6 +1,6 @@
 <?php
 
-function handle_session_exit($cmd, $type, $from, $data) {
+function handle_session_exit($type, $from, $data) {
 	$msg = info_msg(array(
                           'message' => 'User ' . $from['nick'] . ' exited: ' . $data['reason'],
                           ));
@@ -9,11 +9,8 @@ function handle_session_exit($cmd, $type, $from, $data) {
     array_push($res, to_pie($from, $msg));
     return $res;
 }
-$dispatcher->register('session_exit', 'handle_session_exit');
 
-
-function handle_pie_exit($cmd, $type, $from, $data) {
+function handle_pie_exit($type, $from, $data) {
 	$res = array();
     return $res;
 }
-$dispatcher->register('pie_exit', 'handle_pie_exit');
