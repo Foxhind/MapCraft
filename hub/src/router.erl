@@ -23,7 +23,7 @@ defer(Pid) ->
 %%
 route_all(HubReq, Lines) ->
 	stats:incr({router, spawns}),
-	HubReq#hub_req.caller ! {follow_me, self()},
+	hub_web:follow_me(HubReq),
 	[ route_one_safely(HubReq, Line) || Line <- Lines ].
 
 route_one_safely(HubReq, Line) ->

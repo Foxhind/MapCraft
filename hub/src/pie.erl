@@ -20,10 +20,6 @@ subscribe(ChanId) ->
 	gen_server:call(Pie, {set_online, ChanId, self()}),
 	erlang:monitor(process, Pie).
 
-touch(ChanId) ->
-	Pie = pie_hub:get_or_create(ChanId#hub_chan.pieid),
-	gen_server:call(Pie, {touch, ChanId, self()}).
-
 suspend(ChanId, Pid) ->
 	Pie = pie_hub:get_or_create(ChanId#hub_chan.pieid),
 	gen_server:call(Pie, {set_offline, ChanId, Pid}).
@@ -72,13 +68,13 @@ handle_call(get_all, _From, #state{list = List} = State) ->
 	{reply, Res, State}.
 
 handle_info(cleanup, #state{list = List, id = Id} = State) ->
+	{ok, Entries} = List:lookup_expired(),
+	[ delete_chan_and_cleanup(List, ChanId, timeout) || {_, ChanId, _} <- Entries ],
 	case List:size() of
 		0 ->
 			pie_is_empty(Id),
 			{stop, normal, State};
 		_N ->
-			{ok, Entries} = List:lookup_expired(),
-			[ delete_chan_and_cleanup(List, ChanId, timeout) || {_, ChanId, _} <- Entries ],
 			{noreply, State}
 	end;
 
@@ -114,12 +110,23 @@ delete_chan_and_cleanup(List, ChanId, Reason) ->
 	ok.
 
 session_exited(ChanId, Reason) ->
-	io:format("session exited: ~p ~p~n", [ChanId, Reason]),
-	ok.
+	PieId = ChanId#hub_chan.pieid,
+	SesId = ChanId#hub_chan.sesid,
+	HubReq = #hub_req{
+	  pieid = PieId,
+	  sesid = SesId,
+	  type = async,
+	  cmd = api:format_line(["session_exit", PieId, SesId, Reason])
+	 },
+	logic:process_async(HubReq).
 
-pie_is_empty(ChanId) ->
-	io:format("pie exited: ~p~n", [ChanId]),
-	ok.
+pie_is_empty(PieId) ->
+	HubReq = #hub_req{
+	  pieid = PieId,
+	  type = async,
+	  cmd = api:format_line(["pie_exit", PieId])
+	 },
+	logic:process_async(HubReq).
 
 
 %%

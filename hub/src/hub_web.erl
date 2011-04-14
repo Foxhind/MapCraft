@@ -7,7 +7,7 @@
 -author("Mochi Media <dev@mochimedia.com>").
 
 -export([start/1, stop/0, loop/1]).
--export([ok/2, fail/1]).
+-export([ok/2, fail/1, follow_me/1]).
 
 -include("hub.hrl").
 -define(LOOP, {?MODULE, loop}).
@@ -82,6 +82,16 @@ fail(Req) ->
 std_headers() ->
 	[{"Server", "MapCraft Hub (Mochiweb)"},
 	 {"Access-Control-Allow-Origin", config:get(origin)}].
+
+%% TODO: move to another module
+follow_me(HubReq) ->
+	case HubReq#hub_req.type of
+		sync ->
+			HubReq#hub_req.caller ! {follow_me, self()};
+		_ ->
+			ok
+	end.
+
 
 %%
 %% Tests

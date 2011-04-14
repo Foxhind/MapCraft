@@ -31,7 +31,7 @@ init(_Options) ->
 
 handle_cast({process, HubReq}, State) ->
 	stats:incr({logic, requests}),
-	HubReq#hub_req.caller ! {follow_me, self()},
+	hub_web:follow_me(HubReq),
 	{ok, Res} = process_req(State#state.port, HubReq#hub_req.cmd),
 	router:spawn_new(HubReq, Res),
 	logic:add_me(),

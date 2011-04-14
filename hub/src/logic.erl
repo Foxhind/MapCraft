@@ -2,7 +2,7 @@
 -behaviour(gen_server).
 
 -export([start_link/0]).
--export([add_me/0, process/1]).
+-export([add_me/0, process/1, process_async/1]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, code_change/3, terminate/2]).
 
 start_link() ->
@@ -28,6 +28,13 @@ process(HubReq) ->
 		Res ->
 			Res
 	end.
+
+process_async(HubReq) ->
+	Fun = fun() ->
+				  ok = logic:process(HubReq)
+		  end,
+	spawn(Fun),
+	ok.
 
 %%
 %% gen_server callbacks
