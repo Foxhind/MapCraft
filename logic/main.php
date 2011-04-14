@@ -6,6 +6,7 @@ include("./lib/api.php");
 include("./lib/hub.php");
 
 // event handlers
+include("./session.php");
 include("./chat.php");
 
 /*

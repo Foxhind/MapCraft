@@ -61,6 +61,17 @@ function handle_hub_message($str) {
         };
 
         return $res;
+    case 'session_exit':
+        $from = ids_to_from(array_shift($args), array_shift($args));
+        $data = array( 'reason' =>  array_shift($args) );
+
+        $res = $dispatcher->route('session_exit', 'async', $from, $data);
+        return $res;
+    case 'pie_exit':
+        $data = array( 'pie_id' =>  array_shift($args) );
+
+        $res = $dispatcher->route('pie_exit', 'async', null, $data);
+        return $res;
     default:
         throw new Exception("Hub command '$cmd' is not implemented");
     }
