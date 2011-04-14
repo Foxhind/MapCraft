@@ -37,6 +37,11 @@ function _get_head($str) {
 
 function dispatch($cmd, $type, $from, $data) {
     $cb = 'handle_' . $cmd;
+
+    if ( !function_exists($cb) ){
+        throw new Exception("Callback for '$cmd' is no defined yet");
+    }
+
     return $cb($type, $from, $data);
 }
 
