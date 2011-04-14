@@ -13,8 +13,9 @@ handle('GET') ->
 	stats:incr({chan, polls}),
 	case mqueue:check_for_me(ChanId) of
 		{ok, []} ->
-			pie:subscribe(ChanId),
-			wait_loop();
+			Ref = pie:subscribe(ChanId),
+			wait_loop(Ref),
+			erlang:demonitor(Ref);
 		{ok, Msgs} ->
 			hub_web:ok(Req, lists:flatten(Msgs))
 	end.
@@ -50,7 +51,7 @@ wait_for_answer(HubReq, Ref) ->
 			NewRef = erlang:monitor(process, Pid),
 			wait_for_answer(HubReq, NewRef);
 
-		{'DOWN', MonRef, process, From, Reason} ->
+		{'DOWN', Ref, process, From, Reason} ->
 			Report = ["sync request failed",
 					  {hubreq, HubReq},
 					  {following, From},
@@ -75,7 +76,7 @@ format_hub_req(Type, Msg) ->
 %%
 %% Polling
 %%
-wait_loop() ->
+wait_loop(Ref) ->
 	receive
 		{send, Router, ChanId, Line} ->
 			router:got_it(Router),
@@ -83,7 +84,9 @@ wait_loop() ->
 			hub_web:ok(Req, lists:flatten(Events));
 		{send, AnotherRouter, _, _} ->
 			router:not_me(AnotherRouter),
-			wait_loop()
+			wait_loop(Ref);
+		{'DOWN', Ref, process, _, _} ->
+			hub_web:fail(Req)
 	after config:get(poll_timeout) * 1000 ->
 			hub_web:ok(Req, <<"event!json:[\"nop\", {\"reason\": \"poll timeout\"}]\n">>)
 	end.

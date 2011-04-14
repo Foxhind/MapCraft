@@ -17,7 +17,12 @@ start_link(PieId) ->
 %%
 subscribe(ChanId) ->
 	Pie = pie_hub:get_or_create(ChanId#hub_chan.pieid),
-	gen_server:call(Pie, {set_online, ChanId, self()}).
+	gen_server:call(Pie, {set_online, ChanId, self()}),
+	erlang:monitor(process, Pie).
+
+touch(ChanId) ->
+	Pie = pie_hub:get_or_create(ChanId#hub_chan.pieid),
+	gen_server:call(Pie, {touch, ChanId, self()}).
 
 suspend(ChanId, Pid) ->
 	Pie = pie_hub:get_or_create(ChanId#hub_chan.pieid),
@@ -38,6 +43,9 @@ lookup(PieId, SesId) ->
 %% gen_server callbacks
 %%
 init(PieId) ->
+	pie_hub:attach_me(PieId),
+	process_flag(trap_exit, true),
+	timer:send_interval(config:get(pie_cleanup_interval) * 1000, cleanup),
 	{ok, #state{
 	   id   = PieId,
 	   list = new_chanlist()
@@ -52,17 +60,27 @@ handle_call({set_offline, ChanId, Pid}, _From, #state{list = List} = State) ->
 	{reply, Res, State};
 
 handle_call({delete, ChanId}, _, #state{list = List} = State) ->
-	Res = List:delete(chanid, ChanId),
+	Res = delete_chan_and_cleanup(List, ChanId, exit),
 	{reply, Res, State};
 
 handle_call({lookup, SesId}, _From, #state{list = List} = State) ->
-	Res =  format_lookup(List:lookup(sesid, SesId)),
+	Res = List:lookup(sesid, SesId),
 	{reply, Res, State};
 
 handle_call(get_all, _From, #state{list = List} = State) ->
-	Res =  format_lookup(List:lookup()),
+	Res = List:lookup(),
 	{reply, Res, State}.
 
+handle_info(cleanup, #state{list = List, id = Id} = State) ->
+	case List:size() of
+		0 ->
+			pie_is_empty(Id),
+			{stop, normal, State};
+		_N ->
+			{ok, Entries} = List:lookup_expired(),
+			[ delete_chan_and_cleanup(List, ChanId, timeout) || {_, ChanId, _} <- Entries ],
+			{noreply, State}
+	end;
 
 handle_info(_Msg, State) ->
 	{noreply, State}.
@@ -86,12 +104,22 @@ new_chanlist() ->
 	  ets:new(byses,  [bag, protected, {keypos, 2}])
 	 ).
 
-format_lookup({ok, Entries}) ->
-	List = [{Pid, ChanId, State} || {ChanId, _, Pid, State} <- Entries],
-	{ok, List};
+delete_chan_and_cleanup(List, ChanId, Reason) ->
+	ok = List:delete(chanid, ChanId),
+	mqueue:check_for_me(ChanId),
+	% check is there another
+	% channel for this SesId?
+	{ok, L} = List:lookup(sesid, ChanId#hub_chan.sesid),
+	L == [] andalso session_exited(ChanId, Reason),
+	ok.
 
-format_lookup(Any) ->
-	Any.
+session_exited(ChanId, Reason) ->
+	io:format("session exited: ~p ~p~n", [ChanId, Reason]),
+	ok.
+
+pie_is_empty(ChanId) ->
+	io:format("pie exited: ~p~n", [ChanId]),
+	ok.
 
 
 %%
@@ -114,17 +142,17 @@ tmp_list() ->
 	{List, {Chan11, Pid11}, {Chan12, Pid12}, {Chan2, Pid2}}.
 
 test_chan(List, ChanId, Pid, State) ->
-	{ok, [{ChanId, _, Pid, State}]} = List:lookup(chanid, ChanId).
+	[{ChanId, _, Pid, State, _}] = List:lookup_raw(chanid, ChanId).
 
 chanlist_lookup_test() ->
 	{List, {Chan11, Pid11}, {Chan12, Pid12}, _} = tmp_list(),
 	{ok,
 	 [{Pid11, Chan11, online}]
-	} = format_lookup(List:lookup(chanid, Chan11)),
+	} = List:lookup(chanid, Chan11),
 	{ok,
 	 [{Pid11, Chan11, online},
 	  {Pid12, Chan12, online}]
-	} = format_lookup(List:lookup(sesid, 1)).
+	} = List:lookup(sesid, 1).
 
 chanlist_offline_test() ->
 	{List, {Chan11, Pid11}, {Chan12, Pid12}, {Chan2, Pid2}} = tmp_list(),

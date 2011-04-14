@@ -9,12 +9,16 @@
   {env, [
          {port, 8080},
          {listen, {0,0,0,0}},
-         {hub_prefix, "hub"},
-         {origin, "http://localhost"},
-         {poll_timeout, 30},
-         {logic_cmd, "priv/logic.sh"},
-         {logic_pool_size, {3,10}},
-         {logic_timeout, 10}
+         {hub_prefix, "hub"},                 % first part of any URL
+         {origin, "http://localhost"},        % for CORS
+
+         {logic_cmd, "priv/logic.sh"},        % path to logic wrapper
+         {logic_pool_size, {3,10}},           % {min, max} for logic pool
+         {logic_timeout, 10},                 % secs to wait answer from logic
+
+         {poll_timeout, 30},                  % when poll connection should be dropped with 'nop'
+         {chan_expire, 60},                   % how many secs channel can be without any new poll connection
+         {pie_cleanup_interval, 30}           % how often check for expired connections
         ]}
  ]}.
 

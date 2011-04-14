@@ -15,17 +15,21 @@ get_or_create(PieId) ->
 	case gen_server:call(pie_hub, {lookup, PieId}) of
 		notfound ->
 			{ok, NewPie} = pie_sup:new_pie(PieId),
-			ok = gen_server:call(pie_hub, {attach, PieId, NewPie}),
 			NewPie;
 		{ok, Pie} ->
 			Pie
 	end.
+
+attach_me(PieId) ->
+	ok = gen_server:call(?MODULE, {attach, PieId, self()}).
+
 
 %%
 %% gen_server callbacks
 %%
 
 init(_Args) ->
+	process_flag(trap_exit, true),
 	{ok, idpid_list:new()}.
 
 handle_call({lookup, Id}, _From, List) ->
@@ -38,11 +42,13 @@ handle_call({lookup, Id}, _From, List) ->
 	end;
 
 handle_call({attach, Id, Pid}, _From, List) ->
+	link(Pid),
 	idpid_list:insert(List, {Id, Pid}),
 	{reply, ok, List}.
 
-handle_info(_Msg, State) ->
-	{noreply, State}.
+handle_info({'EXIT', Pid, _Reason}, List) ->
+	idpid_list:delete(List, {pid, Pid}),
+	{noreply, List}.
 
 handle_cast(_Msg, State) ->
 	{noreply, State}.
