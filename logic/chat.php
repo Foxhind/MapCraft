@@ -1,24 +1,24 @@
 <?php
 
 // Просто пример простой обработки
-function handle_msg($type, $from, $data) {
+function handle_msg($type, $from, $data, $res) {
     validate_required($data, array('message') );
 
-	$msg = chat_msg(array(
-                          'from' => $from,
-                          'message' => $data['message'],
-                          ));
+    $txt =  $data['message'];
+    // TODO: validate text
 
-	$res = array();
+	$msg = chat_msg(array( 'from' => $from,
+                           'message' => $txt ));
+
+    // TODO: save to the base
+
     if ($data['type'] == 'public') {
-        array_push($res, to_pie($from, $msg));
+        $res->to_pie($from, $msg);
     } else {
         $to = find_session_by_nick($from, $data['target_nick']);
-        array_push($res, to_session($from, $msg));
-        array_push($res, to_session($to, $msg));
+        $res->to_session($from, $msg);
+        $res->to_session($to, $msg);
     }
-
-    return $res;
 }
 
 ?>

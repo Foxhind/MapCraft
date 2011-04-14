@@ -1,5 +1,60 @@
 <?php
 
+class HubResult {
+    protected $data = array();
+    protected $responded = false;
+
+    // Api for handlers
+    function respond($msg)
+    {
+        $this->append(sprintf('respond!json:%s',
+                              json_encode($msg)));
+        $this->responded = true;
+    }
+
+    function default_respond() {
+        if ($this->responded) {
+            return;
+        }
+        $this->respond("ok");
+    }
+
+    function to_session($from, $msg)
+    {
+        $this->append(sprintf('to_session!%s!%s!json:%s',
+                              $from['pie_id'],
+                              $from['session_id'],
+                              json_encode($msg)));
+    }
+
+    function to_pie($from, $msg)
+    {
+        $this->append(sprintf('to_pie!%s!json:%s',
+                              $from['pie_id'],
+                              json_encode($msg)));
+    }
+
+    function to_all($msg)
+    {
+        $this->append(sprintf('to_all!json:%s',
+                              json_encode($msg)));
+    }
+
+    // Internal hub helpers
+    function append($str)
+    {
+        array_push($this->data, $str);
+    }
+
+    function output()
+    {
+        foreach ($this->data as $line) {
+            echo $line, "\n";
+        }
+        echo "EOR\n";  // End of result
+    }
+}
+
 function split_hub_message($str)
 {
     $decoded = NULL;
@@ -35,17 +90,17 @@ function _get_head($str) {
     return $parts[0];
 }
 
-function dispatch($cmd, $type, $from, $data) {
+function dispatch($cmd, $type, $from, $data, $res) {
     $cb = 'handle_' . $cmd;
 
     if ( !function_exists($cb) ){
         throw new Exception("Callback for '$cmd' is no defined yet");
     }
 
-    return $cb($type, $from, $data);
+    return $cb($type, $from, $data, $res);
 }
 
-function process_hub_message($str) {
+function process_hub_message($str, $res) {
     global $dispatcher;
 
     $args = split_hub_message($str);
@@ -60,14 +115,11 @@ function process_hub_message($str) {
         $json_cmd = $json[0];
         $json_arg = isset($json[1]) ? $json[1] : array();
 
-        $res = dispatch($json_cmd, $type, $from, $json_arg);
+        $res = dispatch($json_cmd, $type, $from, $json_arg, $res);
 
         // Add simple 'respond' if it missed and it's a sync call
         if ($type == 'sync') {
-            $heads = array_map('_get_head', $res);
-            if(!in_array('respond', $heads)) {
-                array_push($res, respond("ok"));
-            }
+            $res->default_respond();
         };
 
         return $res;
@@ -75,12 +127,12 @@ function process_hub_message($str) {
         $from = ids_to_from(array_shift($args), array_shift($args));
         $data = array( 'reason' =>  array_shift($args) );
 
-        $res = dispatch('session_exit', 'async', $from, $data);
+        $res = dispatch('session_exit', 'async', $from, $data, $res);
         return $res;
     case 'pie_exit':
         $data = array( 'pie_id' =>  array_shift($args) );
 
-        $res = dispatch('pie_exit', 'async', null, $data);
+        $res = dispatch('pie_exit', 'async', null, $data, $res);
         return $res;
     default:
         throw new Exception("Hub command '$cmd' is not implemented");

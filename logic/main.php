@@ -23,25 +23,18 @@ $TEST_MODE = isset($opts['t']);
 $fp=fopen("php://stdin","r");
 while(!feof($fp)) {
     $cmd = stream_get_line($fp, 4 * 1024 * 1024, "\n");
-    $res = array();
+    $res = new HubResult();
 
     // Try to handle command. catch all exceptions
     try {
-        $res = process_hub_message($cmd);
+        process_hub_message($cmd, $res);
     }
     catch(Exception $e) {
-        $msg = error_msg(array(
-                              'message' =>  $e->getMessage()
-                              ));
-        $res = array( respond($msg) );
+        $msg = error_msg(array( 'message' =>  $e->getMessage() ));
+        $res->respond($msg);
     }
 
-    // Return result as lines
-    foreach ($res as $line) {
-        echo $line, "\n";
-    }
-    print "EOR\n";  // End of result
-
+    $res->output();
     // break after first run in testing mode
     if($TEST_MODE)
         break;

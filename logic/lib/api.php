@@ -7,32 +7,6 @@
 /*
  * Will format MSG in proper command for the hub.
  */
-function respond($msg)
-{
-    return sprintf('respond!json:%s',
-                   json_encode($msg));
-}
-
-function to_session($from, $msg)
-{
-    return sprintf('to_session!%s!%s!json:%s',
-                   $from['pie_id'],
-                   $from['session_id'],
-                   json_encode($msg));
-}
-
-function to_pie($from, $msg)
-{
-    return sprintf('to_pie!%s!json:%s',
-                   $from['pie_id'],
-                   json_encode($msg));
-}
-
-function to_all($msg)
-{
-    return sprintf('to_all!json:%s',
-                   json_encode($msg));
-}
 
 
 /*********************************
