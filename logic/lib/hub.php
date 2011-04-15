@@ -92,6 +92,17 @@ function dispatch($cmd, $type, $from, $data, $res) {
     return $cb($type, $from, $data, $res);
 }
 
+$session_started = false;
+function init_session($sesid) {
+    global $session_started;
+    if($session_started) {
+        session_write_close();
+    }
+    session_id($sesid);
+    @session_start();
+    $session_started = true;
+}
+
 function process_hub_message($str, $res) {
     global $channels;
 
@@ -100,10 +111,11 @@ function process_hub_message($str, $res) {
 
     switch ($cmd) {
     case 'from':
-        $type = array_shift($args);
-        $from = $channels->find(array_shift($args), array_shift($args));
+        list($type, $pieid, $sesid, $json) = $args;
 
-        $json = array_shift($args);
+        init_session($sesid);
+        $from = $channels->find($pieid, $sesid);
+
         $json_cmd = $json[0];
         $json_arg = isset($json[1]) ? $json[1] : array();
 
@@ -116,13 +128,19 @@ function process_hub_message($str, $res) {
 
         return $res;
     case 'session_exit':
-        $from = $channels->find(array_shift($args), array_shift($args));
-        $data = array( 'reason' =>  array_shift($args) );
+        list($pieid, $sesid, $reason) = $args;
+
+        init_session($sesid);
+        $from = $channels->find($pieid, $sesid);
+
+        $data = array( 'reason' =>  $reason );
 
         $res = dispatch('session_exit', 'async', $from, $data, $res);
         return $res;
     case 'pie_exit':
-        $data = array( 'pie_id' =>  array_shift($args) );
+        list($pieid) = $args;
+
+        $data = array( 'pie_id' =>  $pieid );
 
         $res = dispatch('pie_exit', 'async', null, $data, $res);
         return $res;
