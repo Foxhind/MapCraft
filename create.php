@@ -1,12 +1,13 @@
 <div id="pageheader" style="background-color: #92836c;">Создание нового пирога</div>
 <?php
-if (isset($_SESSION['osm_user'])) {
+$osm_user = $_SESSION['osm_user'];
+if (isset($osm_user)) {
     if (isset($_POST['captcha'])) {
-/*         if ($_SESSION['security_code'] != strtolower($_POST['captcha'])) {
+        if ($_SESSION['security_code'] != strtolower($_POST['captcha'])) {
             unset($_SESSION['security_code']);
             echo 'Неправильно введена капча.<br /><a href="javascript:history.back();">Назад</a>';
             exit();
-        } */
+        }
         unset($_SESSION['security_code']);
         if ($_FILES['file']['size'] > 524288) {
             echo 'Слишком большой файл.<br /><a href="javascript:history.back();">Назад</a>';
@@ -20,34 +21,59 @@ if (isset($_SESSION['osm_user'])) {
             echo 'Не указано название.<br /><a href="javascript:history.back();">Назад</a>';
             exit();
         }
-        
+
+        require 'config.php';
+
+        $user = pg_fetch_assoc(pg_query($connection, 'SELECT * FROM users WHERE nick=\''.$osm_user.'\''), 0);
+        if (!$user) {
+            echo 'Пользователь '.$osm_user.' не имеет прав на создание пирогов.<br /><a href="javascript:history.back();">Назад</a>';
+            exit();
+        }
+
         $geojson = array('type'=>'FeatureCollection', 'features'=>array());
         $nodes = array();
         $currentway = null;
         $index = 0;
+        $bbox = null;
         function saxStartElement($parser, $name, $attrs)
         {
-            global $currentway, $index, $nodes;
+            global $currentway, $nodes, $bbox;
             switch($name)
             {
                 case 'node':
-                    $nodes[$attrs['id']] = array(floatval($attrs['lon']), floatval($attrs['lat']));
+                    $lon = floatval($attrs['lon']);
+                    $lat = floatval($attrs['lat']);
+                    if ($bbox == null)
+                        $bbox = array($lon, $lat, $lon, $lat);
+                    else {
+                        if ($lon < $bbox[0]) $bbox[0] = $lon;
+                        if ($lon > $bbox[2]) $bbox[2] = $lon;
+                        if ($lat < $bbox[1]) $bbox[1] = $lat;
+                        if ($lat > $bbox[3]) $bbox[3] = $lat;
+                    }
+                    $nodes[$attrs['id']] = array($lon, $lat);
                     break;
                 case 'way':
                     $currentway = array('type'=>'Feature','geometry'=>array('type'=>'Polygon', 'coordinates'=>array(array())));
                     break;
                 case 'nd':
-                    $currentway['geometry']['coordinates'][0][] = $nodes[$attrs['ref']];
+                    if ($currentway != null)
+                        $currentway['geometry']['coordinates'][0][] = $nodes[$attrs['ref']];
+                    break;
+                case 'tag':
+                    $currenway = null;
                     break;
             };
         }
 
         function saxEndElement($parser, $name)
         {
-            global $geojson, $nodes, $currentway, $index;
-            if ($name == 'way') {
-                $geojson['features'][] = $currentway;
-                $index += 1;
+            global $geojson, $currentway, $index;
+            if ($name == 'way' and $currentway != null) {
+                if ($currentway['geometry']['coordinates'][0][0] == $currentway['geometry']['coordinates'][0][count($currentway['geometry']['coordinates'][0])-1]) {
+                    $geojson['features'][] = $currentway;
+                    $index += 1;
+                }
                 $currentway = null;
             }
         }
@@ -65,7 +91,62 @@ if (isset($_SESSION['osm_user'])) {
 
         xml_parser_free($parser);
 
-        file_put_contents('/srv/www/mapcraft.nanodesu.ru/pies.txt', json_encode($geojson));
+        if (count($geojson['features']) < 2) {
+            echo 'Число секторов должно быть больше одного, иначе вся эта затея не имеет смысла.<br /><a href="javascript:history.back();">Назад</a>';
+            exit();
+        }
+
+        // Adding pie
+        $bboxcenter = json_encode( array(($bbox[0]+$bbox[2])/2, ($bbox[1]+$bbox[3])/2) );
+        $result = pg_query($connection, 'INSERT INTO pies VALUES(DEFAULT, \''.pg_escape_string($_POST['name']).'\', '.pg_escape_string($user['id']).', DEFAULT, NULL, \''.pg_escape_string($_POST['description']).'\', '.(isset($_POST['hide']) ? 'false' : 'true').', \''.$bboxcenter.'\') RETURNING id');
+        $pie_id = pg_fetch_result($result, 0, 0);
+
+        // Adding pieces
+        foreach ($geojson['features'] as $feature) {
+            $result = pg_query($connection, 'INSERT INTO pieces VALUES(DEFAULT, DEFAULT, DEFAULT, '.$pie_id.', \''.json_encode($feature['geometry']['coordinates']).'\')');
+        }
+
+        // Accesses
+        $raccess = array();
+        $rwaccess = array();
+        foreach (explode(',', $_POST['waccess']) as $username) {
+            $username = trim($username);
+            if (!empty($username) and $username != $osm_user)
+                $rwaccess[] = $username;
+        }
+        foreach (explode(',', $_POST['raccess']) as $username) {
+            $username = trim($username);
+            if (!empty($username) and !in_array($username, $rwaccess) and $username != $osm_user)
+                $raccess[] = $username;
+        }
+        // Adding it to table
+        foreach ($raccess as $username) {
+            $username = pg_escape_string($username);
+            $result = pg_query($connection, 'SELECT id FROM users WHERE nick=\''.$username.'\'');
+            if (pg_num_rows($result) > 0)
+                $user_id = pg_fetch_result($result, 0 ,0);
+            else
+                $user_id = pg_fetch_result(pg_query($connection, 'INSERT INTO users VALUES(\''.$username.'\', DEFAULT, DEFAULT) RETURNING id'), 0 ,0);
+            $result = pg_query($connection, 'INSERT INTO access VALUES('.$user_id.', '.$pie_id.', \''.$username.'\', \'r\')');
+        }
+        foreach ($rwaccess as $username) {
+            $username = pg_escape_string($username);
+            $result = pg_query($connection, 'SELECT id FROM users WHERE nick=\''.$username.'\'');
+            if (pg_num_rows($result) > 0)
+                $user_id = pg_fetch_result($result, 0 ,0);
+            else
+                $user_id = pg_fetch_result(pg_query($connection, 'INSERT INTO users VALUES(\''.$username.'\', DEFAULT, DEFAULT) RETURNING id'), 0 ,0);
+            $result = pg_query($connection, 'INSERT INTO access VALUES('.$user_id.', '.$pie_id.', \''.$username.'\', \'rw\')');
+        }
+        // And owner
+        $result = pg_query($connection, 'SELECT id FROM users WHERE nick=\''.$osm_user.'\'');
+        if (pg_num_rows($result) > 0)
+            $user_id = pg_fetch_result($result, 0 ,0);
+        else
+            $user_id = pg_fetch_result(pg_query($connection, 'INSERT INTO users VALUES(\''.$osm_user.'\', DEFAULT, DEFAULT) RETURNING id'), 0 ,0);
+        $result = pg_query($connection, 'INSERT INTO access VALUES('.$user_id.', '.$pie_id.', \''.$osm_user.'\', \'o\')');
+
+        //file_put_contents('/srv/www/mapcraft.nanodesu.ru/pies.txt', json_encode($geojson));
         echo 'Готово!';
     }
     else {
@@ -77,7 +158,7 @@ if (isset($_SESSION['osm_user'])) {
         <label for="name">Название <em>*</em><br/><small>Город, местность и т.п.</small></label>
         <input type="text" id="name" name="name" />
     </div><div>
-        <label for="file">osm-файл <em>*</em><br/><small>Замкнутые полигоны, файл меньше 512 Кб.</small></label>
+        <label for="file">osm-файл <em>*</em><br/><small>Импортируются замкнутые полигоны без тегов, файл меньше 512 Кб.</small></label>
         <input type="file" id="file" name="file" />
     </div></div>
     <div class="row"><div>
