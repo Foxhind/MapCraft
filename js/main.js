@@ -37,12 +37,108 @@ In.javascript = function (data) {
     eval(data.code);
 };
 
+In.piece_comment = function (data) {
+    if (typeof(data['message']) == 'undefined')
+        return false;
+    var mclass = 'msg';
+    var author = '';
+    if (typeof(data['class']) != 'undefined')
+        mclass = data['class'];
+    if (typeof(data['author']) != 'undefined')
+        author = data['author'];
+}
+
+In.piece_state = function (data) {
+    var pieces = kmllayer.getFeaturesByAttribute('name', data['piece_id']);
+    if (pieces.length > 0)
+    {
+        pieces[0].description = data['state'];
+        pieces[0].style.fillColor = color(parseInt(data['state']));
+    }
+}
+
 In.refresh_pie_data = function (data) {
     if (typeof(data['url']) == 'string')
         kmllayer.addOptions({protocol: new OpenLayers.Protocol.HTTP({url: data['url'], format: new OpenLayers.Format.KML({extractStyles: true, extractAttributes: true, maxDepth: 0})})});
     kmllayer.refresh(true);
     kmllayer.redraw(true);
 };
+
+In.reload = function (data) {
+    if (typeof(data['reason']) == 'string')
+        ChatMsg(data['reason'], '', 'info');
+    if (typeof(data['delay']) == 'undefined')
+        Reload();
+    else if (data['delay'] == 'random')
+        setTimeout("Reload();", Math.round(Math.random() * 10000));
+    else
+        setTimeout("Reload();", parseInt(data['delay']));
+};
+
+In.userlist = function (data) {
+    if (typeof(data) == 'object' && data != null) users = data;
+    else data = users;
+    var nicks = [];
+    newhtml = "<table><tr><td id='lname'>" + ldata[18] + "</td><td id='lpieces'>" + ldata[19] + "</td><td id='lclaims'>" + ldata[20] + "</td></tr>";
+    for (var u = 0; u < users.length; u++)
+    {
+        nicks.push(users[u]['user_nick']);
+        var reserved = "";
+        var claims = "";
+        for (var i = 0; i < users[u]['reserved'].length; i++)
+        {
+            reserved += ("<span class='num'>" + users[u]['reserved'][i] + "</span> ");
+        }
+        for (claim_id in users[u]['claims'])
+        {
+            if (nick == users[u]['user_nick'])
+                claims += ("<span class='claim ui-state-default'><span class='num'>" + claim_id + "</span>&nbsp;[" + users[u]['claims'][claim_id] + "&nbsp;<div title='Снять заявку' class='close'></div>]</span> ");
+            else
+                claims += ("<span class='claim ui-state-default'><span class='num'>" + claim_id + "</span>&nbsp;[<div title='За' class='up'></div>&nbsp;" + users[u]['claims'][claim_id] + "&nbsp;<div title='Против' class='down'></div>]</span><br />");
+        }
+        newhtml += ("<tr><td class='nick'>" + (users[u]['online'] ? "<img src='img/onl.png'>&nbsp;" : "") + "<span class='nickname'>" + users[u]['user_nick'] + "</span></td><td class='msg'>" + reserved + "</td><td>" + claims + "</td></tr>");
+    }
+    newhtml += "</table>";
+    $('#userlist').html(newhtml);
+    $('#pac_text').autocomplete('option', 'source', nicks);
+    $('.nickname').click( function() { $('#pac_text').val($('#pac_text').val() + $(this).text() + ': '); $("#pac_text").focus(); } );
+    $('.up').click( function() {
+        Vote($(this).parent().find('span.num').text(), 1);
+        $(this).remove(); } );
+    $('.down').click( function() {
+        Vote($(this).parent().find('span.num').text(), -1);
+        $(this).remove(); } );
+    $('.close').click( function() {
+        CloseClaim($(this).parent().find('span.num').text());
+        $(this).remove(); } );
+    $('.num').click( function() {
+    if (selectedFeature != null) selectCtrl.unselect(selectedFeature); SelectPiece($(this).text()); } );
+};
+
+In.user_add = function (data) {
+    users.push(data);
+    In.userlist();
+}
+
+In.user_remove = function (data) {
+    for (var i = 0; i < users.length; i++) {
+        if (users[i]['user_nick'] == data['user_nick']) {
+            users.splice(i, 1);
+            break;
+        }
+    }
+    In.userlist();
+}
+
+In.user_update = function (data) {
+    for (var i = 0; i < users.length; i++) {
+        if (users[i]['user_nick'] == data['current_nick']) {
+            users[i] = data['update'];
+            break;
+        }
+    }
+    In.userlist();
+}
 
 Out.claim = function (piece_id) {
     if (typeof(piece_id) != 'string' && typeof(piece_id) != 'number') return false;
@@ -94,12 +190,16 @@ Out.piece_free = function (piece_id) {
 Out.vote_claim = function (claim_id, vote) {
     if (typeof(claim_id) != 'string' && typeof(piece_id) != 'number') return false;
     if (typeof(vote) != 'string' && typeof(vote) != 'number') return false;
-    return ['piece_state', {claim_id: claim_id.toString(), vote: vote.toString()}];
+    return ['vote_claim', {claim_id: claim_id.toString(), vote: vote.toString()}];
 };
 
 function Dispatch(data) {
     if (typeof In[data[0]] == 'function')
         In[data[0]](data[1]);
+}
+
+function Reload() {
+    window.location.reload(true);
 }
 
 function LoadSettings() {
@@ -138,7 +238,7 @@ function ApplySettings() {
 }
 
 function LoadLanguage() {
-    $.get("js/lang/" + $('#slang').val() + ".js", {}, function() {
+    $.get("/js/lang/" + $('#slang').val() + ".js", {}, function() {
         $('#dchat').dialog("option", "title", ldata[4]);
         $('#duserlist').dialog("option", "title", ldata[5]);
         $('#dprop').dialog("option", "title", ldata[6]);
@@ -262,53 +362,12 @@ function Enter() {
         });
 }
 
-function Vote(nickname, number, vote) {
-    $.post("ajax.php", { act: "vote", nickname: nickname, number: number, vote: vote }, function (result) {});
+function Vote(claim_id, vote) {
+    PieHub.push( Out.vote_claim(claim_id, vote) );
 }
 
 function CloseClaim(id) {
     $.post("ajax.php", { act: "closeclaim", nick: nick, id: id });
-}
-
-function RenewUserlist() {
-    $.post("ajax.php", { act: "getuserlist", nick: nick }, function (result)
-        {
-        users = [];
-        newhtml = "<table><tr><td id='lname'>" + ldata[18] + "</td><td id='lpieces'>" + ldata[19] + "</td><td id='lclaims'>" + ldata[20] + "</td></tr>";
-        for (var key in userlist)
-        {
-            users.push(key);
-            var owns = "";
-            var claims = "";
-            for (var i = 0; i < userlist[key][0].length; i++)
-            {
-                owns += ("<span class='num'>" + userlist[key][0][i] + "</span> ");
-            }
-            for (var i = 0; i < userlist[key][1].length; i++)
-            {
-                if (key == nick)
-                    claims += ("<span class='claim ui-state-default'><span class='num'>" + userlist[key][1][i] + "</span>&nbsp;[" + userlist[key][2][i] + "&nbsp;<div title='Снять заявку' class='close'></div>]</span> ");
-                else
-                    claims += ("<span class='claim ui-state-default'><span class='num'>" + userlist[key][1][i] + "</span>&nbsp;[<div title='За' class='up'></div>&nbsp;" + userlist[key][2][i] + "&nbsp;<div title='Против' class='down'></div>]</span><br />");
-            }
-            newhtml += ("<tr><td class='nick'>" + (userlist[key][3]==1 ? "<img src='img/onl.png'>&nbsp;" : "") + "<span class='nickname'>" + key + "</span></td><td class='msg'>" + owns + "</td><td>" + claims + "</td></tr>");
-        }
-        newhtml += "</table>";
-        $('#userlist').html(newhtml);
-        $('#pac_text').autocomplete('option', 'source', users);
-        $('.nickname').click( function() { $('#pac_text').val($('#pac_text').val() + $(this).text() + ': '); $("#pac_text").focus(); } );
-        $('.up').click( function() {
-            Vote($(this).parent().parent().parent().find('span.nickname').text(), $(this).parent().find('span.num').text(), 1);
-            $(this).remove(); } );
-        $('.down').click( function() {
-            Vote($(this).parent().parent().parent().find('span.nickname').text(), $(this).parent().find('span.num').text(), -1);
-            $(this).remove(); } );
-        $('.close').click( function() {
-            CloseClaim($(this).parent().find('span.num').text());
-            $(this).remove(); } );
-        $('.num').click( function() {
-        if (selectedFeature != null) selectCtrl.unselect(selectedFeature); SelectPiece($(this).text()); } );
-        });
 }
 
 function Send() {
@@ -342,7 +401,6 @@ function Load() {
 }
 
 function TakePiece() {
-    $.post("ajax.php", { act: "takepiece", nick: nick, id: selectedFeature.attributes.name });
     PieHub.push( Out.piece_reserve(selectedFeature.attributes.name) );
 }
 
@@ -355,7 +413,6 @@ function RefusePiece() {
 }
 
 function GetComments() {
-    $.post("ajax.php", { act: "getcomments", nick: nick, id: selectedFeature.attributes.name });
 }
 
 function PostComment() {
@@ -402,8 +459,8 @@ function onUnselectPiece(e) {
 
 function SetStyle() {
     $('head>link.ui-theme').remove();
-    var link = $('<link href="css/' + $('#sstyle').val() + '/jquery-ui-1.8.11.custom.css" type="text/css" media="screen, projection" rel="Stylesheet" class="ui-theme" />');
-    var linkpatch = $('<link rel="stylesheet" href="css/jquery-theme-patch.css" class="ui-theme" type="text/css" media="screen, projection" />');
+    var link = $('<link href="/css/' + $('#sstyle').val() + '/jquery-ui-1.8.11.custom.css" type="text/css" media="screen, projection" rel="Stylesheet" class="ui-theme" />');
+    var linkpatch = $('<link rel="stylesheet" href="/css/jquery-theme-patch.css" class="ui-theme" type="text/css" media="screen, projection" />');
     $('head').append(link);
     $('head').append(linkpatch);
 }
