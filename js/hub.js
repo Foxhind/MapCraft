@@ -136,10 +136,17 @@ PieHub = {
 	 * Session save and restore sessionID
 	 */
 	store_sesid: function(id) {
-        localStorage.sesid = id;
+        // skip, we do not store into cookie
 	},
 	load_sesid: function() {
-		return localStorage.sesid;
+        var ca = document.cookie.split(/\s*;\s*/);
+        for (var i = 0; i < ca.length; i++) {
+            var cookie = ca[i].split('=', 2);
+            if(cookie[0] == 'PHPSESSID') {
+                return cookie[1];
+            }
+        }
+        return false;
 	},
     gen_random: function(templ) {
         return templ.replace(/X/g, function(c) { return (Math.random()*16|0).toString(16); });
