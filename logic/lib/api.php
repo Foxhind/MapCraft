@@ -41,11 +41,11 @@ function _generic_msg($type, $msg)
             throw new Exception('Missed value for "from" key for type=chat');
         }
 
-        if( is_null($msg['from']['nick']) ) {
+        if( is_null($msg['from']->nick) ) {
             throw new Exception('Missed value for "from->nick" key for type=chat');
         }
 
-        $msg['author'] = $msg['from']['nick'];
+        $msg['author'] = $msg['from']->nick;
     }
     unset($msg['from']);
 

@@ -4,6 +4,9 @@ include("./lib/validators.php");
 include("./lib/api.php");
 include("./lib/hub.php");
 
+// Database
+include("./db/sessions.php");
+
 // event handlers
 include("./session.php");
 include("./chat.php");

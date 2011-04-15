@@ -22,15 +22,15 @@ class HubResult {
     function to_session($from, $msg)
     {
         $this->append(sprintf('to_session!%s!%s!json:%s',
-                              $from['pie_id'],
-                              $from['session_id'],
+                              $from->pieid,
+                              $from->sesid,
                               json_encode($msg)));
     }
 
     function to_pie($from, $msg)
     {
         $this->append(sprintf('to_pie!%s!json:%s',
-                              $from['pie_id'],
+                              $from->pieid,
                               json_encode($msg)));
     }
 
@@ -77,14 +77,6 @@ function split_hub_message($str)
 }
 
 
-function ids_to_from($pie_id, $session_id) {
-    return array(
-                 'pie_id' => $pie_id,
-                 'session_id' => $session_id,
-                 'nick' => "Anon_$session_id",  // TODO! load data from BD
-                 );
-}
-
 function _get_head($str) {
     $parts = split("!", $str, 2);
     return $parts[0];
@@ -101,7 +93,7 @@ function dispatch($cmd, $type, $from, $data, $res) {
 }
 
 function process_hub_message($str, $res) {
-    global $dispatcher;
+    global $channels;
 
     $args = split_hub_message($str);
     $cmd = array_shift($args);
@@ -109,7 +101,7 @@ function process_hub_message($str, $res) {
     switch ($cmd) {
     case 'from':
         $type = array_shift($args);
-        $from = ids_to_from(array_shift($args), array_shift($args));
+        $from = $channels->find(array_shift($args), array_shift($args));
 
         $json = array_shift($args);
         $json_cmd = $json[0];
@@ -124,7 +116,7 @@ function process_hub_message($str, $res) {
 
         return $res;
     case 'session_exit':
-        $from = ids_to_from(array_shift($args), array_shift($args));
+        $from = $channels->find(array_shift($args), array_shift($args));
         $data = array( 'reason' =>  array_shift($args) );
 
         $res = dispatch('session_exit', 'async', $from, $data, $res);
