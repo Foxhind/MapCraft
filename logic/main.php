@@ -12,6 +12,7 @@ include("./db/sessions.php");
 // event handlers
 include("./session.php");
 include("./chat.php");
+include("./eggs.php");
 
 /*
  *     MAIN CODE

@@ -18,3 +18,6 @@ echo $cmd | ./main.php -t
 ( echo 'from!async!1!user1235678!json:["whoami", {}]'; \
   echo 'from!async!1!user1235679!json:["whoami", {}]'  \
   )  | ./main.php
+
+cmd='from!async!1!user1235678!json:["get_cat", {}]'
+echo $cmd | ./main.php -t
