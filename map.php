@@ -11,7 +11,7 @@ function onFeatureSelect(evt) {
     popup = new OpenLayers.Popup.FramedCloud("featurePopup",
         feature.geometry.getBounds().getCenterLonLat(),
         new OpenLayers.Size(100,100),
-        "<h3>"+feature.attributes.name + "</h3>",
+        '<a href="/pie/' + feature.attributes.id.toString() + '">' + feature.attributes.name + '</a>',
         null, true, onPopupClose);
     feature.popup = popup;
     popup.feature = feature;
