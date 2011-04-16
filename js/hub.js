@@ -138,7 +138,7 @@ PieHub = {
 	store_sesid: function(id) {
         // skip, we do not store into cookie
 	},
-	load_sesid: function() {
+    load_sesid: function() {
         var ca = document.cookie.split(/\s*;\s*/);
         for (var i = 0; i < ca.length; i++) {
             var cookie = ca[i].split('=', 2);
@@ -147,7 +147,7 @@ PieHub = {
             }
         }
         return false;
-	},
+    },
     gen_random: function(templ) {
         return templ.replace(/X/g, function(c) { return (Math.random()*16|0).toString(16); });
     },
