@@ -7,7 +7,7 @@ function handle_msg($type, $from, $data, $res) {
     $txt =  $data['message'];
     // TODO: validate text
 
-	$msg = chat_msg(array( 'from' => $from,
+    $msg = chat_msg(array( 'from' => $from,
                            'message' => $txt ));
 
     // TODO: save to the base
