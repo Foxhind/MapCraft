@@ -92,12 +92,6 @@ function dispatch($cmd, $type, $from, $data, $res) {
     return $cb($type, $from, $data, $res);
 }
 
-function init_session($sesid) {
-    session_id($sesid);
-    @session_start();
-    session_write_close();
-}
-
 function process_hub_message($str, $res) {
     global $channels;
 
@@ -108,9 +102,7 @@ function process_hub_message($str, $res) {
     case 'from':
         list($type, $pieid, $sesid, $json) = $args;
 
-        init_session($sesid);
         $from = $channels->find($pieid, $sesid);
-
         $json_cmd = $json[0];
         $json_arg = isset($json[1]) ? $json[1] : array();
 
@@ -125,9 +117,7 @@ function process_hub_message($str, $res) {
     case 'session_exit':
         list($pieid, $sesid, $reason) = $args;
 
-        init_session($sesid);
         $from = $channels->find($pieid, $sesid);
-
         $data = array( 'reason' =>  $reason );
 
         $res = dispatch('user_exit', 'async', $from, $data, $res);
@@ -135,9 +125,7 @@ function process_hub_message($str, $res) {
     case 'session_join':
         list($pieid, $sesid) = $args;
 
-        init_session($sesid);
         $from = $channels->find($pieid, $sesid);
-
         $data = array();
 
         $res = dispatch('user_join', 'async', $from, $data, $res);
