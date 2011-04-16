@@ -1,5 +1,7 @@
 #!/usr/bin/env php
 <?php
+include("../config.php");
+
 include("./lib/validators.php");
 include("./lib/api.php");
 include("./lib/hub.php");
