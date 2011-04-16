@@ -98,7 +98,7 @@ if (isset($osm_user)) {
 
         // Adding pie
         $bboxcenter = json_encode( array(($bbox[0]+$bbox[2])/2, ($bbox[1]+$bbox[3])/2) );
-        $result = pg_query($connection, 'INSERT INTO pies VALUES(DEFAULT, \''.pg_escape_string($_POST['name']).'\', '.pg_escape_string($user['id']).', DEFAULT, NULL, \''.pg_escape_string($_POST['description']).'\', '.(isset($_POST['hide']) ? 'false' : 'true').', \''.$bboxcenter.'\') RETURNING id');
+        $result = pg_query($connection, 'INSERT INTO pies VALUES(DEFAULT, \''.pg_escape_string($_POST['name']).'\', '.pg_escape_string($user['id']).', DEFAULT, NULL, \''.pg_escape_string(htmlspecialchars($_POST['description'])).'\', '.(isset($_POST['hide']) ? 'false' : 'true').', \''.$bboxcenter.'\') RETURNING id');
         $pie_id = pg_fetch_result($result, 0, 0);
 
         // Adding pieces

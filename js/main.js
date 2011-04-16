@@ -1,10 +1,12 @@
 var olmap;
 var kmllayer;
-var nick;
+
 var selectedFeature;
 var selectCtrl;
 var color = ["#ff0000","#ff4c00","#ff8600","#ffc000","#ffee00","#ffff00","#cbff00","#97ff00","#5fff00","#00ff00"];
 var users = [];
+var claims = [];
+var me;
 var isEnd;
 
 var In = {};
@@ -32,6 +34,36 @@ In.chat = function (data) {
         author = data['author'];
     chat.append("<tr><td class='nick'>&lt;" + author + "&gt;</td><td class='" + mclass + "'>" + data['message'] + "</td><td>" + time + "</td></tr>");
 };
+
+In.claim_list = function (data) {
+    claims = data;
+    In.userlist();
+};
+
+In.claim_add = function (data) {
+    claims.push(data);
+    In.userlist();
+}
+
+In.claim_remove = function (data) {
+    for (var i = 0; i < claims.length; i++) {
+        if (claims[i]['claim_id'] == data['claim_id']) {
+            claims.splice(i, 1);
+            break;
+        }
+    }
+    In.userlist();
+}
+
+In.claim_update = function (data) {
+    for (var i = 0; i < claims.length; i++) {
+        if (claims[i]['claim_id'] == data['claim_id']) {
+            claims[i] = data;
+            break;
+        }
+    }
+    In.userlist();
+}
 
 In.javascript = function (data) {
     eval(data.code);
@@ -80,23 +112,24 @@ In.userlist = function (data) {
     else data = users;
     var nicks = [];
     newhtml = "<table><tr><td id='lname'>" + ldata[18] + "</td><td id='lpieces'>" + ldata[19] + "</td><td id='lclaims'>" + ldata[20] + "</td></tr>";
-    for (var u = 0; u < users.length; u++)
-    {
+    for (var u = 0; u < users.length; u++) {
         nicks.push(users[u]['user_nick']);
-        var reserved = "";
-        var claims = "";
+        var sreserved = "";
+        var sclaims = "";
         for (var i = 0; i < users[u]['reserved'].length; i++)
-        {
-            reserved += ("<span class='num'>" + users[u]['reserved'][i] + "</span> ");
+            sreserved += ("<span class='num'>" + users[u]['reserved'][i] + "</span> ");
+        var userclaims = [];
+        for (i = 0; i < claims.length; i++) {
+            if (claims[i]['owner'] == users[u]['user_nick'])
+                userclaims.push(claims[i]);
         }
-        for (claim_id in users[u]['claims'])
-        {
-            if (nick == users[u]['user_nick'])
-                claims += ("<span class='claim ui-state-default'><span class='num'>" + claim_id + "</span>&nbsp;[" + users[u]['claims'][claim_id] + "&nbsp;<div title='Снять заявку' class='close'></div>]</span> ");
+        for (i = 0; i < userclaims.length; i++) {
+            if (me.nick == users[u]['user_nick'])
+                sclaims += ("<span class='claim ui-state-default'><span class='num'>" + userclaims[i]['piece_id'] + "</span>&nbsp;[" + userclaims[i]['vote_balance'] + "&nbsp;<div title='Снять заявку' class='close'></div>]</span> ");
             else
-                claims += ("<span class='claim ui-state-default'><span class='num'>" + claim_id + "</span>&nbsp;[<div title='За' class='up'></div>&nbsp;" + users[u]['claims'][claim_id] + "&nbsp;<div title='Против' class='down'></div>]</span><br />");
+                sclaims += ("<span class='claim ui-state-default'><span class='num'>" + userclaims[i]['piece_id'] + "</span>&nbsp;[<div title='За' class='up'></div>&nbsp;" + userclaims[i]['vote_balance'] + "&nbsp;<div title='Против' class='down'></div>]</span><br />");
         }
-        newhtml += ("<tr><td class='nick'>" + (users[u]['online'] ? "<img src='img/onl.png'>&nbsp;" : "") + "<span class='nickname'>" + users[u]['user_nick'] + "</span></td><td class='msg'>" + reserved + "</td><td>" + claims + "</td></tr>");
+        newhtml += ("<tr><td class='nick'>" + (users[u]['online'] ? "<img src='img/onl.png'>&nbsp;" : "") + "<span class='nickname'>" + users[u]['user_nick'] + "</span></td><td class='msg'>" + sreserved + "</td><td>" + sclaims + "</td></tr>");
     }
     newhtml += "</table>";
     $('#userlist').html(newhtml);
@@ -138,6 +171,12 @@ In.user_update = function (data) {
         }
     }
     In.userlist();
+}
+
+In.youare = function (data) {
+    me = data;
+    $('#pac_nick').button("option", "label", me.nick);
+    $("#pac_text").focus();
 }
 
 Out.claim = function (piece_id) {
@@ -192,6 +231,10 @@ Out.vote_claim = function (claim_id, vote) {
     if (typeof(vote) != 'string' && typeof(vote) != 'number') return false;
     return ['vote_claim', {claim_id: claim_id.toString(), vote: vote.toString()}];
 };
+
+Out.whoami = function() {
+    return ['whoami', {}];
+}
 
 function Dispatch(data) {
     if (typeof In[data[0]] == 'function')
@@ -351,15 +394,7 @@ function Debug(data) {
 }
 
 function Enter() {
-    if (localStorage.nick)
-        nick = localStorage.nick;
-    $.post("ajax.php", { act: "enter", nick: nick }, function (result)
-        {
-        localStorage.nick = nick;
-        $("#pac_form").submit(Send);
-        $("#pac_text").focus();
-        Load();
-        });
+    PieHub.push( Out.whoami() );
 }
 
 function Vote(claim_id, vote) {
@@ -367,7 +402,7 @@ function Vote(claim_id, vote) {
 }
 
 function CloseClaim(id) {
-    $.post("ajax.php", { act: "closeclaim", nick: nick, id: id });
+    PieHub.push( Out.claim_remove(claim_id) );
 }
 
 function Send() {
@@ -384,20 +419,6 @@ function SetStatus(e) {
 function ScrollDown() {
     if (isEnd)
         $("#chat").scrollTop($("#chat").attr("scrollHeight") - $("#chat").height());
-}
-
-function Load() {
-    if(!load_in_process)
-    {
-        load_in_process = true;
-        isEnd = ($("#chat").scrollTop() == $("#chat").attr("scrollHeight") - $("#chat").height());
-        $.post("load.php", { last: last_message_id, nick: nick, rand: (new Date()).getTime() }, function (result)
-        {
-            ScrollDown();
-            load_in_process = false;
-            Load();
-        });
-    }
 }
 
 function TakePiece() {
@@ -428,9 +449,9 @@ function onSelectPiece(e) {
     kmllayer.redraw(true);
     $("#comments").html("<div class='loading'></div>");
     $('#bowner').button("enable");
-    $('#bowner').click( function() { $(e.attributes.owner ? (e.attributes.owner == nick ? '#drefuse' : '#dclaim') : '#dtake').dialog('open'); });
+    $('#bowner').click( function() { $(e.attributes.owner ? (e.attributes.owner == me.nick ? '#drefuse' : '#dclaim') : '#dtake').dialog('open'); });
     $('#bowner').button("option", "label", e.attributes.owner ? e.attributes.owner : "Нет");
-    $('#bowner').button("option", "icons", { primary: (e.attributes.owner ? (e.attributes.owner == nick ? 'ui-icon-closethick' : 'ui-icon-circle-check') : 'ui-icon-flag')});
+    $('#bowner').button("option", "icons", { primary: (e.attributes.owner ? (e.attributes.owner == me.nick ? 'ui-icon-closethick' : 'ui-icon-circle-check') : 'ui-icon-flag')});
     $("#dprop").dialog("option", "title", "Свойства: " + e.attributes.name);
     $("#dprop").dialog("open");
     $('#bstatus').button("enable");
@@ -468,12 +489,13 @@ function SetStyle() {
 $(document).ready(function () {
     // Инициализация клиента хаба
     PieHub.init({
-        pieid: 5,
+        pieid: parseInt(window.location.pathname.split('pie/')[1]),
         hub_url: 'http://mapcraft.nanodesu.ru:8080/hub',   // CORS!
         poll_callback: Dispatch
     });
     // Запуск поллинга
     PieHub.poll();
+    Enter();
 
     var options = {controls: [new OpenLayers.Control.Navigation(), new OpenLayers.Control.ScaleLine(), new OpenLayers.Control.Permalink(), new OpenLayers.Control.Attribution()], projection: new OpenLayers.Projection("EPSG:900913"), displayProjection: new OpenLayers.Projection("EPSG:4326"), units: "m", numZoomLevels: 18, maxResolution: 156543.0339, maxExtent: new OpenLayers.Bounds(-20037508, -20037508, 20037508, 20037508.34) };
     olmap = new OpenLayers.Map(document.getElementById('olmap'), options);
@@ -619,9 +641,7 @@ $(document).ready(function () {
     $('#sstatus').slider({ min: 0, max: 9, slide: function(event, ui) { $('#vcolor').css({color: color[ui.value]}); $('#newstatus').text(ui.value); } });
     $('#bowner').button({ disabled: true, icons: { primary: 'ui-icon-flag'}});
     $('#pac_text').autocomplete({ source: users, position: { my : "right bottom", at: "right top"} });
-    $('#nick_form').submit( function () { SetNick(); return false; } );
     $("#pac_form").submit(Send);
     $("#pac_text").focus();
-
     LoadSettings();
 });
