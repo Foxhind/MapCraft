@@ -130,7 +130,17 @@ function process_hub_message($str, $res) {
 
         $data = array( 'reason' =>  $reason );
 
-        $res = dispatch('session_exit', 'async', $from, $data, $res);
+        $res = dispatch('user_exit', 'async', $from, $data, $res);
+        return $res;
+    case 'session_join':
+        list($pieid, $sesid) = $args;
+
+        init_session($sesid);
+        $from = $channels->find($pieid, $sesid);
+
+        $data = array();
+
+        $res = dispatch('user_join', 'async', $from, $data, $res);
         return $res;
     case 'pie_exit':
         list($pieid) = $args;

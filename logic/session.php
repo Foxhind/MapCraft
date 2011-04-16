@@ -1,8 +1,13 @@
 <?php
 
-function handle_session_exit($type, $from, $data, $res) {
-    $txt = $from->nick() . ' has quit: ' . $data['reason'];
-	$msg = info_msg(array( 'message' => $txt));
+function handle_user_join($type, $from, $data, $res) {
+	$msg = info_msg($from->nick() . ' has joined');
+    $res->to_pie($from, $msg);
+}
+
+
+function handle_user_exit($type, $from, $data, $res) {
+	$msg = info_msg($from->nick() . ' has quit: ' . $data['reason']);
     $res->to_pie($from, $msg);
 }
 
