@@ -32,7 +32,8 @@ In.chat = function (data) {
         mclass = data['class'];
     if (typeof(data['author']) != 'undefined')
         author = data['author'];
-    chat.append("<tr><td class='nick'>&lt;" + author + "&gt;</td><td class='" + mclass + "'>" + data['message'] + "</td><td>" + time + "</td></tr>");
+    var message = data['message'].replace(/(http\:\/\/[A-Za-z0-9_\-./]+)/, '<a href="$1" target="_blank">$1</a>');
+    chat.append("<tr><td class='nick'>&lt;" + author + "&gt;</td><td class='" + mclass + "'>" + message + "</td><td>" + time + "</td></tr>");
 };
 
 In.claim_list = function (data) {
@@ -43,7 +44,7 @@ In.claim_list = function (data) {
 In.claim_add = function (data) {
     claims.push(data);
     In.userlist();
-}
+};
 
 In.claim_remove = function (data) {
     for (var i = 0; i < claims.length; i++) {
@@ -53,7 +54,7 @@ In.claim_remove = function (data) {
         }
     }
     In.userlist();
-}
+};
 
 In.claim_update = function (data) {
     for (var i = 0; i < claims.length; i++) {
@@ -63,7 +64,7 @@ In.claim_update = function (data) {
         }
     }
     In.userlist();
-}
+};
 
 In.javascript = function (data) {
     eval(data.code);
@@ -78,7 +79,7 @@ In.piece_comment = function (data) {
         mclass = data['class'];
     if (typeof(data['author']) != 'undefined')
         author = data['author'];
-}
+};
 
 In.piece_state = function (data) {
     var pieces = kmllayer.getFeaturesByAttribute('name', data['piece_id']);
@@ -87,7 +88,7 @@ In.piece_state = function (data) {
         pieces[0].description = data['state'];
         pieces[0].style.fillColor = color(parseInt(data['state']));
     }
-}
+};
 
 In.refresh_pie_data = function (data) {
     if (typeof(data['url']) == 'string')
@@ -151,7 +152,7 @@ In.userlist = function (data) {
 In.user_add = function (data) {
     users.push(data);
     In.userlist();
-}
+};
 
 In.user_remove = function (data) {
     for (var i = 0; i < users.length; i++) {
@@ -161,7 +162,7 @@ In.user_remove = function (data) {
         }
     }
     In.userlist();
-}
+};
 
 In.user_update = function (data) {
     for (var i = 0; i < users.length; i++) {
@@ -171,13 +172,13 @@ In.user_update = function (data) {
         }
     }
     In.userlist();
-}
+};
 
 In.youare = function (data) {
     me = data;
     $('#pac_nick').button("option", "label", me.nick);
     $("#pac_text").focus();
-}
+};
 
 Out.claim = function (piece_id) {
     if (typeof(piece_id) != 'string' && typeof(piece_id) != 'number') return false;
@@ -192,6 +193,10 @@ Out.claim_remove = function (claim_id) {
 Out.color_set = function (color) {
     if (typeof(color) != 'string') return false;
     return ['color_set', {color: color.toString()}];
+};
+
+Out.get_all_pieces = function () {
+    return ['get_all_pieces', {}];
 };
 
 Out.msg = function (msg, pub, target) {
@@ -234,16 +239,16 @@ Out.vote_claim = function (claim_id, vote) {
 
 Out.whoami = function() {
     return ['whoami', {}];
-}
+};
 
 function Dispatch(data) {
     if (typeof In[data[0]] == 'function')
         In[data[0]](data[1]);
-}
+};
 
 function Reload() {
     window.location.reload(true);
-}
+};
 
 function LoadSettings() {
     if (localStorage.style) {
@@ -394,6 +399,7 @@ function Debug(data) {
 }
 
 function Enter() {
+    PieHub.push( Out.get_all_pieces() );
     PieHub.push( Out.whoami() );
 }
 
@@ -500,7 +506,7 @@ $(document).ready(function () {
     var options = {controls: [new OpenLayers.Control.Navigation(), new OpenLayers.Control.ScaleLine(), new OpenLayers.Control.Permalink(), new OpenLayers.Control.Attribution()], projection: new OpenLayers.Projection("EPSG:900913"), displayProjection: new OpenLayers.Projection("EPSG:4326"), units: "m", numZoomLevels: 18, maxResolution: 156543.0339, maxExtent: new OpenLayers.Bounds(-20037508, -20037508, 20037508, 20037508.34) };
     olmap = new OpenLayers.Map(document.getElementById('olmap'), options);
     var mapnik = new OpenLayers.Layer.OSM();
-    kmllayer = new OpenLayers.Layer.Vector("Pie", { strategies: [new OpenLayers.Strategy.Fixed()], protocol: new OpenLayers.Protocol.HTTP({url: "pie.kml", format: new OpenLayers.Format.KML({extractStyles: true, extractAttributes: true, maxDepth: 0})}), projection: "EPSG:4326" });
+    kmllayer = new OpenLayers.Layer.Vector("Pie", { strategies: [new OpenLayers.Strategy.Fixed()], protocol: new OpenLayers.Protocol.HTTP({url: "/kml/" + window.location.pathname.split('pie/')[1] + ".kml", format: new OpenLayers.Format.KML({extractStyles: true, extractAttributes: true, maxDepth: 0})}), projection: "EPSG:4326" });
     olmap.addLayers([mapnik, kmllayer]);
 
     selectCtrl = new OpenLayers.Control.SelectFeature(kmllayer, {clickout: true, onSelect: onSelectPiece, onUnselect: onUnselectPiece });

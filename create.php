@@ -1,13 +1,16 @@
 <div id="pageheader" style="background-color: #92836c;">Создание нового пирога</div>
 <?php
+
+require 'update_kml.php';
+
 $osm_user = $_SESSION['osm_user'];
 if (isset($osm_user)) {
     if (isset($_POST['captcha'])) {
-        if ($_SESSION['security_code'] != strtolower($_POST['captcha'])) {
+/*         if ($_SESSION['security_code'] != strtolower($_POST['captcha'])) {
             unset($_SESSION['security_code']);
             echo 'Неправильно введена капча.<br /><a href="javascript:history.back();">Назад</a>';
             exit();
-        }
+        } */
         unset($_SESSION['security_code']);
         if ($_FILES['file']['size'] > 524288) {
             echo 'Слишком большой файл.<br /><a href="javascript:history.back();">Назад</a>';
@@ -22,7 +25,7 @@ if (isset($osm_user)) {
             exit();
         }
 
-        require 'config.php';
+        include 'config.php';
 
         $user = pg_fetch_assoc(pg_query($connection, 'SELECT * FROM users WHERE nick=\''.$osm_user.'\''), 0);
         if (!$user) {
@@ -30,10 +33,9 @@ if (isset($osm_user)) {
             exit();
         }
 
-        $geojson = array('type'=>'FeatureCollection', 'features'=>array());
+        $coordinates = array();
         $nodes = array();
         $currentway = null;
-        $index = 0;
         $bbox = null;
         function saxStartElement($parser, $name, $attrs)
         {
@@ -51,29 +53,27 @@ if (isset($osm_user)) {
                         if ($lat < $bbox[1]) $bbox[1] = $lat;
                         if ($lat > $bbox[3]) $bbox[3] = $lat;
                     }
-                    $nodes[$attrs['id']] = array($lon, $lat);
+                    $nodes[$attrs['id']] = $attrs['lon'].','.$attrs['lat'];
                     break;
                 case 'way':
-                    $currentway = array('type'=>'Feature','geometry'=>array('type'=>'Polygon', 'coordinates'=>array(array())));
+                    $currentway = array();
                     break;
                 case 'nd':
-                    if ($currentway != null)
-                        $currentway['geometry']['coordinates'][0][] = $nodes[$attrs['ref']];
+                    if ($currentway !== null)
+                        $currentway[] = $nodes[$attrs['ref']];
                     break;
                 case 'tag':
-                    $currenway = null;
+                    $currentway = null;
                     break;
             };
         }
 
         function saxEndElement($parser, $name)
         {
-            global $geojson, $currentway, $index;
+            global $coordinates, $currentway;
             if ($name == 'way' and $currentway != null) {
-                if ($currentway['geometry']['coordinates'][0][0] == $currentway['geometry']['coordinates'][0][count($currentway['geometry']['coordinates'][0])-1]) {
-                    $geojson['features'][] = $currentway;
-                    $index += 1;
-                }
+                if ($currentway[0] == $currentway[count($currentway)-1])
+                    $coordinates[] = implode(' ', $currentway);
                 $currentway = null;
             }
         }
@@ -91,7 +91,7 @@ if (isset($osm_user)) {
 
         xml_parser_free($parser);
 
-        if (count($geojson['features']) < 2) {
+        if (count($coordinates) < 2) {
             echo 'Число секторов должно быть больше одного, иначе вся эта затея не имеет смысла.<br /><a href="javascript:history.back();">Назад</a>';
             exit();
         }
@@ -102,8 +102,8 @@ if (isset($osm_user)) {
         $pie_id = pg_fetch_result($result, 0, 0);
 
         // Adding pieces
-        foreach ($geojson['features'] as $feature) {
-            $result = pg_query($connection, 'INSERT INTO pieces VALUES(DEFAULT, DEFAULT, DEFAULT, '.$pie_id.', \''.json_encode($feature['geometry']['coordinates']).'\')');
+        foreach ($coordinates as $c) {
+            $result = pg_query($connection, 'INSERT INTO pieces VALUES(DEFAULT, DEFAULT, DEFAULT, '.$pie_id.', \''.$c.'\')');
         }
 
         // Accesses
@@ -146,7 +146,7 @@ if (isset($osm_user)) {
             $user_id = pg_fetch_result(pg_query($connection, 'INSERT INTO users VALUES(\''.$osm_user.'\', DEFAULT, DEFAULT) RETURNING id'), 0 ,0);
         $result = pg_query($connection, 'INSERT INTO access VALUES('.$user_id.', '.$pie_id.', \''.$osm_user.'\', \'o\')');
 
-        //file_put_contents('/srv/www/mapcraft.nanodesu.ru/pies.txt', json_encode($geojson));
+        update_kml($pie_id);
         echo 'Готово!';
     }
     else {
