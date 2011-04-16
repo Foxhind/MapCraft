@@ -7,7 +7,7 @@ if (pg_num_rows($result) > 0) {
     echo '<table class="list">';
     echo '<tr><th>Название</th><th>Сектора</th><th>Готовность</th><th>Создатель</th><th>Открыт</th><th>Закрыт</th></tr>';
     while ($row = pg_fetch_array($result)) {
-        echo '<tr><td>'.$row['name'].'</td><td>'.$row['num'].'</td><td>'.round(floatval($row['state'])).'&nbsp;%</td><td>'.$row['nick'].'</td><td>'.$row['start'].'</td><td>'.($row['ends'] ? $row['ends'] : '—').'</td></tr>';
+        echo '<tr><td><a href="/pie/'.$row['id'].'">'.$row['name'].'</a></td><td>'.$row['num'].'</td><td>'.round(floatval($row['state'])).'&nbsp;%</td><td>'.$row['nick'].'</td><td>'.$row['start'].'</td><td>'.($row['ends'] ? $row['ends'] : '—').'</td></tr>';
     }
     echo '</table>';
 }
