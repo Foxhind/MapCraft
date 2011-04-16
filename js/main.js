@@ -496,7 +496,7 @@ $(document).ready(function () {
     // Инициализация клиента хаба
     PieHub.init({
         pieid: parseInt(window.location.pathname.split('pie/')[1]),
-        hub_url: 'http://mapcraft.nanodesu.ru:8080/hub',   // CORS!
+        hub_url: typeof(MapCraft) != 'undefined' ? MapCraft.config.hub_url : 'http://mapcraft.nanodesu.ru:8080/hub',   // CORS!
         poll_callback: Dispatch
     });
     // Запуск поллинга
