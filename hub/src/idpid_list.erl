@@ -74,5 +74,9 @@ delete_by_elem_test() ->
 	delete(List, {2, 200}),
 	[] = lookup(List, {id, 2}).
 
+twodigit_test() ->
+	List = new(),
+	insert(List, {"12", 100}),
+	[{"12", 100}] = lookup(List, {id, "12"}).
 
 -endif.

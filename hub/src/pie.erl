@@ -9,7 +9,7 @@
 
 
 start_link(PieId) ->
-	gen_server:start_link(?MODULE, [PieId], []).
+	gen_server:start_link(?MODULE, PieId, []).
 
 
 %%
