@@ -13,7 +13,7 @@ function handle_piece_state($type, $from, $data, $res)
     $pinfo = array( "piece_id" => $id,
                     "percent" => $state );
     $res->to_pie($from, array('piece_state', $pinfo));
-    $res->to_pie($from, info_msg("User " . $from->nick() . " has set state for #" . $pieid . " to " . $state));
+    $res->to_pie($from, info_msg("User %s has set state for #%s to %s/9", $from->nick(), $pieid, $state));
 }
 
 ?>

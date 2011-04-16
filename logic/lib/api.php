@@ -27,13 +27,19 @@ function _gen_new_msg_date()
     return time();
 }
 
-function _generic_msg($type, $msg)
+function _generic_msg($type, $args)
 {
+    $msg = $args[0];
     if (gettype($msg) == 'string') {
-        return _generic_msg($type, array('message' => $msg));
+        $msg = array();
+        if(count($args) > 1) {
+            $msg['message'] = call_user_func_array('sprintf', $args);
+        } else {
+            $msg['message'] = $args[0];
+        }
+    } else {
+        $msg = $msg; // copy hash ?
     }
-
-    $msg = $msg; // copy hash ?
 
     // Set author
     if($type == 'chat') {
@@ -58,10 +64,11 @@ function _generic_msg($type, $msg)
     return array('chat', $msg);
 }
 
-function chat_msg($msg)  { return _generic_msg('chat',  $msg); }
-function info_msg($msg)  { return _generic_msg('info',  $msg); }
-function ok_msg($msg)    { return _generic_msg('ok',    $msg); }
-function error_msg($msg) { return _generic_msg('error', $msg); }
+
+function chat_msg($msg)  { return _generic_msg('chat',  func_get_args()); }
+function info_msg($msg)  { return _generic_msg('info',  func_get_args()); }
+function ok_msg($msg)    { return _generic_msg('ok',    func_get_args()); }
+function error_msg($msg) { return _generic_msg('error', func_get_args()); }
 
 
 ?>
