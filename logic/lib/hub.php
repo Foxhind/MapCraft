@@ -92,15 +92,10 @@ function dispatch($cmd, $type, $from, $data, $res) {
     return $cb($type, $from, $data, $res);
 }
 
-$session_started = false;
 function init_session($sesid) {
-    global $session_started;
-    if($session_started) {
-        session_write_close();
-    }
     session_id($sesid);
     @session_start();
-    $session_started = true;
+    session_write_close();
 }
 
 function process_hub_message($str, $res) {
