@@ -13,7 +13,7 @@ start_link() ->
 %%
 
 new_pie(PieId) ->
-	supervisor:start_child(pie_sup, PieId).
+	supervisor:start_child(pie_sup, [PieId]).
 
 %%
 %% supervisor callbacks
