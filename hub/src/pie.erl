@@ -48,6 +48,14 @@ init(PieId) ->
 	  }}.
 
 handle_call({set_online, ChanId, Pid}, _From, #state{list = List} = State) ->
+	%% check if. this is a new user
+	case List:lookup(sesid, ChanId#hub_chan.sesid) of
+		{ok, []} ->
+			user_joined(ChanId);
+		_ ->
+			ok
+	end,
+	%% register
 	Res = List:set_online(ChanId, Pid),
 	{reply, Res, State};
 
@@ -105,11 +113,26 @@ delete_chan_and_cleanup(List, ChanId, Reason) ->
 	mqueue:check_for_me(ChanId),
 	% check is there another
 	% channel for this SesId?
-	{ok, L} = List:lookup(sesid, ChanId#hub_chan.sesid),
-	L == [] andalso session_exited(ChanId, Reason),
+	case List:lookup(sesid, ChanId#hub_chan.sesid) of
+		{ok, []} ->
+			user_exited(ChanId, Reason);
+		_ ->
+			ok
+	end,
 	ok.
 
-session_exited(ChanId, Reason) ->
+user_joined(ChanId) ->
+	PieId = ChanId#hub_chan.pieid,
+	SesId = ChanId#hub_chan.sesid,
+	HubReq = #hub_req{
+	  pieid = PieId,
+	  sesid = SesId,
+	  type = async,
+	  cmd = api:format_line(["session_join", PieId, SesId])
+	 },
+	logic:process_async(HubReq).
+
+user_exited(ChanId, Reason) ->
 	PieId = ChanId#hub_chan.pieid,
 	SesId = ChanId#hub_chan.sesid,
 	HubReq = #hub_req{
