@@ -2,11 +2,13 @@
 
 function handle_piece_state($type, $from, $data, $res)
 {
+    $from->need_level("member"); // ensure we at least member
+
     $id = $data['piece_id'];
     $pieid = $from->pieid;
     $state = $data['percent'];  //TODO: rename percent -> state
 
-    //TODO: check that we have rights to update piece
+    //TODO: check that we have reserved the piece
     //TODO: check that piece exists
     //TODO: update piece
     //TODO: format piece info hash

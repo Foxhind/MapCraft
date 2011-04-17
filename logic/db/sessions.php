@@ -37,6 +37,23 @@ class Channel {
         return $this->_role;
     }
 
+    function need_level($min_role) {
+        $levels = array( "anon" => 0,
+                         "member" => 10,
+                         "moderator" => 20,
+                         "owner" => 30,
+                         "developer" => 40 );
+        $cur_role = $this->role();
+        if ($levels[$min_role] <= $levels[$cur_role]) {
+            return;
+        }
+
+        // Ok, we have no rights, do checks
+        if ($min_role == "member") {
+            throw new Exception("Please, register to access this feature");
+        }
+        throw new Exception("You need $min_role rights to access this feature");
+    }
 }
 
 // Collection of channels
