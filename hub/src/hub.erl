@@ -21,6 +21,7 @@ ensure_started(App) ->
 start() ->
     hub_deps:ensure(),
     ensure_started(crypto),
+    ensure_started(gproc),
     application:start(hub).
 
 

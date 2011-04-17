@@ -1,11 +1,11 @@
 %% -*- mode: erlang; indent-tabs-mode: nil  -*-
 {application, hub,
- [{description, "hub"},
+ [{description, "MapCraft Hub"},
   {vsn, "0.1"},
   {modules, []},
   {registered, []},
   {mod, {'hub_app', []}},
-  {applications, [kernel, stdlib, crypto]},
+  {applications, [kernel, stdlib, crypto, gproc]},
   {env, [
          {port, 8080},
          {listen, {0,0,0,0}},
