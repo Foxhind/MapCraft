@@ -34,8 +34,15 @@ dump() ->
 	Dump.
 
 pdump() ->
-	Dump = lists:sort(dump()),
-	[ io:format("~p ~p~n", tuple_to_list(Elem)) || Elem <- Dump ],
+	Dump = dump(),
+	{Len, List} = lists:foldl(fun({K, V}, {Max, Cur}) ->
+									  S = lists:flatten(io_lib:format("~p", [K])),
+									  L = length(S),
+									  {lists:max([Max, L]), [[S, V] | Cur]}
+							  end, {0, []}, Dump),
+	Sorted = lists:sort(List),
+	FmtStr = lists:concat(["~-", Len, "s   ~p~n"]),
+	[ io:format(FmtStr, Data) || Data <- Sorted],
 	ok.
 
 %%

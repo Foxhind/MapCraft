@@ -46,6 +46,7 @@ lookup(PieId, SesId, TabId) ->
 %%
 init(PieId) ->
 	register_my_pieid(PieId),
+	stats:incr({pie, starts}),
 	process_flag(trap_exit, true),
 	timer:send_interval(config:get(pie_cleanup_interval) * 1000, cleanup),
 	{ok, #state{
@@ -63,14 +64,17 @@ handle_call({set_online, ChanId, Pid}, _From, #state{list = List} = State) ->
 	end,
 	%% register
 	Res = List:set_online(ChanId, Pid),
+	stats:set({pie, State#state.id, channels}, List:size()),
 	{reply, Res, State};
 
 handle_call({set_offline, ChanId, Pid}, _From, #state{list = List} = State) ->
 	Res = List:set_offline(chanid, ChanId, Pid),
+	stats:set({pie, State#state.id, channels}, List:size()),
 	{reply, Res, State};
 
 handle_call({delete, ChanId}, _, #state{list = List} = State) ->
 	Res = delete_chan_and_cleanup(List, ChanId, exit),
+	stats:set({pie, State#state.id, channels}, List:size()),
 	{reply, Res, State};
 
 handle_call({lookup, Type, Id}, _From, #state{list = List} = State) ->
@@ -84,7 +88,9 @@ handle_call(get_all, _From, #state{list = List} = State) ->
 handle_info(cleanup, #state{list = List, id = Id} = State) ->
 	{ok, Entries} = List:lookup_expired(),
 	[ delete_chan_and_cleanup(List, ChanId, timeout) || {_, ChanId, _} <- Entries ],
-	case List:size() of
+	Size = List:size(),
+	stats:set({pie, State#state.id, channels}, Size),
+	case Size of
 		0 ->
 			pie_is_empty(Id),
 			{stop, normal, State};
@@ -130,6 +136,7 @@ delete_chan_and_cleanup(List, ChanId, Reason) ->
 user_joined(ChanId) ->
 	PieId = ChanId#hub_chan.pieid,
 	SesId = ChanId#hub_chan.sesid,
+	stats:incr({pie, PieId, joins}),
 	HubReq = #hub_req{
 	  pieid = PieId,
 	  sesid = SesId,
@@ -141,6 +148,8 @@ user_joined(ChanId) ->
 user_exited(ChanId, Reason) ->
 	PieId = ChanId#hub_chan.pieid,
 	SesId = ChanId#hub_chan.sesid,
+	stats:incr({pie, PieId, exits}),
+	stats:incr({pie, PieId, exits, Reason}),
 	HubReq = #hub_req{
 	  pieid = PieId,
 	  sesid = SesId,

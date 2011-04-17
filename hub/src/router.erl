@@ -32,7 +32,7 @@ route_one_safely(HubReq, Line) ->
 		ok = route_one(Cmd, HubReq, Rest)
 	catch
 		Type:What ->
-			stats:incr({router, failures}),
+			stats:incr({router, lost}),
 			Report = [ "failed to route answer line",
 					   {line, Line},
 					   {type, Type}, {what, What},
