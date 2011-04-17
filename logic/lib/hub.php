@@ -12,11 +12,11 @@ class HubResult {
         $this->responded = true;
     }
 
-    function default_respond() {
+    function default_respond($res) {
         if ($this->responded) {
             return;
         }
-        $this->respond("ok");
+        $this->respond($res);
     }
 
     function to_sender($msg)
@@ -95,7 +95,7 @@ function dispatch($cmd, $type, $from, $data, $res) {
         throw new Exception("Callback for '$cmd' is no defined yet");
     }
 
-    return $cb($type, $from, $data, $res);
+    $cb($type, $from, $data, $res);
 }
 
 function process_hub_message($str, $res) {
@@ -112,37 +112,36 @@ function process_hub_message($str, $res) {
         $json_cmd = $json[0];
         $json_arg = isset($json[1]) ? $json[1] : array();
 
-        $res = dispatch($json_cmd, $type, $from, $json_arg, $res);
+        dispatch($json_cmd, $type, $from, $json_arg, $res);
 
         // Add simple 'respond' if it missed and it's a sync call
         if ($type == 'sync') {
-            $res->default_respond();
+            $res->default_respond("ok");
         };
-
-        return $res;
+        break;
     case 'session_exit':
         list($pieid, $sesid, $reason) = $args;
 
         $from = $channels->find($pieid, $sesid);
         $data = array( 'reason' =>  $reason );
 
-        $res = dispatch('user_exit', 'async', $from, $data, $res);
-        return $res;
+        dispatch('user_exit', 'async', $from, $data, $res);
+        break;
     case 'session_join':
         list($pieid, $sesid) = $args;
 
         $from = $channels->find($pieid, $sesid);
         $data = array();
 
-        $res = dispatch('user_join', 'async', $from, $data, $res);
-        return $res;
+        dispatch('user_join', 'async', $from, $data, $res);
+        break;
     case 'pie_exit':
         list($pieid) = $args;
 
         $data = array( 'pie_id' =>  $pieid );
 
-        $res = dispatch('pie_exit', 'async', null, $data, $res);
-        return $res;
+        dispatch('pie_exit', 'async', null, $data, $res);
+        break;
     default:
         throw new Exception("Hub command '$cmd' is not implemented");
     }
