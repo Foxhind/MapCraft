@@ -37,8 +37,8 @@ while(!feof($fp)) {
         process_hub_message($cmd, $res);
     }
     catch(Exception $e) {
-        $msg = error_msg(array( 'message' =>  $e->getMessage() ));
-        $res->respond($msg);
+        $msg = error_msg($e->getMessage());
+        $res->to_sender($msg);
     }
 
     $res->output();

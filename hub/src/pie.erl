@@ -31,7 +31,13 @@ lookup(PieId) ->
 
 lookup(PieId, SesId) ->
 	Pie = pie_hub:get_or_create(PieId),
-	{ok, Elem} = gen_server:call(Pie, {lookup, SesId}),
+	{ok, Elem} = gen_server:call(Pie, {lookup, sesid, SesId}),
+	Elem.
+
+lookup(PieId, SesId, TabId) ->
+	Pie = pie_hub:get_or_create(PieId),
+	ChanId = #hub_chan{pieid = PieId, sesid = SesId, tabid = TabId},
+	{ok, Elem} = gen_server:call(Pie, {lookup, chanid, ChanId}),
 	Elem.
 
 
@@ -67,8 +73,8 @@ handle_call({delete, ChanId}, _, #state{list = List} = State) ->
 	Res = delete_chan_and_cleanup(List, ChanId, exit),
 	{reply, Res, State};
 
-handle_call({lookup, SesId}, _From, #state{list = List} = State) ->
-	Res = List:lookup(sesid, SesId),
+handle_call({lookup, Type, Id}, _From, #state{list = List} = State) ->
+	Res = List:lookup(Type, Id),
 	{reply, Res, State};
 
 handle_call(get_all, _From, #state{list = List} = State) ->

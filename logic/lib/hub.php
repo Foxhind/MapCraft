@@ -5,10 +5,10 @@ class HubResult {
     protected $responded = false;
 
     // Api for handlers
-    function respond($msg)
+    function respond($data)
     {
         $this->append(sprintf('respond!json:%s',
-                              json_encode($msg)));
+                              json_encode($data)));
         $this->responded = true;
     }
 
@@ -17,6 +17,12 @@ class HubResult {
             return;
         }
         $this->respond("ok");
+    }
+
+    function to_sender($msg)
+    {
+        $this->append(sprintf('to_sender!json:%s',
+                              json_encode($msg)));
     }
 
     function to_session($from, $msg)
