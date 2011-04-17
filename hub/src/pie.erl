@@ -16,26 +16,26 @@ start_link(PieId) ->
 %% Interface
 %%
 subscribe(ChanId) ->
-	Pie = pie_hub:get_or_create(ChanId#hub_chan.pieid),
+	Pie = get_pie(ChanId#hub_chan.pieid),
 	gen_server:call(Pie, {set_online, ChanId, self()}),
 	erlang:monitor(process, Pie).
 
 suspend(ChanId, Pid) ->
-	Pie = pie_hub:get_or_create(ChanId#hub_chan.pieid),
+	Pie = get_pie(ChanId#hub_chan.pieid),
 	gen_server:call(Pie, {set_offline, ChanId, Pid}).
 
 lookup(PieId) ->
-	Pie = pie_hub:get_or_create(PieId),
+	Pie = get_pie(PieId),
 	{ok, Elems} = gen_server:call(Pie, get_all),
 	Elems.
 
 lookup(PieId, SesId) ->
-	Pie = pie_hub:get_or_create(PieId),
+	Pie = get_pie(PieId),
 	{ok, Elem} = gen_server:call(Pie, {lookup, sesid, SesId}),
 	Elem.
 
 lookup(PieId, SesId, TabId) ->
-	Pie = pie_hub:get_or_create(PieId),
+	Pie = get_pie(PieId),
 	ChanId = #hub_chan{pieid = PieId, sesid = SesId, tabid = TabId},
 	{ok, Elem} = gen_server:call(Pie, {lookup, chanid, ChanId}),
 	Elem.
@@ -45,7 +45,7 @@ lookup(PieId, SesId, TabId) ->
 %% gen_server callbacks
 %%
 init(PieId) ->
-	pie_hub:attach_me(PieId),
+	register_my_pieid(PieId),
 	process_flag(trap_exit, true),
 	timer:send_interval(config:get(pie_cleanup_interval) * 1000, cleanup),
 	{ok, #state{
@@ -156,6 +156,35 @@ pie_is_empty(PieId) ->
 	  cmd = api:format_line(["pie_exit", PieId])
 	 },
 	logic:process_async(HubReq).
+
+%%
+%% creating and getting pie pid
+%%
+pieid2key(PieId) ->
+	{n, l, {pie, PieId}}.
+
+register_my_pieid(PieId) ->
+	try
+		true = gproc:reg(pieid2key(PieId), ignored)
+	catch
+		Type:What ->
+			Report = [ "failed to register new pie",
+					   {pieid, PieId},
+					   {type, Type}, {what, What}],
+			error_logger:error_report(Report),
+			exit(normal)
+	end.
+
+get_pie(PieId) ->
+	Key = pieid2key(PieId),
+	case gproc:where(Key) of
+		undefined ->
+			supervisor:start_child(pie_sup, [PieId]),
+			{Pid, _} = gproc:await(Key),
+			Pid;
+		Pid ->
+			Pid
+	end.
 
 
 %%

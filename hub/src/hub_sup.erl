@@ -61,9 +61,7 @@ logic_procs() ->
 	  sup(logic_sup, [])].
 
 pie_procs() ->
-	[ {pie_hub, {pie_hub, start_link, []},
-	   permanent, brutal_kill, worker, [pie_hub]},
-	  sup(pie_sup, [])].
+	[ sup(pie_sup, []) ].
 
 stats_specs() ->
 	[ {stats, {stats, start_link, []},
