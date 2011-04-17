@@ -50,7 +50,8 @@ init([]) ->
 %
 web_specs() ->
     WebConfig = [{ip, config:get(listen)},
-                 {port, config:get(port)}],
+                 {port, config:get(port)},
+                 {acceptor_pool_size, config:get(http_pool_size)} ],
     [ {hub_web,
 	   {hub_web, start, [WebConfig]},
 	   permanent, 5000, worker, dynamic}].
