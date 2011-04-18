@@ -59,7 +59,7 @@ handle_call({get_next, Key}, _From, Tab) ->
 	{reply, {ok, Next}, Tab};
 
 handle_call(dump, _From, Tab) ->
-	Dump = ets:tab2list(Tab),
+	Dump = lists:concat([ets:tab2list(Tab), get_mem_info(), get_sys_info()]),
 	{reply, {ok, Dump}, Tab}.
 
 
@@ -81,6 +81,15 @@ code_change(_, State, _) ->
 
 terminate(_Reason, _State) ->
 	ok.
+
+%%
+%% Private
+%%
+get_mem_info() ->
+	[ {{erlang,memory,K}, V} || {K, V} <- erlang:memory() ].
+
+get_sys_info() ->
+	[ {{erlang, processes, count}, erlang:system_info(process_count)} ].
 
 %%
 %% Implementation
