@@ -50,7 +50,8 @@ init([]) ->
 %
 web_specs() ->
     WebConfig = [{ip, config:get(listen)},
-                 {port, config:get(port)}],
+                 {port, config:get(port)},
+                 {acceptor_pool_size, config:get(http_pool_size)} ],
     [ {hub_web,
 	   {hub_web, start, [WebConfig]},
 	   permanent, 5000, worker, dynamic}].
@@ -61,9 +62,7 @@ logic_procs() ->
 	  sup(logic_sup, [])].
 
 pie_procs() ->
-	[ {pie_hub, {pie_hub, start_link, []},
-	   permanent, brutal_kill, worker, [pie_hub]},
-	  sup(pie_sup, [])].
+	[ sup(pie_sup, []) ].
 
 stats_specs() ->
 	[ {stats, {stats, start_link, []},

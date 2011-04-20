@@ -9,29 +9,35 @@
 
 
 start_link(PieId) ->
-	gen_server:start_link(?MODULE, [PieId], []).
+	gen_server:start_link(?MODULE, PieId, []).
 
 
 %%
 %% Interface
 %%
 subscribe(ChanId) ->
-	Pie = pie_hub:get_or_create(ChanId#hub_chan.pieid),
+	Pie = get_pie(ChanId#hub_chan.pieid),
 	gen_server:call(Pie, {set_online, ChanId, self()}),
 	erlang:monitor(process, Pie).
 
 suspend(ChanId, Pid) ->
-	Pie = pie_hub:get_or_create(ChanId#hub_chan.pieid),
+	Pie = get_pie(ChanId#hub_chan.pieid),
 	gen_server:call(Pie, {set_offline, ChanId, Pid}).
 
 lookup(PieId) ->
-	Pie = pie_hub:get_or_create(PieId),
+	Pie = get_pie(PieId),
 	{ok, Elems} = gen_server:call(Pie, get_all),
 	Elems.
 
 lookup(PieId, SesId) ->
-	Pie = pie_hub:get_or_create(PieId),
-	{ok, Elem} = gen_server:call(Pie, {lookup, SesId}),
+	Pie = get_pie(PieId),
+	{ok, Elem} = gen_server:call(Pie, {lookup, sesid, SesId}),
+	Elem.
+
+lookup(PieId, SesId, TabId) ->
+	Pie = get_pie(PieId),
+	ChanId = #hub_chan{pieid = PieId, sesid = SesId, tabid = TabId},
+	{ok, Elem} = gen_server:call(Pie, {lookup, chanid, ChanId}),
 	Elem.
 
 
@@ -39,7 +45,8 @@ lookup(PieId, SesId) ->
 %% gen_server callbacks
 %%
 init(PieId) ->
-	pie_hub:attach_me(PieId),
+	register_my_pieid(PieId),
+	stats:incr({pie, starts}),
 	process_flag(trap_exit, true),
 	timer:send_interval(config:get(pie_cleanup_interval) * 1000, cleanup),
 	{ok, #state{
@@ -48,19 +55,30 @@ init(PieId) ->
 	  }}.
 
 handle_call({set_online, ChanId, Pid}, _From, #state{list = List} = State) ->
+	%% check if. this is a new user
+	case List:lookup(sesid, ChanId#hub_chan.sesid) of
+		{ok, []} ->
+			user_joined(ChanId);
+		_ ->
+			ok
+	end,
+	%% register
 	Res = List:set_online(ChanId, Pid),
+	stats:set({pie, State#state.id, channels}, List:size()),
 	{reply, Res, State};
 
 handle_call({set_offline, ChanId, Pid}, _From, #state{list = List} = State) ->
 	Res = List:set_offline(chanid, ChanId, Pid),
+	stats:set({pie, State#state.id, channels}, List:size()),
 	{reply, Res, State};
 
 handle_call({delete, ChanId}, _, #state{list = List} = State) ->
 	Res = delete_chan_and_cleanup(List, ChanId, exit),
+	stats:set({pie, State#state.id, channels}, List:size()),
 	{reply, Res, State};
 
-handle_call({lookup, SesId}, _From, #state{list = List} = State) ->
-	Res = List:lookup(sesid, SesId),
+handle_call({lookup, Type, Id}, _From, #state{list = List} = State) ->
+	Res = List:lookup(Type, Id),
 	{reply, Res, State};
 
 handle_call(get_all, _From, #state{list = List} = State) ->
@@ -70,7 +88,9 @@ handle_call(get_all, _From, #state{list = List} = State) ->
 handle_info(cleanup, #state{list = List, id = Id} = State) ->
 	{ok, Entries} = List:lookup_expired(),
 	[ delete_chan_and_cleanup(List, ChanId, timeout) || {_, ChanId, _} <- Entries ],
-	case List:size() of
+	Size = List:size(),
+	stats:set({pie, State#state.id, channels}, Size),
+	case Size of
 		0 ->
 			pie_is_empty(Id),
 			{stop, normal, State};
@@ -105,13 +125,31 @@ delete_chan_and_cleanup(List, ChanId, Reason) ->
 	mqueue:check_for_me(ChanId),
 	% check is there another
 	% channel for this SesId?
-	{ok, L} = List:lookup(sesid, ChanId#hub_chan.sesid),
-	L == [] andalso session_exited(ChanId, Reason),
+	case List:lookup(sesid, ChanId#hub_chan.sesid) of
+		{ok, []} ->
+			user_exited(ChanId, Reason);
+		_ ->
+			ok
+	end,
 	ok.
 
-session_exited(ChanId, Reason) ->
+user_joined(ChanId) ->
 	PieId = ChanId#hub_chan.pieid,
 	SesId = ChanId#hub_chan.sesid,
+	stats:incr({pie, PieId, joins}),
+	HubReq = #hub_req{
+	  pieid = PieId,
+	  sesid = SesId,
+	  type = async,
+	  cmd = api:format_line(["session_join", PieId, SesId])
+	 },
+	logic:process_async(HubReq).
+
+user_exited(ChanId, Reason) ->
+	PieId = ChanId#hub_chan.pieid,
+	SesId = ChanId#hub_chan.sesid,
+	stats:incr({pie, PieId, exits}),
+	stats:incr({pie, PieId, exits, Reason}),
 	HubReq = #hub_req{
 	  pieid = PieId,
 	  sesid = SesId,
@@ -127,6 +165,35 @@ pie_is_empty(PieId) ->
 	  cmd = api:format_line(["pie_exit", PieId])
 	 },
 	logic:process_async(HubReq).
+
+%%
+%% creating and getting pie pid
+%%
+pieid2key(PieId) ->
+	{n, l, {pie, PieId}}.
+
+register_my_pieid(PieId) ->
+	try
+		true = gproc:reg(pieid2key(PieId), ignored)
+	catch
+		Type:What ->
+			Report = [ "failed to register new pie",
+					   {pieid, PieId},
+					   {type, Type}, {what, What}],
+			error_logger:error_report(Report),
+			exit(normal)
+	end.
+
+get_pie(PieId) ->
+	Key = pieid2key(PieId),
+	case gproc:where(Key) of
+		undefined ->
+			supervisor:start_child(pie_sup, [PieId]),
+			{Pid, _} = gproc:await(Key),
+			Pid;
+		Pid ->
+			Pid
+	end.
 
 
 %%

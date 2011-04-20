@@ -5,18 +5,24 @@ class HubResult {
     protected $responded = false;
 
     // Api for handlers
-    function respond($msg)
+    function respond($data)
     {
         $this->append(sprintf('respond!json:%s',
-                              json_encode($msg)));
+                              json_encode($data)));
         $this->responded = true;
     }
 
-    function default_respond() {
+    function default_respond($res) {
         if ($this->responded) {
             return;
         }
-        $this->respond("ok");
+        $this->respond($res);
+    }
+
+    function to_sender($msg)
+    {
+        $this->append(sprintf('to_sender!json:%s',
+                              json_encode($msg)));
     }
 
     function to_session($from, $msg)
@@ -89,13 +95,7 @@ function dispatch($cmd, $type, $from, $data, $res) {
         throw new Exception("Callback for '$cmd' is no defined yet");
     }
 
-    return $cb($type, $from, $data, $res);
-}
-
-function init_session($sesid) {
-    session_id($sesid);
-    @session_start();
-    session_write_close();
+    $cb($type, $from, $data, $res);
 }
 
 function process_hub_message($str, $res) {
@@ -108,37 +108,40 @@ function process_hub_message($str, $res) {
     case 'from':
         list($type, $pieid, $sesid, $json) = $args;
 
-        init_session($sesid);
         $from = $channels->find($pieid, $sesid);
-
         $json_cmd = $json[0];
         $json_arg = isset($json[1]) ? $json[1] : array();
 
-        $res = dispatch($json_cmd, $type, $from, $json_arg, $res);
+        dispatch($json_cmd, $type, $from, $json_arg, $res);
 
         // Add simple 'respond' if it missed and it's a sync call
         if ($type == 'sync') {
-            $res->default_respond();
+            $res->default_respond("ok");
         };
-
-        return $res;
+        break;
     case 'session_exit':
         list($pieid, $sesid, $reason) = $args;
 
-        init_session($sesid);
         $from = $channels->find($pieid, $sesid);
-
         $data = array( 'reason' =>  $reason );
 
-        $res = dispatch('session_exit', 'async', $from, $data, $res);
-        return $res;
+        dispatch('user_exit', 'async', $from, $data, $res);
+        break;
+    case 'session_join':
+        list($pieid, $sesid) = $args;
+
+        $from = $channels->find($pieid, $sesid);
+        $data = array();
+
+        dispatch('user_join', 'async', $from, $data, $res);
+        break;
     case 'pie_exit':
         list($pieid) = $args;
 
         $data = array( 'pie_id' =>  $pieid );
 
-        $res = dispatch('pie_exit', 'async', null, $data, $res);
-        return $res;
+        dispatch('pie_exit', 'async', null, $data, $res);
+        break;
     default:
         throw new Exception("Hub command '$cmd' is not implemented");
     }

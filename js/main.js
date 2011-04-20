@@ -12,6 +12,13 @@ var isEnd;
 var In = {};
 var Out = {};
 
+function config_get(key, defval) {
+    if (typeof(MapCraft) == 'undefined' || typeof(MapCraft.config) == 'undefined') {
+        return defval;
+    }
+    return MapCraft.config[key];
+}
+
 In.chat = function (data) {
     if (typeof(data['message']) == 'undefined')
         return false;
@@ -496,7 +503,7 @@ $(document).ready(function () {
     // Инициализация клиента хаба
     PieHub.init({
         pieid: parseInt(window.location.pathname.split('pie/')[1]),
-        hub_url: 'http://mapcraft.nanodesu.ru:8080/hub',   // CORS!
+        hub_url: config_get('hub_url', 'http://mapcraft.nanodesu.ru:8080/hub'),   // CORS!
         poll_callback: Dispatch
     });
     // Запуск поллинга

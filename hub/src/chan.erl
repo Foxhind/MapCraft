@@ -64,9 +64,11 @@ wait_for_answer(HubReq, Ref) ->
 format_hub_req(Type, Msg) ->
 	PieId = ChanId#hub_chan.pieid,
 	SesId = ChanId#hub_chan.sesid,
+	TabId = ChanId#hub_chan.tabid,
 	#hub_req{
 			  pieid = PieId,
 			  sesid = SesId,
+			  tabid = TabId,
 			  type = list_to_atom(Type),
 			  caller = self(),
 			  cmd = api:format_line(["from", Type, PieId, SesId, Msg])

@@ -34,8 +34,15 @@ dump() ->
 	Dump.
 
 pdump() ->
-	Dump = lists:sort(dump()),
-	[ io:format("~p ~p~n", tuple_to_list(Elem)) || Elem <- Dump ],
+	Dump = dump(),
+	{Len, List} = lists:foldl(fun({K, V}, {Max, Cur}) ->
+									  S = lists:flatten(io_lib:format("~p", [K])),
+									  L = length(S),
+									  {lists:max([Max, L]), [[S, V] | Cur]}
+							  end, {0, []}, Dump),
+	Sorted = lists:sort(List),
+	FmtStr = lists:concat(["~-", Len, "s   ~p~n"]),
+	[ io:format(FmtStr, Data) || Data <- Sorted],
 	ok.
 
 %%
@@ -52,7 +59,7 @@ handle_call({get_next, Key}, _From, Tab) ->
 	{reply, {ok, Next}, Tab};
 
 handle_call(dump, _From, Tab) ->
-	Dump = ets:tab2list(Tab),
+	Dump = lists:concat([ets:tab2list(Tab), get_mem_info(), get_sys_info()]),
 	{reply, {ok, Dump}, Tab}.
 
 
@@ -74,6 +81,15 @@ code_change(_, State, _) ->
 
 terminate(_Reason, _State) ->
 	ok.
+
+%%
+%% Private
+%%
+get_mem_info() ->
+	[ {{erlang,memory,K}, V} || {K, V} <- erlang:memory() ].
+
+get_sys_info() ->
+	[ {{erlang, processes, count}, erlang:system_info(process_count)} ].
 
 %%
 %% Implementation

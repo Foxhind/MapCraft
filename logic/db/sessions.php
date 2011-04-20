@@ -5,26 +5,55 @@ class Channel {
     public $sesid;
     public $pieid;
 
-    // returns osm name or anon####
-    function nick() {
+    function _load_from_session() {
+        session_id($this->sesid);
+        @session_start();
+
+        // nick
         if( isset($_SESSION['osm_user']) ) {
-            return $_SESSION['osm_user'];
+            $this->_nick = $_SESSION['osm_user'];
+        } else {
+            if( ! isset($_SESSION['nick']) ) {
+                $_SESSION['nick'] = 'anon' . rand(1000, 9999);
+            }
+            $this->_nick = $_SESSION['nick'];
         }
 
-        if( ! isset($_SESSION['nick']) ) {
-            $_SESSION['nick'] = 'anon' . rand(1000, 9999);
-        }
-        return $_SESSION['nick'];
+        // role
+        $this->_role = isset($_SESSION['secret']) ? 'member' : 'anon';
+
+        session_write_close();
+    }
+
+    // returns osm name or anon####
+    function nick() {
+        isset($this->_nick) || $this->_load_from_session();
+        return $this->_nick;
     }
 
     // returns current role in the pie
     function role() {
-        if( !isset($_SESSION['secret']) ) {
-            return 'anon';
-        }
-        return 'member';
+        isset($this->_role) || $this->_load_from_session();
+        return $this->_role;
     }
 
+    function need_level($min_role) {
+        $levels = array( "anon" => 0,
+                         "member" => 10,
+                         "moderator" => 20,
+                         "owner" => 30,
+                         "developer" => 40 );
+        $cur_role = $this->role();
+        if ($levels[$min_role] <= $levels[$cur_role]) {
+            return;
+        }
+
+        // Ok, we have no rights, do checks
+        if ($min_role == "member") {
+            throw new Exception("Please, register to access this feature");
+        }
+        throw new Exception("You need $min_role rights to access this feature");
+    }
 }
 
 // Collection of channels

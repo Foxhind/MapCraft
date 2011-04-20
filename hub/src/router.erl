@@ -32,7 +32,7 @@ route_one_safely(HubReq, Line) ->
 		ok = route_one(Cmd, HubReq, Rest)
 	catch
 		Type:What ->
-			stats:incr({router, failures}),
+			stats:incr({router, lost}),
 			Report = [ "failed to route answer line",
 					   {line, Line},
 					   {type, Type}, {what, What},
@@ -41,12 +41,18 @@ route_one_safely(HubReq, Line) ->
 			error_logger:error_report(Report)
 	end.
 
-route_one("respond", HubReq = #hub_req{type = sync}, [{json, Json}]) ->
+route_one("respond", HubReq, [{json, Json}]) ->
+	sync = HubReq#hub_req.type,
 	HubReq#hub_req.caller ! {answer, HubReq, Json},
 	ok;
 
-route_one("respond", #hub_req{type = async}, _) ->
-	% response in async req is skipped
+route_one("to_sender", HubReq, [Msg]) ->
+	stats:incr({router, to_sender}),
+	PieId = HubReq#hub_req.pieid,
+	SesId = HubReq#hub_req.sesid,
+	TabId = HubReq#hub_req.tabid,
+	Dests = pie:lookup(PieId, SesId, TabId),
+	push_event_to_chans(Dests, Msg),
 	ok;
 
 route_one("to_session", _, [PieId, SesId, Msg]) ->
@@ -68,7 +74,7 @@ route_one("to_pie", _, [PieId, Msg]) ->
 %%
 %% Pushing event to channels
 %%
-push_event_to_chans(Dests, Msg) ->
+push_event_to_chans([_|_] = Dests, Msg) ->
 	Cmd = api:format_line([event, Msg]),
 	[ push(Dest, Cmd) || Dest <- Dests ].
 

@@ -1,5 +1,7 @@
 #!/usr/bin/env php
 <?php
+include("../config.php");
+
 include("./lib/validators.php");
 include("./lib/api.php");
 include("./lib/hub.php");
@@ -10,6 +12,8 @@ include("./db/sessions.php");
 // event handlers
 include("./session.php");
 include("./chat.php");
+include("./pieces.php");
+include("./eggs.php");
 
 /*
  *     MAIN CODE
@@ -33,8 +37,8 @@ while(!feof($fp)) {
         process_hub_message($cmd, $res);
     }
     catch(Exception $e) {
-        $msg = error_msg(array( 'message' =>  $e->getMessage() ));
-        $res->respond($msg);
+        $msg = error_msg($e->getMessage());
+        $res->to_sender($msg);
     }
 
     $res->output();
