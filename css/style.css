@@ -69,6 +69,14 @@ vertical-align: top;
 
 }
 
+.info {
+color: #36c96c;
+}
+
+.error {
+color: #ff6445;
+}
+
 #pac_text {
 height: 16px;
 width: 100%;
@@ -194,10 +202,6 @@ width: 10px;
 height: 10px;
 display: inline-block;
 cursor: pointer;
-}
-
-.msg {
-color: black;
 }
 
 .servermsg {
