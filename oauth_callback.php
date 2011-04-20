@@ -1,6 +1,6 @@
 <html>
 <head>
-<title>Ня</title>
+<title>Авторизация</title>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 </head>
 <body>
@@ -13,6 +13,9 @@ $api_url = 'http://api.openstreetmap.org/api/0.6/';                // OSM API UR
 $conskey = '5vecf0vlYdjvFd0ZPdXt3w';
 $conssec = 'wzb8A7oX8gq9lRyCALFyQs2ZoIYgLCFdFW2YKeJvHKQ';
 
+ini_set('session.gc_maxlifetime', 7776000);
+ini_set('session.cookie_lifetime', 7776000);
+session_set_cookie_params(7776000);
 session_start();
 if(isset($_GET['oauth_token']) && isset($_SESSION['secret']))
 {
@@ -48,8 +51,8 @@ try {
 }
 }else
 {
-       if(!isset($_SESSION['secret'])) echo "Нет секрета!<br/><br/>";
-       if(!isset($_GET['oauth_token'])) echo "Нет токена!<br/><br/>";
+       if(!isset($_SESSION['secret'])) echo "Ошибка авторизации: нет секрета!<br/><br/>";
+       if(!isset($_GET['oauth_token'])) echo "Ошибка авторизации: нет токена!<br/><br/>";
 }
 ?>
 </body>
