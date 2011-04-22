@@ -19,6 +19,9 @@ class Channel {
             $this->_nick = $_SESSION['nick'];
         }
 
+        // id
+        $this->_user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 0;
+
         // role
         $this->_role = isset($_SESSION['secret']) ? 'member' : 'anon';
 
@@ -35,6 +38,12 @@ class Channel {
     function role() {
         isset($this->_role) || $this->_load_from_session();
         return $this->_role;
+    }
+
+    // returns current user id
+    function user_id() {
+        isset($this->_user_id) || $this->_load_from_session();
+        return $this->_user_id;
     }
 
     function need_level($min_role) {

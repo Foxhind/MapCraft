@@ -20,30 +20,35 @@ session_start();
 if(isset($_GET['oauth_token']) && isset($_SESSION['secret']))
 {
 try {
-       $oauth = new OAuth($conskey, $conssec, OAUTH_SIG_METHOD_HMACSHA1, OAUTH_AUTH_TYPE_URI);
-       $oauth->enableDebug();
+    $oauth = new OAuth($conskey, $conssec, OAUTH_SIG_METHOD_HMACSHA1, OAUTH_AUTH_TYPE_URI);
+    $oauth->enableDebug();
 
-       $oauth->setToken($_GET['oauth_token'], $_SESSION['secret']);
-       $access_token_info = $oauth->getAccessToken($acc_url);
+    $oauth->setToken($_GET['oauth_token'], $_SESSION['secret']);
+    $access_token_info = $oauth->getAccessToken($acc_url);
 
-       $_SESSION['token'] = strval($access_token_info['oauth_token']);
-       $_SESSION['secret'] = strval($access_token_info['oauth_token_secret']);
+    $_SESSION['token'] = strval($access_token_info['oauth_token']);
+    $_SESSION['secret'] = strval($access_token_info['oauth_token_secret']);
 
-       $oauth->setToken($_SESSION['token'], $_SESSION['secret']);
+    $oauth->setToken($_SESSION['token'], $_SESSION['secret']);
 
-       /// получаем данные пользователя через /api/0.6/user/details
-       $oauth->fetch($api_url."user/details");
-       $user_details = $oauth->getLastResponse();
+    /// получаем данные пользователя через /api/0.6/user/details
+    $oauth->fetch($api_url."user/details");
+    $user_details = $oauth->getLastResponse();
 
-       // парсим ответ, получаем имя осмопользователя и его id
-       $xml = simplexml_load_string($user_details);       
-       $_SESSION['osm_id'] = strval ($xml->user['id']);
-       $_SESSION['osm_user'] = strval($xml->user['display_name']);
+    // парсим ответ, получаем имя осмопользователя и его id
+    $xml = simplexml_load_string($user_details);       
+    $_SESSION['osm_id'] = strval ($xml->user['id']);
+    $_SESSION['osm_user'] = strval($xml->user['display_name']);
 
-       // вывожу все это
-       echo "Ура, ".$_SESSION['osm_user'].", ты успешно залогинился! :3<br/>";
-       echo "OSM id: ".$_SESSION['osm_id']."<br/>";
-       echo "<script>window.opener.location.reload(true); window.close();</script>";
+    // Получение id, если нету, то добавление в базу
+    $pg_osm_user = pg_escape_string($_SESSION['osm_user']);
+    $result = pg_query($connection, 'SELECT id FROM users WHERE nick=\''.$pg_osm_user.'\'');
+    if (pg_num_rows($result) > 0)
+        $_SESSION['user_id'] = pg_fetch_result($result, 0 ,0);
+    else
+        $_SESSION['user_id'] = pg_fetch_result(pg_query($connection, 'INSERT INTO users VALUES(\''.$pg_osm_user.'\', DEFAULT, DEFAULT) RETURNING id'), 0 ,0);
+
+    echo "<script>window.opener.location.reload(true); window.close();</script>";
 
        /// тут мы можем создать юзера в своей базе и сохранить его osm_id, osm_user, token? и secret?.
 } catch(OAuthException $E) {

@@ -6,11 +6,11 @@ require 'update_kml.php';
 $osm_user = $_SESSION['osm_user'];
 if (isset($osm_user)) {
     if (isset($_POST['captcha'])) {
-/*         if ($_SESSION['security_code'] != strtolower($_POST['captcha'])) {
+        if ($_SESSION['security_code'] != strtolower($_POST['captcha'])) {
             unset($_SESSION['security_code']);
             echo 'Неправильно введена капча.<br /><a href="javascript:history.back();">Назад</a>';
             exit();
-        } */
+        }
         unset($_SESSION['security_code']);
         if ($_FILES['file']['size'] > 524288) {
             echo 'Слишком большой файл.<br /><a href="javascript:history.back();">Назад</a>';
