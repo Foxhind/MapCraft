@@ -8,12 +8,23 @@
 <?php
 include '../lib/config.php';
 
-if (isset($_POST['nick']))
-{
-	echo "logged in";
+if (isset($_POST['nick'])) {
+    // Получение id, если нету, то добавление в базу
+    $_SESSION['token'] = 'no-token';
+    $_SESSION['secret'] = 'no-secret';
+    $_SESSION['osm_id'] = '0';
+    $_SESSION['osm_user'] = $_POST['nick'];
+
+    $pg_osm_user = pg_escape_string($_POST['nick']);
+    $result = pg_query($connection, 'SELECT id FROM users WHERE nick=\''.$pg_osm_user.'\'');
+    if (pg_num_rows($result) > 0)
+        $_SESSION['user_id'] = pg_fetch_result($result, 0 ,0);
+    else
+        $_SESSION['user_id'] = pg_fetch_result(pg_query($connection, 'INSERT INTO users VALUES(\''.$pg_osm_user.'\', DEFAULT, DEFAULT) RETURNING id'), 0 ,0);
+
 	echo "<script>window.opener.location.reload(true); window.close();</script>";
-	exit;
-}
+
+} else {
 
 ?>
 
@@ -21,5 +32,10 @@ if (isset($_POST['nick']))
 Nick: <input type="text" name="nick">
 <input type="submit">
 </form>
+
+<?php
+}
+?>
+
 </body>
 </html>
