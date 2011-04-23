@@ -32,16 +32,50 @@ function handle_piece_reserve($type, $from, $data, $res)
     if (!pg_field_is_null($result, 0, 0)) {
         $owner = pg_fetch_result($result, 0 ,0);
         if ($owner !== $from->user_id())
-        throw new Exception("This piece is already owned by $owner.");
+            throw new Exception("This piece is already owned by $owner.");
+        else
+            throw new Exception("This piece is your already.");
     }
 
     $result = pg_query($connection, 'UPDATE pieces SET owner = '.$from->user_id().' WHERE id = '.$piece_id);
 
     //TODO: format piece info hash
+    update_kml($from->pieid);
+
     $pinfo = array( "piece_id" => $piece_id,
                     "owner" => $from->nick() );
     $res->to_pie($from, array('piece_owner', $pinfo));
-    $res->to_pie($from, info_msg("User %s has reserved piece %s.", $from->nick(), $piece_id));
+    $res->to_pie($from, info_msg("User %s has reserved piece #%s.", $from->nick(), $piece_id));
+}
+
+function handle_piece_free($type, $from, $data, $res)
+{
+    global $connection;
+    $from->need_level("member");
+
+    $piece_id = $data['piece_id'];
+
+    $result = pg_query($connection, 'SELECT owner FROM pieces WHERE id = '.$piece_id);
+    if (pg_num_rows($result) == 0)
+        throw new Exception("This piece isn't exists.");
+    if (pg_field_is_null($result, 0, 0)) {
+        throw new Exception("This piece isn't owned by you.");
+    }
+    else {
+        $owner = pg_fetch_result($result, 0 ,0);
+        if ($owner !== $from->user_id())
+            throw new Exception("This piece isn't owned by you.");
+    }
+
+    $result = pg_query($connection, 'UPDATE pieces SET owner = NULL WHERE id = '.$piece_id);
+
+    //TODO: format piece info hash
+    update_kml($from->pieid);
+
+    $pinfo = array( "piece_id" => $piece_id,
+                    "owner" => "" );
+    $res->to_pie($from, array('piece_owner', $pinfo));
+    $res->to_pie($from, info_msg("User %s has freed piece #%s.", $from->nick(), $piece_id));
 }
 
 function handle_piece_state($type, $from, $data, $res)
@@ -59,16 +93,18 @@ function handle_piece_state($type, $from, $data, $res)
     if (!pg_field_is_null($result, 0, 0)) {
         $owner = pg_fetch_result($result, 0 ,0);
         if ($owner !== $from->user_id())
-        throw new Exception("This piece is owned by $owner.");
+            throw new Exception("This piece is owned by $owner.");
     }
 
     $result = pg_query($connection, 'UPDATE pieces SET state = '.$state.' WHERE id = '.$piece_id);
 
     //TODO: format piece info hash
+    update_kml($from->pieid);
+
     $pinfo = array( "piece_id" => $piece_id,
                     "state" => $state );
     $res->to_pie($from, array('piece_state', $pinfo));
-    $res->to_pie($from, info_msg("User %s has set state for #%s to %s/9", $from->nick(), $pieid, $state));
+    $res->to_pie($from, info_msg("User %s has set state for #%s to %s/9", $from->nick(), $piece_id, $state));
 }
 
 function handle_piece_comment($type, $from, $data, $res)

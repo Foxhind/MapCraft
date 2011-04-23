@@ -7,7 +7,6 @@ var color = ["#ff0000","#ff4c00","#ff8600","#ffc000","#ffee00","#ffff00","#cbff0
 var users = [];
 var claims = [];
 var me;
-var isEnd;
 
 var In = {};
 var Out = {};
@@ -26,21 +25,28 @@ In.chat = function (data) {
     var time = '';
     var mclass = 'msg';
     var author = '';
-    if (typeof(data['date']) != 'undefined') {
+    if (typeof(data['date']) == 'number') {
         var d = new Date();
-        d.setTime(parseInt(data['date'])*1000);
+        d.setTime(data['date']*1000);
         var s = d.getSeconds();
         var m = d.getMinutes();
         s = (s < 10) ? '0' + s : s;
         m = (m < 10) ? '0' + m : m;
-        var time = d.getHours().toString() + ':' + m.toString() + ':' + s.toString()
+        time = d.getHours().toString() + ':' + m.toString() + ':' + s.toString()
+    }
+    else if (typeof(data['date']) == 'string') {
+        time = data['date'].substr(11, 8);
     }
     if (typeof(data['class']) != 'undefined')
         mclass = data['class'];
     if (typeof(data['author']) != 'undefined')
         author = data['author'];
-    var message = data['message'].replace(/(http\:\/\/[A-Za-z0-9_\-./]+)/, '<a href="$1" target="_blank">$1</a>');
+    var message = data['message'].replace(/(http\:\/\/[A-Za-z0-9_\-./]+)/g, '<a href="$1" target="_blank">$1</a>');
+    message = message.replace(/#([0-9]+)/g, '<span class="piecenum" onclick="SelectPiece($1)">#$1</span>');
+    var chatbox = $("#chat");
+    var isEnd = (chatbox.attr("scrollHeight") - chatbox.height() - chatbox.scrollTop() < 20);
     chat.append("<tr><td class='nick'>" + (author != "" ? "&lt;" + author + "&gt;" : "") + "</td><td class='" + mclass + "'>" + message + "</td><td>" + time + "</td></tr>");
+    if (isEnd) ScrollDown();
 };
 
 In.claim_list = function (data) {
@@ -90,11 +96,16 @@ In.piece_comment = function (data) {
 
 In.piece_owner = function (data) {
     var pieces = kmllayer.getFeaturesByAttribute('name', data['piece_id']);
-    if (pieces.length > 0)
-        pieces[0].attributes.owner = data['owner'];
-    if (selectedFeature != null)
-        if (data['piece_id'].toString() == selectedFeature.attributes.name)
-            $('#bowner').button("option", "label", data['owner']);
+    if (pieces.length > 0) {
+        var isFreeing = (data['owner'] == '' && typeof(pieces[0].attributes.owner) != 'undefined');
+        if (isFreeing)
+            delete pieces[0].attributes.owner;
+        else
+            pieces[0].attributes.owner = data['owner'];
+        if (selectedFeature != null)
+            if (data['piece_id'].toString() == selectedFeature.attributes.name)
+                $('#bowner').button("option", "label", (isFreeing ? ldata[12] : data['owner']) );
+    }
 }
 
 In.piece_state = function (data) {
@@ -102,11 +113,13 @@ In.piece_state = function (data) {
     if (pieces.length > 0)
     {
         pieces[0].attributes.description = data['state'];
-        pieces[0].style.fillColor = color(parseInt(data['state']));
+        pieces[0].style.fillColor = color[parseInt(data['state'])];
     }
-    if (selectedFeature != null)
+    if (selectedFeature != null) {
         if (data['piece_id'].toString() == selectedFeature.attributes.name)
-            $('#bstatus').button("option", "label", data['state'] + '/9');
+            $('#bstatus').button("option", "label", data['state'].toString() + '/9');
+    }
+    kmllayer.redraw(true);
 };
 
 In.refresh_pie_data = function (data) {
@@ -214,15 +227,19 @@ Out.color_set = function (color) {
     return ['color_set', {color: color.toString()}];
 };
 
+Out.get_chat_history = function () {
+    return ['get_chat_history', {}];
+};
+
 Out.get_piece_comments = function (piece_id) {
     return ['get_piece_comments', {piece_id: piece_id}];
 };
 
-Out.msg = function (msg, pub, target) {
+Out.chat = function (msg, pub, target) {
     if (typeof(msg) != 'string') return false;
 	if (typeof(pub) != 'boolean') pub = true;
 	if (typeof(target) != 'string') target = '';
-    var cmd = ['msg', {type: (pub ? 'public' : 'private'), message: msg }];
+    var cmd = ['chat', {type: (pub ? 'public' : 'private'), message: msg }];
     if (target != '')
         cmd.target_nick = target;
     return cmd;
@@ -236,8 +253,8 @@ Out.piece_comment = function (piece_id, comment) {
 
 Out.piece_state = function (piece_id, state) {
     if (typeof(piece_id) != 'string' && typeof(piece_id) != 'number') return false;
-    if (typeof(state) != 'string' && typeof(percent) != 'number') return false;
-    return ['piece_state', {piece_id: piece_id.toString(), state: percent.toString()}];
+    if (typeof(state) != 'string' && typeof(state) != 'number') return false;
+    return ['piece_state', {piece_id: piece_id.toString(), state: state.toString()}];
 };
 
 Out.piece_reserve = function (piece_id) {
@@ -333,11 +350,6 @@ function LoadLanguage() {
     });
 }
 
-function ChatMsg(text, name, type) {
-    $('#chat tbody').append("<tr><td>" + name + "</td><td class='" + type + "'>" + text + "</td><td> </td></tr>");
-    ScrollDown();
-}
-
 function PromptColor() {
     $('#dcolor').dialog("open");
 }
@@ -411,6 +423,7 @@ function Debug(data) {
 
 function Enter() {
     PieHub.push( Out.whoami() );
+    PieHub.push( Out.get_chat_history() );
 }
 
 function Vote(claim_id, vote) {
@@ -422,7 +435,7 @@ function CloseClaim(id) {
 }
 
 function Send() {
-    PieHub.push(Out.msg($("#pac_text").val()));
+    PieHub.push(Out.chat($("#pac_text").val()));
     $("#pac_text").val("");
     $("#pac_text").focus();
     return false;
@@ -433,8 +446,8 @@ function SetStatus(e) {
 }
 
 function ScrollDown() {
-    if (isEnd)
-        $("#chat").scrollTop($("#chat").attr("scrollHeight") - $("#chat").height());
+    var chatbox = $("#chat");
+    chatbox.scrollTop(chatbox.attr("scrollHeight") - chatbox.height());
 }
 
 function TakePiece() {
@@ -467,7 +480,7 @@ function onSelectPiece(e) {
     $("#comments").html("<div class='loading'></div>");
     $('#bowner').button("enable");
     $('#bowner').click( function() { $(e.attributes.owner ? (e.attributes.owner == me.nick ? '#drefuse' : '#dclaim') : '#dtake').dialog('open'); });
-    $('#bowner').button("option", "label", e.attributes.owner ? e.attributes.owner : "Нет");
+    $('#bowner').button("option", "label", e.attributes.owner ? e.attributes.owner : ldata[12]);
     $('#bowner').button("option", "icons", { primary: (e.attributes.owner ? (e.attributes.owner == me.nick ? 'ui-icon-closethick' : 'ui-icon-circle-check') : 'ui-icon-flag')});
     $("#dprop").dialog("option", "title", "Свойства: " + e.attributes.name);
     $("#dprop").dialog("open");
@@ -483,7 +496,7 @@ function onUnselectPiece(e) {
     e.style.fillOpacity = "0.5";
     e.style.strokeWidth = "1";
     kmllayer.redraw(true);
-    $('#bowner').button("option", "label", "Нет");
+    $('#bowner').button("option", "label", ldata[12]);
     $('#bowner').button("option", "icons", {primary: 'ui-icon-flag'});
     $('#bowner').unbind('click');
     $('#status').text("0");

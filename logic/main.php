@@ -1,6 +1,7 @@
 #!/usr/bin/env php
 <?php
 include("../config.php");
+include("../update_kml.php");
 
 include("./lib/validators.php");
 include("./lib/api.php");

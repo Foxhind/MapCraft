@@ -69,12 +69,25 @@ vertical-align: top;
 
 }
 
+.piecenum {
+cursor: pointer;
+border-bottom: 1px dotted;
+}
+
 .info {
 color: #36c96c;
 }
 
+.info .piecenum {
+border-bottom: 1px dotted #36c96c;
+}
+
 .error {
 color: #ff6445;
+}
+
+.error .piecenum {
+border-bottom: 1px dotted #ff6445;
 }
 
 #pac_text {
@@ -206,14 +219,6 @@ width: 10px;
 height: 10px;
 display: inline-block;
 cursor: pointer;
-}
-
-.servermsg {
-color: green;
-}
-
-.errormsg {
-color: red;
 }
 
 .num {
