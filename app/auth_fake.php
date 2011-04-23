@@ -7,6 +7,7 @@
 
 <?php
 include '../lib/config.php';
+session_start();
 
 if (isset($_POST['nick'])) {
     // Получение id, если нету, то добавление в базу
