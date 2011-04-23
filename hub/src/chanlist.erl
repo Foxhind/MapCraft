@@ -15,7 +15,7 @@ set_offline(chanid, ChanId, Pid) ->
 		[Entry] ->
 			set_offline(entry, Entry, Pid);
 		[] ->
-			ok
+			insert(ChanId, Pid, offline)
 	end;
 
 set_offline(entry, Entry, Pid) ->

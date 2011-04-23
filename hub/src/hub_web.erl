@@ -59,12 +59,12 @@ loop(Req) ->
 %%
 
 %% Method on 'hub/pie/PieId/SesId/TabId -- subscribe/publish in channels
-handle_hub_req(Method, Req, ["pie", PieId, SesId, TabId]) ->
+handle_hub_req(Method, Req, ["pie", PieId, SesId, TabId | Rest]) ->
 	ChanId = #hub_chan{ pieid = PieId,
 						sesid = SesId,
 						tabid = TabId },
 	Chan = chan:new(ChanId, Req),
-	Chan:handle(Method).
+	Chan:handle(Method, Rest).
 
 
 %%

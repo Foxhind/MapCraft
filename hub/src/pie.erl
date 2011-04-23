@@ -24,6 +24,9 @@ suspend(ChanId, Pid) ->
 	Pie = get_pie(ChanId#hub_chan.pieid),
 	gen_server:call(Pie, {set_offline, ChanId, Pid}).
 
+suspend(ChatId) ->
+	suspend(ChatId, self()).
+
 lookup(PieId) ->
 	Pie = get_pie(PieId),
 	{ok, Elems} = gen_server:call(Pie, get_all),

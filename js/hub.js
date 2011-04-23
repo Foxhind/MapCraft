@@ -13,6 +13,8 @@ PieHub = {
         poll_callback: null
     },
     myid: null,
+    registered: false,
+    deferred: [],
 
     /*
      * init (PieId, poll_callback)
@@ -20,6 +22,7 @@ PieHub = {
     init: function(options) {
         $.extend(this.options, options);
         this.myid = this.gen_myid();
+        this.register_channel();
     },
 
     /*
@@ -27,9 +30,15 @@ PieHub = {
      */
     progressive_timeout: 100,
     poll: function() {
-        var self=this;
-        var timeout = 10;
+        var self = this;
 
+        // defer it if the channel is not registered yet
+        if(!this.registered) {
+            this.deferred.push(arguments);
+            return;
+        }
+
+        var timeout = 10;
         this.poll_xhr = jQuery.ajax({
             type: 'GET',
             url: this.get_poll_url('pie'),
@@ -58,6 +67,14 @@ PieHub = {
      * Pushing: just call this func. Answer will be sent using poll connection
      */
     push: function(data) {
+        var self = this;
+
+        // defer it if the channel is not registered yet
+        if(!this.registered) {
+            this.deferred.push(arguments);
+            return;
+        }
+
         var event = "async!json:" +  JSON.stringify(data);
         jQuery.ajax({
             type: 'POST',
@@ -73,6 +90,14 @@ PieHub = {
      * Sync call -- will wait for answer
      */
     call: function(data, cb, err_cb) {
+        var self = this;
+
+        // defer it if the channel is not registered yet
+        if(!this.registered) {
+            this.deferred.push(arguments);
+            return;
+        }
+
         var event = "sync!json:" +  JSON.stringify(data);
         jQuery.ajax({
             type: 'POST',
@@ -81,6 +106,28 @@ PieHub = {
             dataType: 'json',
             success: cb,
             error: err_cb
+        });
+    },
+
+    /*
+     * Registering me in the hub
+     */
+    register_channel: function() {
+        var self = this;
+
+        this.poll_xhr = jQuery.ajax({
+            type: 'GET',
+            url: this.get_poll_url('pie') + '/init',
+            cache: false,
+            success: function (data) {
+                self.registered = true;
+                while( (args = self.deferred.shift()) ) {
+                    args.callee.apply(self, args);
+                }
+            },
+            error: function(data) {
+                throw "Failed to register channel in the hub!";
+            }
         });
     },
 

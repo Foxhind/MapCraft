@@ -1,15 +1,15 @@
 -module(chan, [ChanId, Req]).
--export([handle/1]).
+-export([handle/2]).
 -include("hub.hrl").
 
 
-handle('POST') ->
+handle('POST', []) ->
 	stats:incr({chan, pushes}),
 	Data = binary_to_list(Req:recv_body()),
 	[Type | Rest] = api:parse_line(Data),
 	handle_api(Type, Rest);
 
-handle('GET') ->
+handle('GET', []) ->
 	stats:incr({chan, polls}),
 	case mqueue:check_for_me(ChanId) of
 		{ok, []} ->
@@ -18,7 +18,12 @@ handle('GET') ->
 			erlang:demonitor(Ref);
 		{ok, Msgs} ->
 			hub_web:ok(Req, lists:flatten(Msgs))
-	end.
+	end;
+
+handle('GET', ["init"]) ->
+	pie:suspend(ChanId),
+	hub_web:ok(Req, "ok").
+
 
 %%
 %% API handlers
