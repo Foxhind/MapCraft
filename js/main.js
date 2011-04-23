@@ -51,12 +51,12 @@ In.chat = function (data) {
 
 In.claim_list = function (data) {
     claims = data;
-    In.userlist();
+    In.user_list();
 };
 
 In.claim_add = function (data) {
     claims.push(data);
-    In.userlist();
+    In.user_list();
 };
 
 In.claim_remove = function (data) {
@@ -66,17 +66,19 @@ In.claim_remove = function (data) {
             break;
         }
     }
-    In.userlist();
+    In.user_list();
 };
 
 In.claim_update = function (data) {
     for (var i = 0; i < claims.length; i++) {
         if (claims[i]['claim_id'] == data['claim_id']) {
-            claims[i] = data;
+            for(var field in data) {
+                claims[i][field] = data[field];
+            }
             break;
         }
     }
-    In.userlist();
+    In.user_list();
 };
 
 In.javascript = function (data) {
@@ -146,7 +148,7 @@ In.reload = function (data) {
         setTimeout("Reload();", parseInt(data['delay']));
 };
 
-In.userlist = function (data) {
+In.user_list = function (data) {
     if (typeof(data) == 'object' && data != null) users = data;
     else data = users;
     var nicks = [];
@@ -175,13 +177,34 @@ In.userlist = function (data) {
     $('#pac_text').autocomplete('option', 'source', nicks);
     $('.nickname').click( function() { $('#pac_text').val($('#pac_text').val() + $(this).text() + ': '); $("#pac_text").focus(); } );
     $('.up').click( function() {
-        Vote($(this).parent().find('span.num').text(), 1);
+        var piece_id = $(this).parent().find('span.num').text();
+        var user_nick = $(this).parent().parent().parent().find('span.nickname').text();
+        for (var i = 0; i < claims.length; i++) {
+            if (claims[i]['owner'] == user_nick && claims[i]['piece_id'] == piece_id) {
+                Vote(claims[i]['claim_id'], 1);
+                break;
+            }
+        }
         $(this).remove(); } );
     $('.down').click( function() {
-        Vote($(this).parent().find('span.num').text(), -1);
+        var piece_id = $(this).parent().find('span.num').text();
+        var user_nick = $(this).parent().parent().parent().find('span.nickname').text();
+        for (var i = 0; i < claims.length; i++) {
+            if (claims[i]['owner'] == user_nick && claims[i]['piece_id'] == piece_id) {
+                Vote(claims[i]['claim_id'], -1);
+                break;
+            }
+        }
         $(this).remove(); } );
     $('.close').click( function() {
-        CloseClaim($(this).parent().find('span.num').text());
+        var piece_id = $(this).parent().find('span.num').text();
+        var user_nick = $(this).parent().parent().parent().find('span.nickname').text();
+        for (var i = 0; i < claims.length; i++) {
+            if (claims[i]['owner'] == user_nick && claims[i]['piece_id'] == piece_id) {
+                CloseClaim(claims[i]['claim_id']);
+                break;
+            }
+        }
         $(this).remove(); } );
     $('.num').click( function() {
     if (selectedFeature != null) selectCtrl.unselect(selectedFeature); SelectPiece($(this).text()); } );
@@ -189,7 +212,7 @@ In.userlist = function (data) {
 
 In.user_add = function (data) {
     users.push(data);
-    In.userlist();
+    In.user_list();
 };
 
 In.user_remove = function (data) {
@@ -199,23 +222,26 @@ In.user_remove = function (data) {
             break;
         }
     }
-    In.userlist();
+    In.user_list();
 };
 
 In.user_update = function (data) {
     for (var i = 0; i < users.length; i++) {
         if (users[i]['user_nick'] == data['current_nick']) {
-            users[i] = data['update'];
+            for(var field in data) {
+                users[i][field] = data[field];
+            }
             break;
         }
     }
-    In.userlist();
+    In.user_list();
 };
 
 In.youare = function (data) {
     me = data;
     $('#pac_nick').button("option", "label", me.nick);
     $("#pac_text").focus();
+    PieHub.push( Out.get_user_list() );
 };
 
 Out.claim = function (piece_id) {
@@ -240,6 +266,10 @@ Out.get_chat_history = function () {
 Out.get_piece_comments = function (piece_id) {
     return ['get_piece_comments', {piece_id: piece_id}];
 };
+
+Out.get_user_list = function () {
+    return ['get_user_list', {}]
+}
 
 Out.chat = function (msg, pub, target) {
     if (typeof(msg) != 'string') return false;
@@ -436,7 +466,7 @@ function Vote(claim_id, vote) {
     PieHub.push( Out.vote_claim(claim_id, vote) );
 }
 
-function CloseClaim(id) {
+function CloseClaim(claim_id) {
     PieHub.push( Out.claim_remove(claim_id) );
 }
 
@@ -575,7 +605,7 @@ $(document).ready(function () {
         resizable: false,
         draggable: false,
         position: 'center',
-        buttons: { "OK": function() { SetNick(); }, "Cancel": function() { $(this).dialog("close"); } }
+        buttons: { "OK": function() { SetNick(); $(this).dialog("close"); }, "Cancel": function() { $(this).dialog("close"); } }
     });
     $('#dstatus').dialog({
         autoOpen: false,
@@ -584,7 +614,7 @@ $(document).ready(function () {
         resizable: false,
         draggable: false,
         position: 'center',
-        buttons: { "OK": function() { SetStatus(); }, "Cancel": function() { $(this).dialog("close"); } }
+        buttons: { "OK": function() { SetStatus(); $(this).dialog("close"); }, "Cancel": function() { $(this).dialog("close"); } }
     });
     $('#dtake').dialog({
         autoOpen: false,
@@ -593,7 +623,7 @@ $(document).ready(function () {
         resizable: false,
         draggable: false,
         position: 'center',
-        buttons: { "Yes": function() { TakePiece(); }, "No": function() { $(this).dialog("close"); } }
+        buttons: { "Yes": function() { TakePiece(); $(this).dialog("close"); }, "No": function() { $(this).dialog("close"); } }
     });
     $('#dclaim').dialog({
         autoOpen: false,
@@ -602,7 +632,7 @@ $(document).ready(function () {
         resizable: false,
         draggable: false,
         position: 'center',
-        buttons: { "Yes": function() { ClaimPiece(); }, "No": function() { $(this).dialog("close"); } }
+        buttons: { "Yes": function() { ClaimPiece(); $(this).dialog("close"); }, "No": function() { $(this).dialog("close"); } }
     });
     $('#drefuse').dialog({
         autoOpen: false,
@@ -611,7 +641,7 @@ $(document).ready(function () {
         resizable: false,
         draggable: false,
         position: 'center',
-        buttons: { "Yes": function() { RefusePiece(); }, "No": function() { $(this).dialog("close"); } }
+        buttons: { "Yes": function() { RefusePiece(); $(this).dialog("close"); }, "No": function() { $(this).dialog("close"); } }
     });
     $('#dprop').dialog({
         autoOpen: true,

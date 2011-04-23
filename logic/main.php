@@ -15,6 +15,7 @@ include("./session.php");
 include("./chat.php");
 include("./claims.php");
 include("./pieces.php");
+include("./users.php");
 include("./eggs.php");
 
 /*

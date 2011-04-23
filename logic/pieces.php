@@ -30,6 +30,8 @@ function handle_piece_reserve($type, $from, $data, $res)
     $from->need_level("member");
 
     $piece_id = $data['piece_id'];
+    $user_id = $from->user_id();
+    $nick = $from->nick();
 
     $result = pg_query($connection, 'SELECT owner FROM pieces WHERE id = '.$piece_id);
     if (pg_num_rows($result) == 0)
@@ -42,15 +44,21 @@ function handle_piece_reserve($type, $from, $data, $res)
             throw new Exception("This piece is your already.");
     }
 
-    $result = pg_query($connection, 'UPDATE pieces SET owner = '.$from->user_id().' WHERE id = '.$piece_id);
+    $result = pg_query($connection, 'UPDATE pieces SET owner = '.$user_id.' WHERE id = '.$piece_id);
 
     //TODO: format piece info hash
     update_kml($from->pieid);
 
     $pinfo = array( "piece_id" => $piece_id,
-                    "owner" => $from->nick() );
+                    "owner" => $nick );
     $res->to_pie($from, array('piece_owner', $pinfo));
-    $res->to_pie($from, info_msg("User %s has reserved piece #%s.", $from->nick(), $piece_id));
+
+    // Updating owner
+    $result = pg_query($connection, 'SELECT id FROM pieces WHERE owner = '.$user_id);
+    $piece_ids = pg_fetch_all_columns($result, 0);
+    $res->to_pie($from, array( 'user_update', array('current_nick' => $nick,
+                                                    'reserved' => $piece_ids) ));
+    $res->to_pie($from, info_msg("User %s has reserved piece #%s.", $nick, $piece_id));
 }
 
 function handle_piece_free($type, $from, $data, $res)
@@ -59,6 +67,7 @@ function handle_piece_free($type, $from, $data, $res)
     $from->need_level("member");
 
     $piece_id = $data['piece_id'];
+    $nick = $from->nick();
 
     $result = pg_query($connection, 'SELECT owner FROM pieces WHERE id = '.$piece_id);
     if (pg_num_rows($result) == 0)
@@ -80,7 +89,15 @@ function handle_piece_free($type, $from, $data, $res)
     $pinfo = array( "piece_id" => $piece_id,
                     "owner" => "" );
     $res->to_pie($from, array('piece_owner', $pinfo));
-    $res->to_pie($from, info_msg("User %s has freed piece #%s.", $from->nick(), $piece_id));
+
+    // Updating owner
+    $result = pg_query($connection, 'SELECT id FROM pieces WHERE owner = '.$from->user_id());
+    $piece_ids = pg_fetch_all_columns($result, 0);
+    if ($piece_ids === false) $piece_ids = array();
+    $res->to_pie($from, array( 'user_update', array('current_nick' => $nick,
+                                                    'reserved' => $piece_ids) ));
+
+    $res->to_pie($from, info_msg("User %s has freed piece #%s.", $nick, $piece_id));
 }
 
 function handle_piece_state($type, $from, $data, $res)

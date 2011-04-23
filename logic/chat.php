@@ -24,7 +24,7 @@ function handle_chat($type, $from, $data, $res) {
     }
 }
 
-    // Temporary
+    // TODO: Move to handle_user_join?
 function handle_get_chat_history($type, $from, $data, $res) {
     global $connection;
 
