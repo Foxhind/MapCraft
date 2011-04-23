@@ -184,8 +184,8 @@ $width = 90;
 $height = 20;
 $characters = 6;
 
-$font = 'fonts/monofont.ttf';
-$font_fallback = imageloadfont('fonts/captchafont.gdf');
+$font = '../static/fonts/monofont.ttf';
+$font_fallback = imageloadfont('../static/fonts/captchafont.gdf');
 
 $captcha = new CaptchaSecurityImages($width,$height,$characters,$font);
 

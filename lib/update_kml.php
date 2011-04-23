@@ -3,7 +3,7 @@ function update_kml($pie_id) {
     global $connection;
     $color = array ("800000ff","80004cff","800086ff","8000c0ff","8000eeff","8000ffff","8000ffcb","8000ff97","8000ff5f","8000ff00");
 
-    $kml = fopen(dirname(__FILE__).'../static/kml/'.$pie_id.'.kml', 'w');
+    $kml = fopen(dirname(__FILE__).'/../static/kml/'.$pie_id.'.kml', 'w');
     if (!empty($kml)) {
         fwrite($kml, "<?xml version=\"1.0\" encoding=\"utf-8\" ?>
         <kml xmlns=\"http://www.opengis.net/kml/2.1\">
