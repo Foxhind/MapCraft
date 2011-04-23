@@ -6,7 +6,7 @@ server {
 
 	rewrite ^/pie/[0-9]+/?$                 /client.html last;
 	rewrite ^/(list|map|create)$            /app/index.php?page=$1 last;
-	rewrite ^/(list|map|create)\?(.+)$      /app/index.php?page=$1&$2 last;
+	rewrite ^/oauth_callback.php$           /app/oauth_callback.php last;
 
 	# Static files will be served by nginx
 	location / {
