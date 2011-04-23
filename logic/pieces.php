@@ -9,13 +9,18 @@ function handle_get_piece_comments($type, $from, $data, $res)
 
     $result = pg_query($connection, 'SELECT users.nick, text, timestamp FROM pieces_comments JOIN users ON users.id = author WHERE piece = '.$piece_id.' ORDER BY timestamp DESC LIMIT 100');
 
-    while ($row = pg_fetch_array($result)) {
-        $res->to_sender( array('piece_comment', array(
-            'piece_id' => $piece_id,
-            'author' => $row['nick'],
-            'message' => $row['text'],
-            'date' => $row['timestamp']
-        )) );
+    if (pg_num_rows($result) == 0) {
+        $res->to_sender( array('no_comments', array()) );
+    }
+    else {
+        while ($row = pg_fetch_array($result)) {
+            $res->to_sender( array('piece_comment', array(
+                'piece_id' => $piece_id,
+                'author' => $row['nick'],
+                'message' => $row['text'],
+                'date' => $row['timestamp']
+            )) );
+        }
     }
 }
 
@@ -120,7 +125,7 @@ function handle_piece_comment($type, $from, $data, $res)
     $result = pg_query($connection, 'INSERT INTO pieces_comments VALUES(DEFAULT,'.$piece_id.','.$from->user_id().',\''.pg_escape_string($comment).'\',DEFAULT) RETURNING timestamp');
     $timestamp = pg_fetch_result($result, 0 ,0);
 
-    $res->to_sender(info_msg( 'Comment added to piece '.$piece_id.'.', $from->nick() ));
+    $res->to_sender(info_msg( 'Comment added to piece #'.$piece_id.'.', $from->nick() ));
     $res->to_pie($from, array('piece_comment', array(
         'piece_id' => $piece_id,
         'author' => $from->nick(),

@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
-include("../config.php");
-include("../update_kml.php");
+include("../../../config.php"); // FIXME
+include("../../../update_kml.php");
 
 include("./lib/validators.php");
 include("./lib/api.php");
@@ -13,6 +13,7 @@ include("./db/sessions.php");
 // event handlers
 include("./session.php");
 include("./chat.php");
+include("./claims.php");
 include("./pieces.php");
 include("./eggs.php");
 

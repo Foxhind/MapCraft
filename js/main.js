@@ -83,6 +83,12 @@ In.javascript = function (data) {
     eval(data.code);
 };
 
+In.no_comments = function (data) {
+    if (selectedFeature == null)
+        return;
+    $('#dprop #comments').html('');
+}
+
 In.piece_comment = function (data) {
     if (selectedFeature == null)
         return;
@@ -422,8 +428,8 @@ function Debug(data) {
 }
 
 function Enter() {
-    PieHub.push( Out.whoami() );
     PieHub.push( Out.get_chat_history() );
+    PieHub.push( Out.whoami() );
 }
 
 function Vote(claim_id, vote) {
@@ -484,10 +490,10 @@ function onSelectPiece(e) {
     $('#bowner').button("option", "icons", { primary: (e.attributes.owner ? (e.attributes.owner == me.nick ? 'ui-icon-closethick' : 'ui-icon-circle-check') : 'ui-icon-flag')});
     $("#dprop").dialog("option", "title", "Свойства: " + e.attributes.name);
     $("#dprop").dialog("open");
+    $('#bstatus').button("option", "label", e.attributes.description + '/9');
     $('#bstatus').button("enable");
     $('#bremote').button("enable");
     $('#bcomment').button("enable");
-    $("#status").text(e.attributes.description);
     GetComments();
 }
 
@@ -499,7 +505,7 @@ function onUnselectPiece(e) {
     $('#bowner').button("option", "label", ldata[12]);
     $('#bowner').button("option", "icons", {primary: 'ui-icon-flag'});
     $('#bowner').unbind('click');
-    $('#status').text("0");
+    $('#bstatus').button("option", "label", '0/9');
     $('#dprop').dialog("option", "title", "Свойства");
     $('#comments').html("");
     $('#bowner').button("disable");
@@ -636,7 +642,7 @@ $(document).ready(function () {
     $('#bremote').button({ disabled: true, icons: { primary: 'ui-icon-signal'}});
     $('#bremote').click(OpenViaRemote);
     $('#bstatus').button({disabled: true});
-    $('#bstatus').click(function() { $('#sstatus').slider('value', $('#status').text()); $('#vcolor').css({ color: color[$('#sstatus').slider('value')] }); $('#newstatus').text($('#sstatus').slider('value')); $('#dstatus').dialog('open'); });
+    $('#bstatus').click(function() { $('#sstatus').slider('value', selectedFeature.attributes.description); $('#vcolor').css({ color: color[$('#sstatus').slider('value')] }); $('#newstatus').text($('#sstatus').slider('value')); $('#dstatus').dialog('open'); });
     $('#pac_nick').button({ icons: { primary: 'ui-icon-person'} });
     $('#pac_color').button();
     $('#pac_color').click(PromptColor);
