@@ -1,7 +1,7 @@
 <div id="pageheader" style="background-color: #92836c;">Создание нового пирога</div>
 <?php
 
-require 'update_kml.php';
+require '../lib/update_kml.php';
 
 $osm_user = $_SESSION['osm_user'];
 if (isset($osm_user)) {
@@ -25,7 +25,7 @@ if (isset($osm_user)) {
             exit();
         }
 
-        include 'config.php';
+        include '../lib/config.php';
 
         $user = pg_fetch_assoc(pg_query($connection, 'SELECT * FROM users WHERE nick=\''.$osm_user.'\''), 0);
         if (!$user) {

@@ -1,5 +1,5 @@
 <?php
-require 'config.php';
+require '../lib/config.php';
 
 $result = pg_query($connection, 'SELECT pies.id, pies.name, users.nick, pies.start, pies.ends, count(pieces.id) AS num, sum(pieces.state) / (count(pieces.id) * 9.0) * 100 AS state FROM pies INNER JOIN pieces ON pies.id = pieces.pie JOIN users ON pies.author=users.id WHERE pies.visible = true GROUP BY pies.id, pies.name, users.nick, pies.start, pies.ends LIMIT 10');
 

@@ -1,5 +1,5 @@
 <?php
-require 'config.php';
+require '../lib/config.php';
 
 Header('Content-type: application/json; charset=utf-8');
 
