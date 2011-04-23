@@ -24,7 +24,7 @@ process(Worker, HubReq) ->
 init(_Options) ->
 	Id = stats:get_next({logic, starts}),
 	Cmd = config:get(logic_cmd) ++ " -i " ++ integer_to_list(Id),
-	Port = open_port({spawn, Cmd}, [stream, {line, 1000}, exit_status]),
+	Port = open_port({spawn, Cmd}, [stream, {line, 1000}, exit_status, stderr_to_stdout]),
 	logic:add_me(),
 	{ok, #state{id = Id, port = Port}}.
 
@@ -61,15 +61,26 @@ code_change(_, State, _) ->
 
 %% We are recieving response lines splitted by 1000 bytes.
 %% join them and return all lines
+skip_warning(<<"PHP Warning: ", Warn/binary>>) ->
+	stats:incr({logic,php,warnings}),
+	error_logger:warning_report([{php_warn, Warn}]),
+	warn;
+skip_warning(_) ->
+	ok.
+
 read_response(Port, RespAcc, LineAcc) ->
 	receive
 		{Port, {data, {eol, "EOR"}}} ->
 			{ok, RespAcc};
 
 		{Port, {data, {eol, Line}}} ->
-			Response = lists:flatten(lists:reverse([Line | LineAcc])),
-			read_response(Port, [Response | RespAcc], []);
-
+			Response = list_to_binary(lists:reverse([Line | LineAcc])),
+			case skip_warning(Response) of
+				ok ->
+					read_response(Port, [Response | RespAcc], []);
+				warn ->
+					read_response(Port, RespAcc, [])
+				end;
 		{Port, {data, {noeol, LinePart}}} ->
 			read_response(Port, RespAcc, [LinePart | LineAcc])
 
