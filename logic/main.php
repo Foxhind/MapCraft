@@ -1,14 +1,14 @@
 #!/usr/bin/env php
 <?php
-include("../../../config.php"); // FIXME
-include("../../../update_kml.php");
+include("../lib/config.php");
+include("../lib/update_kml.php");
 
-include("./lib/validators.php");
-include("./lib/api.php");
-include("./lib/hub.php");
+include("../lib/validators.php");
+include("../lib/api.php");
+include("../lib/hub.php");
 
 // Database
-include("./db/sessions.php");
+include("../lib/db/sessions.php");
 
 // event handlers
 include("./session.php");
