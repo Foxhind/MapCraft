@@ -31,7 +31,8 @@ echo '<li class="c3'.($_GET['page']=='create'?' current':'').'"><a href="/create
 if (isset($_SESSION['osm_user']))
     echo $_SESSION['osm_user'].'&nbsp; &nbsp;<a href="?logout">Выход</a>';
 else
-    echo '<a href="/app/auth.php" target="_blank">Вход</a>';
+	include '../lib/config.php';
+	echo "<a href=\"/app/auth_$auth_type.php\" target=\"_blank\">Вход</a>";
 ?>
 </div>
 <div id="content">
