@@ -20,7 +20,7 @@ class Channel {
         }
 
         // id
-        $this->_user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 0;
+        $this->_user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : '0';
 
         // role
         $this->_role = isset($_SESSION['secret']) ? 'member' : 'anon';
@@ -59,7 +59,7 @@ class Channel {
 
         // Ok, we have no rights, do checks
         if ($min_role == "member") {
-            throw new Exception("Please, register to access this feature");
+            throw new Exception("Please, <a href='/auth.php' target='_blank'>log in</a> to access this feature");
         }
         throw new Exception("You need $min_role rights to access this feature");
     }

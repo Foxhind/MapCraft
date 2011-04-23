@@ -121,6 +121,10 @@ white-space: -o-pre-wrap;
 word-wrap: break-word;
 }
 
+p {
+margin: 0 0 1em 0;
+}
+
 #panel {
 position: absolute;
 top: 10px;

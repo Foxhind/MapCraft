@@ -40,7 +40,7 @@ In.chat = function (data) {
     if (typeof(data['author']) != 'undefined')
         author = data['author'];
     var message = data['message'].replace(/(http\:\/\/[A-Za-z0-9_\-./]+)/, '<a href="$1" target="_blank">$1</a>');
-    chat.append("<tr><td class='nick'>&lt;" + author + "&gt;</td><td class='" + mclass + "'>" + message + "</td><td>" + time + "</td></tr>");
+    chat.append("<tr><td class='nick'>" + (author != "" ? "&lt;" + author + "&gt;" : "") + "</td><td class='" + mclass + "'>" + message + "</td><td>" + time + "</td></tr>");
 };
 
 In.claim_list = function (data) {
@@ -78,23 +78,35 @@ In.javascript = function (data) {
 };
 
 In.piece_comment = function (data) {
-    if (typeof(data['message']) == 'undefined')
-        return false;
-    var mclass = 'msg';
-    var author = '';
-    if (typeof(data['class']) != 'undefined')
-        mclass = data['class'];
-    if (typeof(data['author']) != 'undefined')
-        author = data['author'];
+    if (selectedFeature == null)
+        return;
+    if (data['piece_id'].toString() == selectedFeature.attributes.name) {
+        var comments_div = $('#dprop #comments');
+        if ($('#dprop .loading').length != 0)
+            comments_div.html('');
+        $('#dprop #comments').html($('#dprop #comments').html() + '<p><strong>' + data['author'] + '</strong> (' + data['date'] + '):<br />' + data['message'] + '</p>');
+    }
 };
+
+In.piece_owner = function (data) {
+    var pieces = kmllayer.getFeaturesByAttribute('name', data['piece_id']);
+    if (pieces.length > 0)
+        pieces[0].attributes.owner = data['owner'];
+    if (selectedFeature != null)
+        if (data['piece_id'].toString() == selectedFeature.attributes.name)
+            $('#bowner').button("option", "label", data['owner']);
+}
 
 In.piece_state = function (data) {
     var pieces = kmllayer.getFeaturesByAttribute('name', data['piece_id']);
     if (pieces.length > 0)
     {
-        pieces[0].description = data['state'];
+        pieces[0].attributes.description = data['state'];
         pieces[0].style.fillColor = color(parseInt(data['state']));
     }
+    if (selectedFeature != null)
+        if (data['piece_id'].toString() == selectedFeature.attributes.name)
+            $('#bstatus').button("option", "label", data['state'] + '/9');
 };
 
 In.refresh_pie_data = function (data) {
@@ -202,8 +214,8 @@ Out.color_set = function (color) {
     return ['color_set', {color: color.toString()}];
 };
 
-Out.get_all_pieces = function () {
-    return ['get_all_pieces', {}];
+Out.get_piece_comments = function (piece_id) {
+    return ['get_piece_comments', {piece_id: piece_id}];
 };
 
 Out.msg = function (msg, pub, target) {
@@ -222,10 +234,10 @@ Out.piece_comment = function (piece_id, comment) {
     return ['piece_comment', {piece_id: piece_id.toString(), comment: comment}];
 };
 
-Out.piece_state = function (piece_id, percent) {
+Out.piece_state = function (piece_id, state) {
     if (typeof(piece_id) != 'string' && typeof(piece_id) != 'number') return false;
-    if (typeof(percent) != 'string' && typeof(percent) != 'number') return false;
-    return ['piece_state', {piece_id: piece_id.toString(), percent: percent.toString()}];
+    if (typeof(state) != 'string' && typeof(percent) != 'number') return false;
+    return ['piece_state', {piece_id: piece_id.toString(), state: percent.toString()}];
 };
 
 Out.piece_reserve = function (piece_id) {
@@ -326,14 +338,6 @@ function ChatMsg(text, name, type) {
     ScrollDown();
 }
 
-function PromptNick() {
-    $('#newnick').removeAttr('disabled');
-    $('#newnick').val(nick);
-    $('#dnick').dialog("open");
-    $('#newnick').get(0).selectionStart = 0;
-    $('#newnick').get(0).selectionEnd = nick.length;
-}
-
 function PromptColor() {
     $('#dcolor').dialog("open");
 }
@@ -406,7 +410,6 @@ function Debug(data) {
 }
 
 function Enter() {
-    PieHub.push( Out.get_all_pieces() );
     PieHub.push( Out.whoami() );
 }
 
@@ -447,6 +450,7 @@ function RefusePiece() {
 }
 
 function GetComments() {
+    PieHub.push( Out.get_piece_comments(selectedFeature.attributes.name) );
 }
 
 function PostComment() {
@@ -621,7 +625,6 @@ $(document).ready(function () {
     $('#bstatus').button({disabled: true});
     $('#bstatus').click(function() { $('#sstatus').slider('value', $('#status').text()); $('#vcolor').css({ color: color[$('#sstatus').slider('value')] }); $('#newstatus').text($('#sstatus').slider('value')); $('#dstatus').dialog('open'); });
     $('#pac_nick').button({ icons: { primary: 'ui-icon-person'} });
-    $('#pac_nick').click(PromptNick);
     $('#pac_color').button();
     $('#pac_color').click(PromptColor);
     $('#dchat').dialog( { resize: function(event, ui) { $('#chat').height($(this).height() - 45); $('#chat').width($(this).width() - 30); } } );
