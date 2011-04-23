@@ -1,0 +1,22 @@
+<VirtualHost *:8000>
+	ServerAdmin webmaster@mapcraft.local
+
+	DocumentRoot /path/to/mapcraft/static
+	<Directory />
+		Options FollowSymLinks
+		AllowOverride None
+	</Directory>
+
+	ScriptAlias /app/ /path/to/mapcraft/app/
+	<Directory "/path/to/mapcraft/app/">
+		AllowOverride None
+		Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch
+		Order allow,deny
+		Allow from all
+	</Directory>
+
+	ErrorLog /var/log/apache2/mapcraft.error.log
+	CustomLog /var/log/apache2/mapcraft.access.log combined
+	LogLevel warn
+
+</VirtualHost>
