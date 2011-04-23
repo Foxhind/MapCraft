@@ -14,16 +14,16 @@ if (isset($_GET['logout']))
 <head>
 <title>MapCraft — massively mapping helper</title>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<link rel="stylesheet" href="css/site.css" type="text/css" media="screen, projection" />
+<link rel="stylesheet" href="/css/site.css" type="text/css" media="screen, projection" />
 </head>
 
 <body>
 <header>MapCraft</header>
 <div id="panel"><nav><ul>
 <?php
-echo '<li class="c1'.($_GET['page']=='map'?' current':'').'"><a href="map">Карта</a></li>';
-echo '<li class="c2'.($_GET['page']=='list'?' current':'').'"><a href="list">Список</a></li>';
-echo '<li class="c3'.($_GET['page']=='create'?' current':'').'"><a href="create">Новый пирог</a></li>';
+echo '<li class="c1'.($_GET['page']=='map'?' current':'').'"><a href="/map">Карта</a></li>';
+echo '<li class="c2'.($_GET['page']=='list'?' current':'').'"><a href="/list">Список</a></li>';
+echo '<li class="c3'.($_GET['page']=='create'?' current':'').'"><a href="/create">Новый пирог</a></li>';
 ?>
 </ul></nav></div>
 <div id="login">
@@ -31,7 +31,7 @@ echo '<li class="c3'.($_GET['page']=='create'?' current':'').'"><a href="create"
 if (isset($_SESSION['osm_user']))
     echo $_SESSION['osm_user'].'&nbsp; &nbsp;<a href="?logout">Выход</a>';
 else
-    echo '<a href="auth.php" target="_blank">Вход</a>';
+    echo '<a href="/app/auth.php" target="_blank">Вход</a>';
 ?>
 </div>
 <div id="content">
