@@ -176,7 +176,7 @@ if (isset($osm_user)) {
         <label><input class="btn" type="checkbox" id="hide" name="hide" /> Скрыть пирог<br/><small>Скрытие не влияет на права доступа!</small></label>
     </div></div>
     <div class="row"><div>
-        <label for="captcha">Капча <em>*</em> <img src="captcha.php" /></label>
+        <label for="captcha">Капча <em>*</em> <img src="/app/captcha.php" /></label>
         <input type="text" id="captcha" name="captcha" />
     </div></div>
     <input class="btn" type="submit" value="&nbsp Создать »" />
