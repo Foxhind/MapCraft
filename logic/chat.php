@@ -3,7 +3,7 @@
 function handle_chat($type, $from, $data, $res) {
     global $connection;
 
-    validate_required($data, array('message') );
+    validate_required($data, 'message');
 
     $text = htmlspecialchars(trim( preg_replace('/\s+/', ' ', $data['message']) ));
 

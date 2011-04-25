@@ -4,7 +4,7 @@ function handle_claim($type, $from, $data, $res) {
     global $connection;
     $from->need_level("member");
 
-    validate_required($data, array('piece_id') );
+    validate_required($data, 'piece_id');
     $piece_id = $data['piece_id'];
 
     $result = pg_query($connection, 'SELECT COUNT(*) FROM claims WHERE author = '.$from->user_id().' and piece = '.$piece_id);
@@ -30,7 +30,7 @@ function handle_claim_remove($type, $from, $data, $res) {
     global $connection;
     $from->need_level("member");
 
-    validate_required($data, array('claim_id') );
+    validate_required($data, 'claim_id');
     $claim_id = $data['claim_id'];
 
     $result = pg_query($connection, 'SELECT users.nick FROM claims JOIN users ON users.id = claims.author WHERE claims.id = '.$claim_id);
@@ -53,7 +53,7 @@ function handle_vote_claim($type, $from, $data, $res) {
     global $connection;
     $from->need_level("member");
 
-    validate_required($data, array('claim_id', 'vote') );
+    validate_required($data, 'claim_id', 'vote');
     $claim_id = $data['claim_id'];
     $vote = intval($data['vote']);
     $textvote = ($vote > 0) ? 'pro' : (($vote < 0) ? 'contra' : 'neutrally');

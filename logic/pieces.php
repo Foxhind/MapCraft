@@ -4,7 +4,7 @@ function handle_get_piece_comments($type, $from, $data, $res)
 {
     global $connection;
 
-    validate_required($data, array('piece_id'));
+    validate_required($data, 'piece_id');
     $piece_id = $data['piece_id'];
 
     $result = pg_query($connection, 'SELECT users.nick, text, timestamp FROM pieces_comments JOIN users ON users.id = author WHERE piece = '.$piece_id.' ORDER BY timestamp DESC LIMIT 100');
@@ -134,7 +134,7 @@ function handle_piece_comment($type, $from, $data, $res)
     global $connection;
 
     $from->need_level('member');
-    validate_required($data, array('piece_id', 'comment'));
+    validate_required($data, 'piece_id', 'comment');
 
     $piece_id = $data['piece_id'];
     $comment = htmlspecialchars(trim( preg_replace('/\s+/', ' ', $data['comment']) ));
