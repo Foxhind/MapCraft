@@ -227,7 +227,7 @@ ALTER TABLE mapcraft.susers OWNER TO mapcrafter;
 CREATE TABLE users (
     nick character varying(255) NOT NULL,
     id integer DEFAULT nextval('susers'::regclass) NOT NULL,
-    sessions bytea
+    color character varying(6) DEFAULT '000000'::character varying NOT NULL
 );
 
 
@@ -323,6 +323,20 @@ ALTER TABLE ONLY votes
 --
 
 CREATE INDEX access_user ON access USING btree ("user");
+
+
+--
+-- Name: chat_pie_idx; Type: INDEX; Schema: mapcraft; Owner: mapcrafter; Tablespace: 
+--
+
+CREATE INDEX chat_pie_idx ON chat USING btree (pie);
+
+
+--
+-- Name: chat_timestamp_idx; Type: INDEX; Schema: mapcraft; Owner: mapcrafter; Tablespace: 
+--
+
+CREATE INDEX chat_timestamp_idx ON chat USING btree ("timestamp");
 
 
 --
