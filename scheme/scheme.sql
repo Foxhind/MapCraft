@@ -89,6 +89,19 @@ CREATE TABLE chat (
 ALTER TABLE mapcraft.chat OWNER TO mapcrafter;
 
 --
+-- Name: chat_members; Type: TABLE; Schema: mapcraft; Owner: mapcrafter; Tablespace: 
+--
+
+CREATE TABLE chat_members (
+    pie integer NOT NULL,
+    member integer NOT NULL,
+    session character varying(32) NOT NULL
+);
+
+
+ALTER TABLE mapcraft.chat_members OWNER TO mapcrafter;
+
+--
 -- Name: sclaims; Type: SEQUENCE; Schema: mapcraft; Owner: mapcrafter
 --
 
@@ -255,6 +268,14 @@ ALTER TABLE ONLY access
 
 
 --
+-- Name: chat_members_pkey; Type: CONSTRAINT; Schema: mapcraft; Owner: mapcrafter; Tablespace: 
+--
+
+ALTER TABLE ONLY chat_members
+    ADD CONSTRAINT chat_members_pkey PRIMARY KEY (pie, member, session);
+
+
+--
 -- Name: chat_pkey; Type: CONSTRAINT; Schema: mapcraft; Owner: mapcrafter; Tablespace: 
 --
 
@@ -375,6 +396,22 @@ ALTER TABLE ONLY access
 
 ALTER TABLE ONLY chat
     ADD CONSTRAINT chat_author_fkey FOREIGN KEY (author) REFERENCES users(id) ON UPDATE CASCADE;
+
+
+--
+-- Name: chat_members_pie_fkey; Type: FK CONSTRAINT; Schema: mapcraft; Owner: mapcrafter
+--
+
+ALTER TABLE ONLY chat_members
+    ADD CONSTRAINT chat_members_pie_fkey FOREIGN KEY (pie) REFERENCES pies(id);
+
+
+--
+-- Name: chat_members_user_fkey; Type: FK CONSTRAINT; Schema: mapcraft; Owner: mapcrafter
+--
+
+ALTER TABLE ONLY chat_members
+    ADD CONSTRAINT chat_members_user_fkey FOREIGN KEY (member) REFERENCES users(id);
 
 
 --
