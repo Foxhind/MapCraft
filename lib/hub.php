@@ -142,6 +142,13 @@ function process_hub_message($str, $res) {
 
         dispatch('pie_exit', 'async', null, $data, $res);
         break;
+    case 'pie_create':
+        list($pieid) = $args;
+
+        $data = array( 'pie_id' =>  $pieid );
+
+        dispatch('pie_create', 'sync', null, $data, $res);
+        break;
     default:
         throw new Exception("Hub command '$cmd' is not implemented");
     }
