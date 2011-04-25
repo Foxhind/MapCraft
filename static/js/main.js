@@ -556,7 +556,7 @@ $(document).ready(function () {
     // Инициализация клиента хаба
     PieHub.init({
         pieid: parseInt(window.location.pathname.split('pie/')[1]),
-        hub_url: config_get('hub_url', 'http://mapcraft.nanodesu.ru/hub'),
+        hub_url: config_get('hub_url', '/hub'),
         poll_callback: Dispatch
     });
     // Запуск поллинга
