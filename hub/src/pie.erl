@@ -59,19 +59,13 @@ init(PieId) ->
 	  }}.
 
 handle_call({set_online, ChanId, Pid}, _From, #state{list = List} = State) ->
-	%% check if. this is a new user
-	case List:lookup(sesid, ChanId#hub_chan.sesid) of
-		{ok, []} ->
-			user_joined(ChanId);
-		_ ->
-			ok
-	end,
-	%% register
+	announce_if_new(ChanId, List),
 	Res = List:set_online(ChanId, Pid),
 	stats:set({pie, State#state.id, channels}, List:size()),
 	{reply, Res, State};
 
 handle_call({set_offline, ChanId, Pid}, _From, #state{list = List} = State) ->
+	announce_if_new(ChanId, List),
 	Res = List:set_offline(chanid, ChanId, Pid),
 	stats:set({pie, State#state.id, channels}, List:size()),
 	{reply, Res, State};
@@ -136,6 +130,15 @@ delete_chan_and_cleanup(List, ChanId, Reason) ->
 			ok
 	end,
 	ok.
+
+announce_if_new(ChanId, List) ->
+	case List:lookup(sesid, ChanId#hub_chan.sesid) of
+		{ok, []} ->
+			user_joined(ChanId);
+		_ ->
+			ok
+	end.
+
 
 user_joined(ChanId) ->
 	PieId = ChanId#hub_chan.pieid,
