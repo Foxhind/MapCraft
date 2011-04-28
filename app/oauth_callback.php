@@ -20,7 +20,7 @@ session_start();
 if(isset($_GET['oauth_token']) && isset($_SESSION['secret']))
 {
 try {
-    include 'config.php';
+    include '../lib/config.php';
     $oauth = new OAuth($conskey, $conssec, OAUTH_SIG_METHOD_HMACSHA1, OAUTH_AUTH_TYPE_URI);
     $oauth->enableDebug();
 
