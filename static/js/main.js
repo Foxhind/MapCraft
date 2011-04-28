@@ -170,7 +170,7 @@ In.user_list = function (data) {
             else
                 sclaims += ("<span class='claim ui-state-default'><span class='num'>" + userclaims[i]['piece_id'] + "</span>&nbsp;[<div title='За' class='up'></div>&nbsp;" + userclaims[i]['vote_balance'] + "&nbsp;<div title='Против' class='down'></div>]</span><br />");
         }
-        newhtml += ("<tr><td class='nick'>" + (users[u]['online'] ? "<img src='img/onl.png'>&nbsp;" : "") + "<span class='nickname'>" + users[u]['user_nick'] + "</span></td><td class='msg'>" + sreserved + "</td><td>" + sclaims + "</td></tr>");
+        newhtml += ("<tr><td class='nick'>" + (users[u]['online'] ? "<img src='/img/onl.png'>&nbsp;" : "") + "<span class='nickname'>" + users[u]['user_nick'] + "</span></td><td class='msg'>" + sreserved + "</td><td>" + sclaims + "</td></tr>");
     }
     newhtml += "</table>";
     $('#userlist').html(newhtml);

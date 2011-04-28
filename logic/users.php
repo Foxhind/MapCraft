@@ -34,7 +34,15 @@ function handle_get_user_list($type, $from, $data, $res) {
         }
     }
 
-    // TODO: Adding all online users
+    // Adding all online users:  chat_members JOIN users
+    $result = pg_query($connection, 'SELECT users.id, users.nick, users.color FROM chat_members LEFT JOIN users ON users.id = member WHERE pie = '.$from->pieid);
+    while ($row = pg_fetch_assoc($result)) {
+        // If new user -> set it fully
+        if (!isset($users[$row['nick']])) {
+            $users[$row['nick']] = array('owns' => array(),'color' => array($row['color']));
+        }
+        $users[$row['nick']]['online'] = true;
+    }
 
     // Generating user_list from userbuffer array
     foreach ($users as $user_nick => $attrs) {
@@ -43,7 +51,7 @@ function handle_get_user_list($type, $from, $data, $res) {
                                 'reserved' => $attrs['owns'],
                                 'online' => $attrs['online']);
     }
-    
+
     $res->to_sender($user_list);
     $res->to_sender($claim_list);
 }

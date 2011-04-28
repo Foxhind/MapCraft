@@ -5,15 +5,20 @@ function handle_user_join($type, $from, $data, $res) {
 
     $pie_id = $from->pieid;
     $user_id = $from->user_id();
+    $is_new = true;
 
-    // Check is used already joined
-    $result = pg_query($connection, 'SELECT session FROM  chat_members '
-                       . 'WHERE pie = ' . $pie_id . ' and member = ' . $user_id);
-    $is_new = pg_num_rows($result) == 0;
+    if ($user_id == 0) {
+        // TODO: count anonymous users
+    } else {
+        // Check is used already joined
+        $result = pg_query($connection, 'SELECT session FROM  chat_members '
+                           . 'WHERE pie = ' . $pie_id . ' and member = ' . $user_id);
+        $is_new = pg_num_rows($result) == 0;
 
-    // Add session
-    pg_query($connection, 'INSERT INTO chat_members '
-             . 'VALUES (' . join(", ", array($pie_id, $user_id, '\'' . $from->sesid . '\'')) . ')' );
+        // Add session
+        pg_query($connection, 'INSERT INTO chat_members '
+                 . 'VALUES (' . join(", ", array($pie_id, $user_id, '\'' . $from->sesid . '\'')) . ')' );
+    }
 
     if ($is_new) {
         $msg = info_msg($from->nick() . ' has joined');
@@ -27,15 +32,20 @@ function handle_user_exit($type, $from, $data, $res) {
 
     $pie_id = $from->pieid;
     $user_id = $from->user_id();
+    $is_last = true;
 
-    // Remove session
-    pg_query($connection, 'DELETE from chat_members '
-             . 'WHERE pie = ' . $pie_id . ' and member = ' . $user_id . ' and session = \'' . $from->sesid . '\'');
+    if ($user_id == 0) {
+        // TODO: count anonymous users
+    } else {
+        // Remove session
+        pg_query($connection, 'DELETE from chat_members '
+                 . 'WHERE pie = ' . $pie_id . ' and member = ' . $user_id . ' and session = \'' . $from->sesid . '\'');
 
-    // Check is this is a last session
-    $result = pg_query($connection, 'SELECT session FROM chat_members '
-                       . 'WHERE pie = ' . $pie_id . ' and member = ' . $user_id . ' and session = \'' . $from->sesid . '\'');
-    $is_last = pg_num_rows($result) == 0;
+        // Check is this is a last session
+        $result = pg_query($connection, 'SELECT session FROM chat_members '
+                           . 'WHERE pie = ' . $pie_id . ' and member = ' . $user_id . ' and session = \'' . $from->sesid . '\'');
+        $is_last = pg_num_rows($result) == 0;
+    }
 
     if ($is_last) {
         $msg = info_msg($from->nick() . ' has quit: ' . $data['reason']);
