@@ -13,7 +13,7 @@ function handle_user_join($type, $from, $data, $res) {
 
     // Add session
     pg_query($connection, 'INSERT INTO chat_members '
-             . 'VALUES (' . join(", ", array($pie_id, $user_id, "'" . $from->sesid . "'")) . ')' );
+             . 'VALUES (' . join(", ", array($pie_id, $user_id, '\'' . $from->sesid . '\'')) . ')' );
 
     if ($is_new) {
         $msg = info_msg($from->nick() . ' has joined');
@@ -30,11 +30,11 @@ function handle_user_exit($type, $from, $data, $res) {
 
     // Remove session
     pg_query($connection, 'DELETE from chat_members '
-             . 'WHERE pie = ' . $pie_id . ' and member = ' . $user_id . ' and session = "' . $from->sesid . '"');
+             . 'WHERE pie = ' . $pie_id . ' and member = ' . $user_id . ' and session = \'' . $from->sesid . '\'');
 
     // Check is this is a last session
     $result = pg_query($connection, 'SELECT session FROM chat_members '
-                       . 'WHERE pie = ' . $pie_id . ' and member = ' . $user_id . ' and session = "' . $from->sesid . '"');
+                       . 'WHERE pie = ' . $pie_id . ' and member = ' . $user_id . ' and session = \'' . $from->sesid . '\'');
     $is_last = pg_num_rows($result) == 0;
 
     if ($is_last) {
@@ -44,15 +44,13 @@ function handle_user_exit($type, $from, $data, $res) {
 }
 
 function handle_pie_exit($type, $from, $data, $res) {
-    validate_required($data, 'id');
-    validate_id($data, 'id');
-    clear_pie($data[$id]);
+    clear_pie($data['pie_id']);
 }
 
+// Special sync call, respond with "ok" if pie allowed to be created
 function handle_pie_create($type, $from, $data, $res) {
-    validate_required($data, 'id');
-    validate_id($data, 'id');
-    clear_pie($data[$id]);
+    clear_pie($data['pie_id']);
+    $res->respond("ok");
 }
 
 function handle_whoami($type, $from, $data, $res) {

@@ -43,26 +43,10 @@ push(HubReq = #hub_req{type = async}) ->
 
 push(HubReq = #hub_req{type = sync}) ->
 	stats:incr({chan, pushes, sync}),
-	ok = logic:process(HubReq),
-	wait_for_answer(HubReq, 0).
-
-wait_for_answer(HubReq, Ref) ->
-	receive
-		{answer, HubReq, Data} ->
+	case logic:process_and_wait(HubReq) of
+		{ok, Data} ->
 			hub_web:ok(Req, Data);
-
-		{follow_me, Pid} ->
-			catch erlang:demonitor(Ref),
-			NewRef = erlang:monitor(process, Pid),
-			wait_for_answer(HubReq, NewRef);
-
-		{'DOWN', Ref, process, From, Reason} ->
-			Report = ["sync request failed",
-					  {hubreq, HubReq},
-					  {following, From},
-					  {reason, Reason},
-					  {req, Req}],
-			error_logger:error_report(Report),
+		{fail, _} ->
 			hub_web:fail(Req)
 	end.
 

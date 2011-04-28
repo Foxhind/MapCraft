@@ -2,7 +2,7 @@
 -behaviour(gen_server).
 
 -export([start_link/0]).
--export([add_me/0, process/1, process_async/1]).
+-export([add_me/0, process/1, process_async/1, process_and_wait/1]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, code_change/3, terminate/2]).
 
 start_link() ->
@@ -28,6 +28,32 @@ process(HubReq) ->
 		Res ->
 			Res
 	end.
+
+process_and_wait(HubReq) ->
+	ok = process(HubReq),
+	wait_for_answer(HubReq, 0).
+
+wait_for_answer(HubReq, Ref) ->
+	receive
+		{answer, HubReq, Data} ->
+			{ok, Data};
+
+		{follow_me, Pid} ->
+			catch erlang:demonitor(Ref),
+			NewRef = erlang:monitor(process, Pid),
+			wait_for_answer(HubReq, NewRef);
+
+		{'DOWN', Ref, process, From, Reason} ->
+			Report = ["sync request failed",
+					  {hubreq, HubReq},
+					  {following, From},
+					  {reason, Reason}],
+			error_logger:error_report(Report),
+			{fail, {down, Reason}}
+	after 10000 ->
+			{fail, timeout}
+	end.
+
 
 process_async(HubReq) ->
 	Fun = fun() ->

@@ -49,6 +49,7 @@ lookup(PieId, SesId, TabId) ->
 %%
 init(PieId) ->
 	register_my_pieid(PieId),
+	pie_new(PieId),
 	stats:incr({pie, starts}),
 	process_flag(trap_exit, true),
 	timer:send_interval(config:get(pie_cleanup_interval) * 1000, cleanup),
@@ -161,6 +162,15 @@ user_exited(ChanId, Reason) ->
 	 },
 	logic:process_async(HubReq).
 
+pie_new(PieId) ->
+	HubReq = #hub_req{
+	  pieid = PieId,
+	  type = sync,
+	  caller = self(),
+	  cmd = api:format_line(["pie_create", PieId])
+	 },
+	{ok, "\"ok\""} = logic:process_and_wait(HubReq).
+
 pie_is_empty(PieId) ->
 	HubReq = #hub_req{
 	  pieid = PieId,
@@ -192,7 +202,7 @@ get_pie(PieId) ->
 	case gproc:where(Key) of
 		undefined ->
 			supervisor:start_child(pie_sup, [PieId]),
-			{Pid, _} = gproc:await(Key),
+			{Pid, _} = gproc:await(Key, 5000),
 			Pid;
 		Pid ->
 			Pid
