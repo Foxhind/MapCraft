@@ -410,7 +410,6 @@ function SetNick() {
 }
 
 function RedrawUsersList() {
-    Debug(JSON.stringify(users, null, 2));
     var nicks = [];
     newhtml = "<table><tr><td id='lname'>" + ldata[18] + "</td><td id='lpieces'>" + ldata[19] + "</td><td id='lclaims'>" + ldata[20] + "</td></tr>";
     for (var u = 0; u < users.length; u++) {

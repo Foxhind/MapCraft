@@ -1,7 +1,7 @@
 <?php
 
 class HubResult {
-    protected $data = array();
+    public $data = array();
     protected $responded = false;
 
     // Api for handlers

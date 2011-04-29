@@ -148,6 +148,12 @@ function _add_chat_member($res, $from, $user_id) {
     pg_query($connection, 'INSERT INTO chat_members '
              . 'VALUES (' . join(", ", array($from->pieid, $user_id, '\'' . $from->sesid . '\'')) . ')' );
 
+    if ($is_new) {
+        $user = _get_user_info($user_id);
+        $res->to_pie($from, array( 'user_update', array('current_nick' => $user['nick'],
+                                                        'online' => true) ));
+    }
+
     return $is_new;
 }
 
@@ -162,6 +168,12 @@ function _remove_chat_member($res, $from, $user_id) {
     $result = pg_query($connection, 'SELECT session FROM chat_members '
                        . 'WHERE pie = ' . $from->pieid . ' and member = ' . $user_id);
     $is_last = pg_num_rows($result) == 0;
+
+    if ($is_last) {
+        $user = _get_user_info($user_id);
+        $res->to_pie($from, array( 'user_update', array('current_nick' => $user['nick'],
+                                                        'online' => false) ));
+    }
 
     return $is_last;
 }
