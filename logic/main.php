@@ -40,8 +40,8 @@ while(!feof($fp)) {
         process_hub_message($cmd, $res);
     }
     catch(Exception $e) {
+        trigger_error("Exception: " . $e->getMessage());
         $msg = error_msg($e->getMessage());
-        trigger_error("Exception: " . print_r($msg, true));
         $res->to_sender($msg);
     }
 

@@ -54,7 +54,19 @@ function handle_get_user_list($type, $from, $data, $res) {
 
     $res->to_sender($user_list);
     $res->to_sender($claim_list);
-    _update_anons_to_pie($from, $res);
+    _update_anons_to_pie($res, $from);
+}
+
+
+/* ------------------
+ * Helpers
+ * ------------------
+*/
+
+function _get_user_info($user_id) {
+    global $connection;
+    $result = pg_query($connection, 'SELECT * FROM users WHERE id = 3');
+    return pg_fetch_assoc($result, 0);
 }
 
 ?>
