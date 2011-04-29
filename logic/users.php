@@ -65,7 +65,7 @@ function handle_get_user_list($type, $from, $data, $res) {
 
 function _get_user_info($user_id) {
     global $connection;
-    $result = pg_query($connection, 'SELECT * FROM users WHERE id = 3');
+    $result = pg_query($connection, 'SELECT * FROM users WHERE id = ' . $user_id);
     return pg_fetch_assoc($result, 0);
 }
 
