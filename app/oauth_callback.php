@@ -49,7 +49,12 @@ try {
     else
         $_SESSION['user_id'] = pg_fetch_result(pg_query($connection, 'INSERT INTO users VALUES(\''.$pg_osm_user.'\', DEFAULT, DEFAULT) RETURNING id'), 0 ,0);
 
-    echo "<script>window.opener.location.reload(true); window.close();</script>";
+    $sesid = session_id();
+    session_write_close();
+    system('curl -d "" "' . $hub_full_url . '/api/session/' . $sesid . '/login"');
+
+    //echo "<script>window.opener.location.reload(true);</script>";
+    echo("<script>window.close()</script>");
 
        /// тут мы можем создать юзера в своей базе и сохранить его osm_id, osm_user, token? и secret?.
 } catch(OAuthException $E) {

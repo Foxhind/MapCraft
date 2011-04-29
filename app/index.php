@@ -4,7 +4,13 @@ if (!isset($_GET['page']))
     $_GET['page'] = 'list';
 if (isset($_GET['logout']))
 {
+    include '../lib/config.php';
+
+    $sesid = session_id();
     session_unset();
+    session_write_close();
+    system('curl -d "" "' . $hub_full_url . '/api/session/' . $sesid . '/logout"');
+
     Header("Location: ".$REQUEST_URL.$_GET['page']);
     exit();
 }
