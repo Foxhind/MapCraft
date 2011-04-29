@@ -33,7 +33,7 @@ dump() ->
 	{ok, Dump} = gen_server:call(?MODULE, dump),
 	Dump.
 
-pdump() ->
+fdump() ->
 	Dump = dump(),
 	{Len, List} = lists:foldl(fun({K, V}, {Max, Cur}) ->
 									  S = lists:flatten(io_lib:format("~p", [K])),
@@ -42,7 +42,11 @@ pdump() ->
 							  end, {0, []}, Dump),
 	Sorted = lists:sort(List),
 	FmtStr = lists:concat(["~-", Len, "s   ~p~n"]),
-	[ io:format(FmtStr, Data) || Data <- Sorted],
+	list_to_binary([ io_lib:format(FmtStr, Data) || Data <- Sorted]).
+
+pdump() ->
+	Dump = fdump(),
+	io:fwrite("~s", [Dump]),
 	ok.
 
 %%

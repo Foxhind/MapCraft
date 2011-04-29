@@ -64,14 +64,17 @@ handle_hub_req(Method, Req, ["pie", PieId, SesId, TabId | Rest]) ->
 						sesid = SesId,
 						tabid = TabId },
 	Chan = chan:new(ChanId, Req),
-	Chan:handle(Method, Rest).
+	Chan:handle(Method, Rest);
+
+handle_hub_req(Method, Req, ["api" | Rest]) ->
+	hub_api:handle(Method, Req, Rest).
 
 
 %%
 %% Helpers
 %%
 ok(Req, Msg) ->
-	Req:ok({_Content = "test/plain",
+	Req:ok({_Content = "text/plain",
 			_Headers = std_headers(),
 			Msg}).
 
