@@ -132,7 +132,7 @@ function _find_member_user_id($pie_id, $ses_id) {
     global $connection;
 
     $result = pg_query($connection, 'SELECT member FROM  chat_members '
-                       . 'WHERE pie = 1 and session = \'qnkmhqthm1e54ap8fq8si3uki0\'');
+                       . 'WHERE pie = ' . $pie_id . ' and session = \'' . $ses_id .'\'');
     return (int) pg_fetch_result($result, 0, "member");
 }
 
