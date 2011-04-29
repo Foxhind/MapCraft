@@ -237,6 +237,18 @@ In.user_update = function (data) {
     In.user_list();
 };
 
+In.anons_update = function (data) {
+    count = data.count;
+    text = '';
+    if (count) {
+        text = 'and ' + count + ' anon';
+        if (count > 1) {
+            text = text + 's';
+        }
+    }
+    $('#anonscounter').text(text);
+};
+
 In.youare = function (data) {
     me = data;
     $('#pac_nick').button("option", "label", me.nick);

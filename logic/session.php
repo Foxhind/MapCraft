@@ -82,7 +82,7 @@ function _clear_pie($pie_id) {
     pg_query($connection, 'UPDATE pies SET anons=0 WHERE id = ' . $pie_id);
 }
 
-function _update_anons_to_pie($from, $res, $pie_id) {
+function _update_anons_to_pie($from, $res) {
     global $connection;
 
     $result = pg_query($connection, 'SELECT anons FROM pies WHERE id = ' . $from->pieid);
