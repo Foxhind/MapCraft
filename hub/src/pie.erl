@@ -43,6 +43,13 @@ lookup(PieId, SesId, TabId) ->
 	{ok, Elem} = gen_server:call(Pie, {lookup, chanid, ChanId}),
 	Elem.
 
+get_ids() ->
+	Key = {pie, '$1'},
+	GProcKey = {'_', '_', Key},
+	MatchHead = {GProcKey, '_', '_'},
+	Ids = gproc:select(n, [{MatchHead, [], ['$1']}]),
+	{ok, Ids}.
+
 
 %%
 %% gen_server callbacks
@@ -125,7 +132,7 @@ delete_chan_and_cleanup(List, ChanId, Reason) ->
 	% channel for this SesId?
 	case List:lookup(sesid, ChanId#hub_chan.sesid) of
 		{ok, []} ->
-			user_exited(ChanId, Reason);
+			session_exited(ChanId, Reason);
 		_ ->
 			ok
 	end,
@@ -134,13 +141,12 @@ delete_chan_and_cleanup(List, ChanId, Reason) ->
 announce_if_new(ChanId, List) ->
 	case List:lookup(sesid, ChanId#hub_chan.sesid) of
 		{ok, []} ->
-			user_joined(ChanId);
+			session_joined(ChanId);
 		_ ->
 			ok
 	end.
 
-
-user_joined(ChanId) ->
+session_joined(ChanId) ->
 	PieId = ChanId#hub_chan.pieid,
 	SesId = ChanId#hub_chan.sesid,
 	stats:incr({pie, PieId, joins}),
@@ -152,7 +158,7 @@ user_joined(ChanId) ->
 	 },
 	logic:process_async(HubReq).
 
-user_exited(ChanId, Reason) ->
+session_exited(ChanId, Reason) ->
 	PieId = ChanId#hub_chan.pieid,
 	SesId = ChanId#hub_chan.sesid,
 	stats:incr({pie, PieId, exits}),
@@ -210,7 +216,6 @@ get_pie(PieId) ->
 		Pid ->
 			Pid
 	end.
-
 
 %%
 %% Tests

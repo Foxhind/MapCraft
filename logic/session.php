@@ -1,6 +1,6 @@
 <?php
 
-function handle_user_join($type, $from, $data, $res) {
+function handle_session_join($type, $from, $data, $res) {
     global $connection;
 
     $pie_id = $from->pieid;
@@ -28,7 +28,7 @@ function handle_user_join($type, $from, $data, $res) {
 }
 
 
-function handle_user_exit($type, $from, $data, $res) {
+function handle_session_exit($type, $from, $data, $res) {
     global $connection;
 
     $pie_id = $from->pieid;
@@ -54,6 +54,31 @@ function handle_user_exit($type, $from, $data, $res) {
         $res->to_pie($from, $msg);
     }
 }
+
+function handle_session_act_login($type, $from, $data, $res) {
+    // Make sure that we was anonymous
+    // Make sure that we are actually logged in
+    // Remove one anonymous
+    // Add to channel
+    // Anounce new user
+
+    // info msg
+    $msg = info_msg('%s has logged in as %s', $from->anon_nick(), $from->nick());
+    $res->to_pie($from, $msg);
+}
+
+function handle_session_act_logout($type, $from, $data, $res) {
+    // Make sure that we was registered
+    // Make sure that we are actually anonymous
+    // Add one anonymous
+    // Remove from channel
+    // Remove old user
+
+    // info msg
+    $msg = info_msg('%s has logged out, he is %s now', 'TODO', $from->anon_nick());
+    $res->to_pie($from, $msg);
+}
+
 
 function handle_pie_exit($type, $from, $data, $res) {
     _clear_pie($data['pie_id']);

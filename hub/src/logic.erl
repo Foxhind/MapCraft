@@ -22,7 +22,7 @@ process(HubReq) ->
 										 {self, self()},
 										 {hubreq, HubReq}]),
 			receive
-			after 1000 ->
+			after 100 ->
 					process(HubReq)
 			end;
 		Res ->
