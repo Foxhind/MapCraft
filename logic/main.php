@@ -41,6 +41,7 @@ while(!feof($fp)) {
     }
     catch(Exception $e) {
         $msg = error_msg($e->getMessage());
+        trigger_error("Exception: " . print_r($msg, true));
         $res->to_sender($msg);
     }
 
