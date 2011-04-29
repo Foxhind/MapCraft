@@ -8,7 +8,8 @@ function handle_user_join($type, $from, $data, $res) {
     $is_new = true;
 
     if ($user_id == 0) {
-        // TODO: count anonymous users
+        pg_query($connection, 'UPDATE pies SET anons=anons+1 WHERE id = ' . $pie_id);
+        _update_anons_to_pie($from, $res);
     } else {
         // Check is used already joined
         $result = pg_query($connection, 'SELECT session FROM  chat_members '
@@ -35,7 +36,8 @@ function handle_user_exit($type, $from, $data, $res) {
     $is_last = true;
 
     if ($user_id == 0) {
-        // TODO: count anonymous users
+        pg_query($connection, 'UPDATE pies SET anons=anons-1 WHERE id = ' . $pie_id);
+        _update_anons_to_pie($from, $res);
     } else {
         // Remove session
         pg_query($connection, 'DELETE from chat_members '
@@ -54,12 +56,12 @@ function handle_user_exit($type, $from, $data, $res) {
 }
 
 function handle_pie_exit($type, $from, $data, $res) {
-    clear_pie($data['pie_id']);
+    _clear_pie($data['pie_id']);
 }
 
 // Special sync call, respond with "ok" if pie allowed to be created
 function handle_pie_create($type, $from, $data, $res) {
-    clear_pie($data['pie_id']);
+    _clear_pie($data['pie_id']);
     $res->respond("ok");
 }
 
@@ -73,10 +75,21 @@ function handle_whoami($type, $from, $data, $res) {
 // Helpers
 // -----------
 
-function clear_pie($pie_id) {
+function _clear_pie($pie_id) {
     global $connection;
 
     $result = pg_query($connection, 'DELETE from chat_members WHERE pie = ' . $pie_id);
+    pg_query($connection, 'UPDATE pies SET anons=0 WHERE id = ' . $pie_id);
 }
+
+function _update_anons_to_pie($from, $res, $pie_id) {
+    global $connection;
+
+    $result = pg_query($connection, 'SELECT anons FROM pies WHERE id = ' . $from->pieid);
+    $row = pg_fetch_assoc($result);
+    $count = $row['anons'];
+    $res->to_pie($from, array('anons_update', array('count' => $count)));
+}
+
 
 ?>

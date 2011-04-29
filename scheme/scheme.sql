@@ -213,7 +213,8 @@ CREATE TABLE pies (
     ends timestamp without time zone,
     description text,
     visible boolean DEFAULT true NOT NULL,
-    jcenter character varying(255)
+    jcenter character varying(255),
+    anons integer DEFAULT 0 NOT NULL
 );
 
 

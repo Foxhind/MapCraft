@@ -54,6 +54,7 @@ function handle_get_user_list($type, $from, $data, $res) {
 
     $res->to_sender($user_list);
     $res->to_sender($claim_list);
+    _update_anons_to_pie($from, $res);
 }
 
 ?>
