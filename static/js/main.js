@@ -51,12 +51,12 @@ In.chat = function (data) {
 
 In.claim_list = function (data) {
     claims = data;
-    In.user_list();
+    RedrawUsersList();
 };
 
 In.claim_add = function (data) {
     claims.push(data);
-    In.user_list();
+    RedrawUsersList();
 };
 
 In.claim_remove = function (data) {
@@ -66,7 +66,7 @@ In.claim_remove = function (data) {
             break;
         }
     }
-    In.user_list();
+    RedrawUsersList();
 };
 
 In.claim_update = function (data) {
@@ -78,7 +78,7 @@ In.claim_update = function (data) {
             break;
         }
     }
-    In.user_list();
+    RedrawUsersList();
 };
 
 In.javascript = function (data) {
@@ -149,70 +149,13 @@ In.reload = function (data) {
 };
 
 In.user_list = function (data) {
-    if (typeof(data) == 'object' && data != null) users = data;
-    else data = users;
-    var nicks = [];
-    newhtml = "<table><tr><td id='lname'>" + ldata[18] + "</td><td id='lpieces'>" + ldata[19] + "</td><td id='lclaims'>" + ldata[20] + "</td></tr>";
-    for (var u = 0; u < users.length; u++) {
-        nicks.push(users[u]['user_nick']);
-        var sreserved = "";
-        var sclaims = "";
-        for (var i = 0; i < users[u]['reserved'].length; i++)
-            sreserved += ("<span class='num'>" + users[u]['reserved'][i] + "</span> ");
-        var userclaims = [];
-        for (i = 0; i < claims.length; i++) {
-            if (claims[i]['owner'] == users[u]['user_nick'])
-                userclaims.push(claims[i]);
-        }
-        for (i = 0; i < userclaims.length; i++) {
-            if (me.nick == users[u]['user_nick'])
-                sclaims += ("<span class='claim ui-state-default'><span class='num'>" + userclaims[i]['piece_id'] + "</span>&nbsp;[" + userclaims[i]['vote_balance'] + "&nbsp;<div title='Снять заявку' class='close'></div>]</span> ");
-            else
-                sclaims += ("<span class='claim ui-state-default'><span class='num'>" + userclaims[i]['piece_id'] + "</span>&nbsp;[<div title='За' class='up'></div>&nbsp;" + userclaims[i]['vote_balance'] + "&nbsp;<div title='Против' class='down'></div>]</span><br />");
-        }
-        newhtml += ("<tr><td class='nick'>" + (users[u]['online'] ? "<img src='/img/onl.png'>&nbsp;" : "") + "<span class='nickname'>" + users[u]['user_nick'] + "</span></td><td class='msg'>" + sreserved + "</td><td>" + sclaims + "</td></tr>");
-    }
-    newhtml += "</table>";
-    $('#userlist').html(newhtml);
-    $('#pac_text').autocomplete('option', 'source', nicks);
-    $('.nickname').click( function() { $('#pac_text').val($('#pac_text').val() + $(this).text() + ': '); $("#pac_text").focus(); } );
-    $('.up').click( function() {
-        var piece_id = $(this).parent().find('span.num').text();
-        var user_nick = $(this).parent().parent().parent().find('span.nickname').text();
-        for (var i = 0; i < claims.length; i++) {
-            if (claims[i]['owner'] == user_nick && claims[i]['piece_id'] == piece_id) {
-                Vote(claims[i]['claim_id'], 1);
-                break;
-            }
-        }
-        $(this).remove(); } );
-    $('.down').click( function() {
-        var piece_id = $(this).parent().find('span.num').text();
-        var user_nick = $(this).parent().parent().parent().find('span.nickname').text();
-        for (var i = 0; i < claims.length; i++) {
-            if (claims[i]['owner'] == user_nick && claims[i]['piece_id'] == piece_id) {
-                Vote(claims[i]['claim_id'], -1);
-                break;
-            }
-        }
-        $(this).remove(); } );
-    $('.close').click( function() {
-        var piece_id = $(this).parent().find('span.num').text();
-        var user_nick = $(this).parent().parent().parent().find('span.nickname').text();
-        for (var i = 0; i < claims.length; i++) {
-            if (claims[i]['owner'] == user_nick && claims[i]['piece_id'] == piece_id) {
-                CloseClaim(claims[i]['claim_id']);
-                break;
-            }
-        }
-        $(this).remove(); } );
-    $('.num').click( function() {
-    if (selectedFeature != null) selectCtrl.unselect(selectedFeature); SelectPiece($(this).text()); } );
+    users = data;
+    RedrawUsersList();
 };
 
 In.user_add = function (data) {
     users.push(data);
-    In.user_list();
+    RedrawUsersList();
 };
 
 In.user_remove = function (data) {
@@ -222,7 +165,7 @@ In.user_remove = function (data) {
             break;
         }
     }
-    In.user_list();
+    RedrawUsersList();
 };
 
 In.user_update = function (data) {
@@ -234,7 +177,7 @@ In.user_update = function (data) {
             break;
         }
     }
-    In.user_list();
+    RedrawUsersList();
 };
 
 In.anons_update = function (data) {
@@ -463,6 +406,67 @@ function SetNick() {
     }
     else
         $('#dnick').dialog("close");
+}
+
+function RedrawUsersList() {
+    alert(JSON.stringify(users, null, 2));
+    var nicks = [];
+    newhtml = "<table><tr><td id='lname'>" + ldata[18] + "</td><td id='lpieces'>" + ldata[19] + "</td><td id='lclaims'>" + ldata[20] + "</td></tr>";
+    for (var u = 0; u < users.length; u++) {
+        nicks.push(users[u]['user_nick']);
+        var sreserved = "";
+        var sclaims = "";
+        for (var i = 0; i < users[u]['reserved'].length; i++)
+            sreserved += ("<span class='num'>" + users[u]['reserved'][i] + "</span> ");
+        var userclaims = [];
+        for (i = 0; i < claims.length; i++) {
+            if (claims[i]['owner'] == users[u]['user_nick'])
+                userclaims.push(claims[i]);
+        }
+        for (i = 0; i < userclaims.length; i++) {
+            if (me.nick == users[u]['user_nick'])
+                sclaims += ("<span class='claim ui-state-default'><span class='num'>" + userclaims[i]['piece_id'] + "</span>&nbsp;[" + userclaims[i]['vote_balance'] + "&nbsp;<div title='Снять заявку' class='close'></div>]</span> ");
+            else
+                sclaims += ("<span class='claim ui-state-default'><span class='num'>" + userclaims[i]['piece_id'] + "</span>&nbsp;[<div title='За' class='up'></div>&nbsp;" + userclaims[i]['vote_balance'] + "&nbsp;<div title='Против' class='down'></div>]</span><br />");
+        }
+        newhtml += ("<tr><td class='nick'>" + (users[u]['online'] ? "<img src='/img/onl.png'>&nbsp;" : "") + "<span class='nickname'>" + users[u]['user_nick'] + "</span></td><td class='msg'>" + sreserved + "</td><td>" + sclaims + "</td></tr>");
+    }
+    newhtml += "</table>";
+    $('#userlist').html(newhtml);
+    $('#pac_text').autocomplete('option', 'source', nicks);
+    $('.nickname').click( function() { $('#pac_text').val($('#pac_text').val() + $(this).text() + ': '); $("#pac_text").focus(); } );
+    $('.up').click( function() {
+        var piece_id = $(this).parent().find('span.num').text();
+        var user_nick = $(this).parent().parent().parent().find('span.nickname').text();
+        for (var i = 0; i < claims.length; i++) {
+            if (claims[i]['owner'] == user_nick && claims[i]['piece_id'] == piece_id) {
+                Vote(claims[i]['claim_id'], 1);
+                break;
+            }
+        }
+        $(this).remove(); } );
+    $('.down').click( function() {
+        var piece_id = $(this).parent().find('span.num').text();
+        var user_nick = $(this).parent().parent().parent().find('span.nickname').text();
+        for (var i = 0; i < claims.length; i++) {
+            if (claims[i]['owner'] == user_nick && claims[i]['piece_id'] == piece_id) {
+                Vote(claims[i]['claim_id'], -1);
+                break;
+            }
+        }
+        $(this).remove(); } );
+    $('.close').click( function() {
+        var piece_id = $(this).parent().find('span.num').text();
+        var user_nick = $(this).parent().parent().parent().find('span.nickname').text();
+        for (var i = 0; i < claims.length; i++) {
+            if (claims[i]['owner'] == user_nick && claims[i]['piece_id'] == piece_id) {
+                CloseClaim(claims[i]['claim_id']);
+                break;
+            }
+        }
+        $(this).remove(); } );
+    $('.num').click( function() {
+    if (selectedFeature != null) selectCtrl.unselect(selectedFeature); SelectPiece($(this).text()); } );
 }
 
 function Debug(data) {

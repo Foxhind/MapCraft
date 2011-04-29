@@ -140,7 +140,7 @@ PieHub = {
             try {
                 this.handle_event(events[i]);
             } catch (err) {
-                console.error("Error while handling event: ", events[i], err);
+                //console.error("Error while handling event: ", events[i], err);
             }
         }
     },
@@ -152,12 +152,12 @@ PieHub = {
 
         m = event.match(/^event!json:(.+)/);
         if( m == null) {
-            console.error("Failed to parse event: " + event);
+            //console.error("Failed to parse event: " + event);
         }
 
         var json = m[1];
         if ( json == null ) {
-            console.error("Failed to find json in event: " + event);
+            //console.error("Failed to find json in event: " + event);
         }
 
         var data = JSON.parse(json);
