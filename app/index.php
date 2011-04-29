@@ -2,18 +2,6 @@
 session_start();
 if (!isset($_GET['page']))
     $_GET['page'] = 'list';
-if (isset($_GET['logout']))
-{
-    include '../lib/config.php';
-
-    $sesid = session_id();
-    session_unset();
-    session_write_close();
-    system('curl -d "" "' . $hub_full_url . '/api/session/' . $sesid . '/logout"');
-
-    Header("Location: ".$REQUEST_URL.$_GET['page']);
-    exit();
-}
 ?>
 <!doctype html>
 <html>
@@ -35,10 +23,10 @@ echo '<li class="c3'.($_GET['page']=='create'?' current':'').'"><a href="/create
 <div id="login">
 <?php
 if (isset($_SESSION['osm_user']))
-    echo $_SESSION['osm_user'].'&nbsp; &nbsp;<a href="?logout">Выход</a>';
+    echo $_SESSION['osm_user'].'&nbsp; &nbsp;<a href="/app/auth.php?action=logout&reload=1" target=\"_blank\">Выход</a>';
 else {
 	include '../lib/config.php';
-	echo "<a href=\"/app/auth_$auth_type.php\" target=\"_blank\">Вход</a>";
+	echo "<a href=\"/app/auth.php?reload=1\" target=\"_blank\">Вход</a>";
 }
 ?>
 </div>

@@ -1,9 +1,3 @@
-<html>
-<head>
-<title>Авторизация</title>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-</head>
-<body>
 <?php
 $req_url = 'http://www.openstreetmap.org/oauth/request_token';     // OSM Request Token URL
 $authurl = 'http://www.openstreetmap.org/oauth/authorize';         // OSM Authorize URL
@@ -17,8 +11,17 @@ ini_set('session.gc_maxlifetime', 7776000);
 ini_set('session.cookie_lifetime', 7776000);
 session_set_cookie_params(7776000);
 session_start();
-if(isset($_GET['oauth_token']) && isset($_SESSION['secret']))
-{
+
+if(!isset($_GET['oauth_token'])) {
+    echo "Error! There is no OAuth token!";
+    exit;
+}
+
+if(!isset($_SESSION['secret'])) {
+    echo "Error! There is no OAuth secret!";
+    exit;
+}
+
 try {
     include '../lib/config.php';
     $oauth = new OAuth($conskey, $conssec, OAUTH_SIG_METHOD_HMACSHA1, OAUTH_AUTH_TYPE_URI);
@@ -49,21 +52,12 @@ try {
     else
         $_SESSION['user_id'] = pg_fetch_result(pg_query($connection, 'INSERT INTO users VALUES(\''.$pg_osm_user.'\', DEFAULT, DEFAULT) RETURNING id'), 0 ,0);
 
-    $sesid = session_id();
-    session_write_close();
-    system('curl -d "" "' . $hub_full_url . '/api/session/' . $sesid . '/login"');
+    /// тут мы можем создать юзера в своей базе и сохранить его osm_id, osm_user, token? и secret?.
 
-    //echo "<script>window.opener.location.reload(true);</script>";
-    echo("<script>window.close()</script>");
+    // Переход на станицу успеха
+    Header("Location: /app/auth.php?action=success");
 
-       /// тут мы можем создать юзера в своей базе и сохранить его osm_id, osm_user, token? и secret?.
 } catch(OAuthException $E) {
-       print_r($E);
+    echo("Exception:\n");
+    print_r($E);
 }
-}else
-{
-       if(!isset($_SESSION['secret'])) echo "Ошибка авторизации: нет секрета!<br/><br/>";
-       if(!isset($_GET['oauth_token'])) echo "Ошибка авторизации: нет токена!<br/><br/>";
-}
-?>
-</body>
