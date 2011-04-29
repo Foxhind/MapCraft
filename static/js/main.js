@@ -374,11 +374,12 @@ OpenLayers.Layer.Vector.prototype.getFeaturesByAttribute = function getFeaturesB
 };
 
 function SelectPiece(num) {
+    if (selectedFeature != null)
+        selectCtrl.unselect(selectedFeature);
+
     pieces = kmllayer.getFeaturesByAttribute('name', num);
     if (pieces.length > 0)
-    {
         selectCtrl.select(pieces[0]);
-    }
 }
 
 function OpenViaRemote() {
@@ -409,7 +410,7 @@ function SetNick() {
 }
 
 function RedrawUsersList() {
-    alert(JSON.stringify(users, null, 2));
+    Debug(JSON.stringify(users, null, 2));
     var nicks = [];
     newhtml = "<table><tr><td id='lname'>" + ldata[18] + "</td><td id='lpieces'>" + ldata[19] + "</td><td id='lclaims'>" + ldata[20] + "</td></tr>";
     for (var u = 0; u < users.length; u++) {
@@ -465,8 +466,7 @@ function RedrawUsersList() {
             }
         }
         $(this).remove(); } );
-    $('.num').click( function() {
-    if (selectedFeature != null) selectCtrl.unselect(selectedFeature); SelectPiece($(this).text()); } );
+    $('.num').click( function() { SelectPiece($(this).text()); } );
 }
 
 function Debug(data) {
