@@ -68,7 +68,7 @@ class Channel {
 
         // Ok, we have no rights, do checks
         if ($min_role == "member") {
-            throw new Exception("Please, <a href='/app/auth.php' target='_blank'>log in</a> to access this feature");
+            throw new Exception("Please, <a href='/app/auth_osm.php' target='_blank'>log in</a> to access this feature");
         }
         throw new Exception("You need $min_role rights to access this feature");
     }
