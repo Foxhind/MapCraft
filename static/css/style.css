@@ -244,3 +244,12 @@ white-space: nowrap;
 	margin-left: 1em;
 	color: gray;
 }
+
+#comments .date {
+white-space: nowrap;
+font-size: smaller;
+margin-top: 0.2em;
+float: right;
+margin-right: 1em;
+color: gray;
+}

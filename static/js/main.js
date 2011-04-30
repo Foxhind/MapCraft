@@ -98,7 +98,9 @@ In.piece_comment = function (data) {
         var comments_div = $('#dprop #comments');
         if ($('#dprop .loading').length != 0)
             comments_div.html('');
-        $('#dprop #comments').html($('#dprop #comments').html() + '<p><strong>' + data['author'] + '</strong> (' + data['date'] + '):<br />' + data['message'] + '</p>');
+
+        var date = data['date'].replace(/\.\d+$/, '');
+        $('#dprop #comments').append('<p><strong>' + data['author'] + '</strong><span class="date">' + date + '</span><br />' + data['message'] + '</p>');
     }
 };
 
