@@ -9,6 +9,20 @@ var users = [];
 var claims = [];
 var me;
 
+// ---------------
+// Translations
+// ---------------
+var _trans_hash = {};
+function _(str) {
+    if(_trans_hash[str]) return _trans_hash[str];
+    return str;
+}
+
+function LoadTransData() {
+    for (i in trans) _trans_hash[trans[i]] = trans[++i];
+}
+
+
 var Progress = {
     draw: function(width) {
         var w = this.width = width || 200;
@@ -395,6 +409,7 @@ function ApplySettings() {
 
 function LoadLanguage() {
     $.get("/js/lang/" + $('#slang').val() + ".js", {}, function() {
+        LoadTransData();
         $('#dchat').dialog("option", "title", ldata[4]);
         $('#duserlist').dialog("option", "title", ldata[5]);
         $('#dprop').dialog("option", "title", ldata[6]);
@@ -419,6 +434,7 @@ function LoadLanguage() {
         $('#ltake').text(ldata[24]);
         $('#lclaim').text(ldata[25]);
         $('#lrefuse').text(ldata[26]);
+        $('#lprogress_bar').text(_("Progress bar:"));
     });
 }
 
