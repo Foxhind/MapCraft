@@ -600,6 +600,7 @@ function SetStyle() {
     $('head').append(linkpatch);
 }
 
+
 $(document).ready(function () {
     // Инициализация клиента хаба
     PieHub.init({
@@ -623,7 +624,13 @@ $(document).ready(function () {
     olmap.addControl(selectCtrl);
     selectCtrl.activate();
 
-	if (!olmap.getCenter()) {olmap.zoomToMaxExtent()}
+    // Zoom what it will be loaded
+    kmllayer.events.register("loadend", this, function() {
+        if (!olmap.getCenter()) {
+            olmap.zoomToExtent(kmllayer.getDataExtent());
+            olmap.zoomOut(); // a bit smaller
+        }
+    });
 
     var ww = $(window).width();
     var wh = $(window).height();
