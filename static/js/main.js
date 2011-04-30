@@ -371,6 +371,11 @@ function LoadSettings() {
         localStorage.lang = lang;
         LoadLanguage();
     }
+
+    // Progress bar
+    var show_pb = localStorage.progress_bar ? true : false;
+    $('#sprogress_bar').attr('checked', show_pb);
+    $('#progress_bar').toggle(show_pb);
 }
 
 function ApplySettings() {
@@ -382,6 +387,10 @@ function ApplySettings() {
         localStorage.lang = $('#slang').val();
         LoadLanguage();
     }
+
+    var show_pb = $('#sprogress_bar').attr('checked') ? true : false;
+    localStorage.progress_bar = show_pb ? 'show' : '';
+    $('#progress_bar').toggle(show_pb);
 }
 
 function LoadLanguage() {
