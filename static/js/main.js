@@ -358,7 +358,7 @@ function LoadSettings() {
             SetStyle();
         }
     }
-    if (localStorage.lang && false) {
+    if (localStorage.lang) {
         $('#slang').val(localStorage.lang);
         LoadLanguage();
     }
