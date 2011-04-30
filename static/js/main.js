@@ -19,9 +19,9 @@ var Progress = {
             stroke: "none",
             opacity: "0.3"
         };
-        var nb = this.none   = p.rect(1, 1, 0, 23).attr(common).attr({fill: "#f77"});
-        var pb = this.partly = p.rect(1, 1, 0, 23).attr(common).attr({fill: "#ff7"});
-        var gb = this.good   = p.rect(1, 1, 0, 23).attr(common).attr({fill: "#7f7"});
+        var nb = this.none   = p.rect(1, 1, 0, 23).attr(common).attr({fill: "#f33"});
+        var pb = this.partly = p.rect(1, 1, 0, 23).attr(common).attr({fill: "#ff3"});
+        var gb = this.good   = p.rect(1, 1, 0, 23).attr(common).attr({fill: "#3f3"});
     },
 
     update: function(cnone, cpartly, cgood, t) {
