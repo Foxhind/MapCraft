@@ -30,9 +30,9 @@ var Progress = {
         var xnone = 0;
         var xpartly = cnone / sum * this.width;
         var xgood = cpartly / sum * this.width + xpartly;
-        this.none.animate(  {            width: xpartly},            t);
-        this.partly.animate({x: xpartly, width: xgood - xpartly},    t);
-        this.good.animate(  {x: xgood,   width: this.width - xgood}, t);
+        this.none.animate(  {            width: xpartly},            t).attr({title: cnone});;
+        this.partly.animate({x: xpartly, width: xgood - xpartly},    t).attr({title: cpartly});;
+        this.good.animate(  {x: xgood,   width: this.width - xgood}, t).attr({title: cgood});
     }
 };
 var In = {};
