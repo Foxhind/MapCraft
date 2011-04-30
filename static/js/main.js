@@ -19,6 +19,7 @@ function _(str) {
 }
 
 function LoadTransData() {
+    trans = typeof(trans) == 'undefined' ? [] : trans;
     for (i in trans) _trans_hash[trans[i]] = trans[++i];
 }
 
