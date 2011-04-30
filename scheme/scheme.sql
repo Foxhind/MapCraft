@@ -65,8 +65,8 @@ ALTER TABLE mapcraft.access OWNER TO mapcrafter;
 CREATE SEQUENCE schat
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -108,8 +108,8 @@ ALTER TABLE mapcraft.chat_members OWNER TO mapcrafter;
 CREATE SEQUENCE sclaims
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -136,8 +136,8 @@ ALTER TABLE mapcraft.claims OWNER TO mapcrafter;
 CREATE SEQUENCE spieces
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -165,8 +165,8 @@ ALTER TABLE mapcraft.pieces OWNER TO mapcrafter;
 CREATE SEQUENCE spieces_comments
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -194,8 +194,8 @@ ALTER TABLE mapcraft.pieces_comments OWNER TO mapcrafter;
 CREATE SEQUENCE spies
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -227,8 +227,8 @@ ALTER TABLE mapcraft.pies OWNER TO mapcrafter;
 CREATE SEQUENCE susers
     START WITH 1
     INCREMENT BY 1
-    NO MAXVALUE
     NO MINVALUE
+    NO MAXVALUE
     CACHE 1;
 
 
@@ -503,16 +503,6 @@ REVOKE ALL ON SCHEMA mapcraft FROM PUBLIC;
 REVOKE ALL ON SCHEMA mapcraft FROM mapcrafter;
 GRANT ALL ON SCHEMA mapcraft TO mapcrafter;
 GRANT ALL ON SCHEMA mapcraft TO PUBLIC;
-
-
---
--- Name: public; Type: ACL; Schema: -; Owner: postgres
---
-
-REVOKE ALL ON SCHEMA public FROM PUBLIC;
-REVOKE ALL ON SCHEMA public FROM postgres;
-GRANT ALL ON SCHEMA public TO postgres;
-GRANT ALL ON SCHEMA public TO PUBLIC;
 
 
 --

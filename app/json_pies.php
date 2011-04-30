@@ -3,7 +3,7 @@ require '../lib/config.php';
 
 Header('Content-type: application/json; charset=utf-8');
 
-$result = pg_query($connection, 'SELECT id, name, description, jcenter FROM pies LIMIT 100');
+$result = pg_query($connection, 'SELECT id, name, description, jcenter FROM pies WHERE visible = true LIMIT 100');
 
 $first = true;
 echo '{"type":"FeatureCollection","features":[';
