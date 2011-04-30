@@ -112,11 +112,10 @@ function handle_piece_state($type, $from, $data, $res)
     $result = pg_query($connection, 'SELECT owner FROM pieces WHERE id = '.$piece_id);
     if (pg_num_rows($result) == 0)
         throw new Exception("This piece isn't exists.");
-    if (!pg_field_is_null($result, 0, 0)) {
-        $owner = pg_fetch_result($result, 0 ,0);
-        if ($owner !== $from->user_id())
-            throw new Exception("This is not your piece");
-    }
+
+    $owner = pg_fetch_result($result, 0 ,0);
+    if ($owner !== $from->user_id())
+        throw new Exception("This is not your piece");
 
     $result = pg_query($connection, 'UPDATE pieces SET state = '.$state.' WHERE id = '.$piece_id);
 
