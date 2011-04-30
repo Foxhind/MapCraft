@@ -460,7 +460,7 @@ function RedrawUsersList() {
         newhtml += ("<tr><td class='nick'>" + (users[u]['online'] ? "<img src='/img/onl.png'>&nbsp;" : "") + "<span class='nickname'>" + users[u]['user_nick'] + "</span></td><td class='msg'>" + sreserved + "</td><td>" + sclaims + "</td></tr>");
     }
     newhtml += "</table>";
-    $('#userlist').html(newhtml);
+    $('#userlist-table').html(newhtml);
     $('#pac_text').autocomplete('option', 'source', nicks);
     $('.nickname').click( function() { $('#pac_text').val($('#pac_text').val() + $(this).text() + ': '); $("#pac_text").focus(); } );
     $('.up').click( function() {

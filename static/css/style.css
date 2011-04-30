@@ -239,3 +239,8 @@ bottom: 0.5em !important;
 .claim, .nick {
 white-space: nowrap;
 }
+
+#anonscounter {
+	margin-left: 1em;
+	color: gray;
+}
