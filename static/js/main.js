@@ -3,7 +3,7 @@ var kmllayer;
 
 var selectedFeature;
 var selectCtrl;
-var color = ["#ff0000","#ff4000","#ff6000","#ff7000","#ff8000","#ff9000","#ffb000","#ffd000","#ffff00","#00ff00"];
+var color = ["#a2ff0000","#ff4000","#ff6000","#ff7000","#ff8000","#ff9000","#ffb000","#ffd000","#ffff00","#00ff00"];
 var users = [];
 var claims = [];
 var me;
@@ -41,11 +41,12 @@ In.chat = function (data) {
         mclass = data['class'];
     if (typeof(data['author']) != 'undefined')
         author = data['author'];
+    var history_class = data['history'] ? 'history' : '';
     var message = data['message'].replace(/(http\:\/\/[A-Za-z0-9_\-./]+)/g, '<a href="$1" target="_blank">$1</a>');
     message = message.replace(/#([0-9]+)/g, '<span class="piecenum" onclick="SelectPiece($1)">#$1</span>');
     var chatbox = $("#chat");
     var isEnd = (chatbox.attr("scrollHeight") - chatbox.height() - chatbox.scrollTop() < 20);
-    chat.append("<tr><td class='nick'>" + (author != "" ? "&lt;" + author + "&gt;" : "") + "</td><td class='" + mclass + "'>" + message + "</td><td>" + time + "</td></tr>");
+    chat.append("<tr class='" + history_class + "'><td class='nick'>" + author + "</td><td class='" + mclass + "'>" + message + "</td><td class='time'>" + time + "</td></tr>");
     if (isEnd) ScrollDown();
 };
 

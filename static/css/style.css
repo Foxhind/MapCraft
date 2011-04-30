@@ -69,13 +69,31 @@ vertical-align: top;
 
 }
 
+#chat .history {
+color: gray;
+}
+
+#chat .history .nick {
+	color: CadetBlue;
+}
+
+#chat .time {
+color: gray;
+font-size: smaller;
+}
+
+#chat .nick {
+text-align: right;
+color: darkblue;
+}
+
 .piecenum {
 cursor: pointer;
 border-bottom: 1px dotted;
 }
 
 .info {
-color: #36c96c;
+color: darkgreen;
 }
 
 .info .piecenum {
@@ -180,6 +198,8 @@ width: 100%;
 td.nick {
 max-width: 10em;
 overflow: hidden;
+border-right: 1px lightgray solid;
+padding-right: 0.2em;
 }
 
 .maxima {
