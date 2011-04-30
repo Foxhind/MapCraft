@@ -23,11 +23,12 @@ include("./eggs.php");
  */
 
 // Parse opts and set variables
-$opts = getopt("ti:");
+$opts = getopt("dti:");
 
 // to distinguish several logic instances
 $LOGIC_ID= isset($opts['i']) ? $opts['i'] : (string) rand(1,65535);
 $TEST_MODE = isset($opts['t']);
+$DEBUG_MODE = isset($opts['d']) || getenv('MC_DEBUG');
 
 // Main pipe reading/writing loop
 $fp=fopen("php://stdin","r");
@@ -40,11 +41,16 @@ while(!feof($fp)) {
         process_hub_message($cmd, $res);
     }
     catch(Exception $e) {
+        trigger_error("Exception: " . $e->getMessage());
         $msg = error_msg($e->getMessage());
         $res->to_sender($msg);
     }
 
     $res->output();
+
+    if($DEBUG_MODE)
+        trigger_error("Logic respond:\nvvvvvvvv\n" . join("\n", $res->data) . "\n^^^^^^^^^ ");
+
     // break after first run in testing mode
     if($TEST_MODE)
         break;

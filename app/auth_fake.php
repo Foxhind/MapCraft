@@ -1,10 +1,3 @@
-<html>
-<head>
-<title>Авторизация</title>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-</head>
-<body>
-
 <?php
 include '../lib/config.php';
 session_start();
@@ -23,20 +16,26 @@ if (isset($_POST['nick'])) {
     else
         $_SESSION['user_id'] = pg_fetch_result(pg_query($connection, 'INSERT INTO users VALUES(\''.$pg_osm_user.'\', DEFAULT, DEFAULT) RETURNING id'), 0 ,0);
 
-	echo "<script>window.opener.location.reload(true); window.close();</script>";
+    Header("Location: /app/auth.php?action=success");
+    exit();
 
 } else {
-
 ?>
+<html>
+<head>
+<title>Авторизация</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+</head>
+<body>
 
 <form method="post">
 Nick: <input type="text" name="nick">
 <input type="submit">
 </form>
 
+</body>
+</html>
+
 <?php
 }
 ?>
-
-</body>
-</html>

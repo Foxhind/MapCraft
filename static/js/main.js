@@ -51,12 +51,12 @@ In.chat = function (data) {
 
 In.claim_list = function (data) {
     claims = data;
-    In.user_list();
+    RedrawUsersList();
 };
 
 In.claim_add = function (data) {
     claims.push(data);
-    In.user_list();
+    RedrawUsersList();
 };
 
 In.claim_remove = function (data) {
@@ -66,7 +66,7 @@ In.claim_remove = function (data) {
             break;
         }
     }
-    In.user_list();
+    RedrawUsersList();
 };
 
 In.claim_update = function (data) {
@@ -78,7 +78,7 @@ In.claim_update = function (data) {
             break;
         }
     }
-    In.user_list();
+    RedrawUsersList();
 };
 
 In.javascript = function (data) {
@@ -149,92 +149,40 @@ In.reload = function (data) {
 };
 
 In.user_list = function (data) {
-    if (typeof(data) == 'object' && data != null) users = data;
-    else data = users;
-    var nicks = [];
-    newhtml = "<table><tr><td id='lname'>" + ldata[18] + "</td><td id='lpieces'>" + ldata[19] + "</td><td id='lclaims'>" + ldata[20] + "</td></tr>";
-    for (var u = 0; u < users.length; u++) {
-        nicks.push(users[u]['user_nick']);
-        var sreserved = "";
-        var sclaims = "";
-        for (var i = 0; i < users[u]['reserved'].length; i++)
-            sreserved += ("<span class='num'>" + users[u]['reserved'][i] + "</span> ");
-        var userclaims = [];
-        for (i = 0; i < claims.length; i++) {
-            if (claims[i]['owner'] == users[u]['user_nick'])
-                userclaims.push(claims[i]);
-        }
-        for (i = 0; i < userclaims.length; i++) {
-            if (me.nick == users[u]['user_nick'])
-                sclaims += ("<span class='claim ui-state-default'><span class='num'>" + userclaims[i]['piece_id'] + "</span>&nbsp;[" + userclaims[i]['vote_balance'] + "&nbsp;<div title='Снять заявку' class='close'></div>]</span> ");
-            else
-                sclaims += ("<span class='claim ui-state-default'><span class='num'>" + userclaims[i]['piece_id'] + "</span>&nbsp;[<div title='За' class='up'></div>&nbsp;" + userclaims[i]['vote_balance'] + "&nbsp;<div title='Против' class='down'></div>]</span><br />");
-        }
-        newhtml += ("<tr><td class='nick'>" + (users[u]['online'] ? "<img src='/img/onl.png'>&nbsp;" : "") + "<span class='nickname'>" + users[u]['user_nick'] + "</span></td><td class='msg'>" + sreserved + "</td><td>" + sclaims + "</td></tr>");
-    }
-    newhtml += "</table>";
-    $('#userlist').html(newhtml);
-    $('#pac_text').autocomplete('option', 'source', nicks);
-    $('.nickname').click( function() { $('#pac_text').val($('#pac_text').val() + $(this).text() + ': '); $("#pac_text").focus(); } );
-    $('.up').click( function() {
-        var piece_id = $(this).parent().find('span.num').text();
-        var user_nick = $(this).parent().parent().parent().find('span.nickname').text();
-        for (var i = 0; i < claims.length; i++) {
-            if (claims[i]['owner'] == user_nick && claims[i]['piece_id'] == piece_id) {
-                Vote(claims[i]['claim_id'], 1);
-                break;
-            }
-        }
-        $(this).remove(); } );
-    $('.down').click( function() {
-        var piece_id = $(this).parent().find('span.num').text();
-        var user_nick = $(this).parent().parent().parent().find('span.nickname').text();
-        for (var i = 0; i < claims.length; i++) {
-            if (claims[i]['owner'] == user_nick && claims[i]['piece_id'] == piece_id) {
-                Vote(claims[i]['claim_id'], -1);
-                break;
-            }
-        }
-        $(this).remove(); } );
-    $('.close').click( function() {
-        var piece_id = $(this).parent().find('span.num').text();
-        var user_nick = $(this).parent().parent().parent().find('span.nickname').text();
-        for (var i = 0; i < claims.length; i++) {
-            if (claims[i]['owner'] == user_nick && claims[i]['piece_id'] == piece_id) {
-                CloseClaim(claims[i]['claim_id']);
-                break;
-            }
-        }
-        $(this).remove(); } );
-    $('.num').click( function() {
-    if (selectedFeature != null) selectCtrl.unselect(selectedFeature); SelectPiece($(this).text()); } );
-};
-
-In.user_add = function (data) {
-    users.push(data);
-    In.user_list();
-};
-
-In.user_remove = function (data) {
-    for (var i = 0; i < users.length; i++) {
-        if (users[i]['user_nick'] == data['user_nick']) {
-            users.splice(i, 1);
-            break;
-        }
-    }
-    In.user_list();
+    users = data;
+    RedrawUsersList();
 };
 
 In.user_update = function (data) {
+    var idx = -1;
     for (var i = 0; i < users.length; i++) {
         if (users[i]['user_nick'] == data['current_nick']) {
-            for(var field in data) {
-                users[i][field] = data[field];
-            }
+            idx = i;
             break;
         }
     }
-    In.user_list();
+    // If user entry is not found, add one
+    if (idx == -1) {
+        var entry = {
+            user_nick: data['current_nick'],
+            color: data['color'] || '000',
+            online: data['online'] || false,
+            reserved: data['reserved'] || []
+        };
+        users.push(entry);
+        idx = users.length - 1;
+    } else {
+        // If found then update and delete if needed
+        for(var field in data) {
+            users[i][field] = data[field];
+        }
+    }
+
+    if(is_user_entry_is_empty(users[i])) {
+        users.splice(i, 1);
+    }
+
+    RedrawUsersList();
 };
 
 In.anons_update = function (data) {
@@ -324,6 +272,24 @@ Out.vote_claim = function (claim_id, vote) {
 Out.whoami = function() {
     return ['whoami', {}];
 };
+
+function is_user_entry_is_empty(entry) {
+    if(entry.online) return false;
+    if(entry.reserved.length) return false;
+
+    // search for claims
+    found = false;
+    for (idx in claims) {
+        if (claims[idx]['owner'] == entry.user_nick) {
+            found = true;
+            break;
+        }
+    }
+    if(found) return false;
+
+    // all checks failed -- entry is useless
+    return true;
+}
 
 function Dispatch(data) {
     if (typeof In[data[0]] == 'function')
@@ -431,11 +397,12 @@ OpenLayers.Layer.Vector.prototype.getFeaturesByAttribute = function getFeaturesB
 };
 
 function SelectPiece(num) {
+    if (selectedFeature != null)
+        selectCtrl.unselect(selectedFeature);
+
     pieces = kmllayer.getFeaturesByAttribute('name', num);
     if (pieces.length > 0)
-    {
         selectCtrl.select(pieces[0]);
-    }
 }
 
 function OpenViaRemote() {
@@ -463,6 +430,65 @@ function SetNick() {
     }
     else
         $('#dnick').dialog("close");
+}
+
+function RedrawUsersList() {
+    var nicks = [];
+    newhtml = "<table><tr><td id='lname'>" + ldata[18] + "</td><td id='lpieces'>" + ldata[19] + "</td><td id='lclaims'>" + ldata[20] + "</td></tr>";
+    for (var u = 0; u < users.length; u++) {
+        nicks.push(users[u]['user_nick']);
+        var sreserved = "";
+        var sclaims = "";
+        for (var i = 0; i < users[u]['reserved'].length; i++)
+            sreserved += ("<span class='num'>" + users[u]['reserved'][i] + "</span> ");
+        var userclaims = [];
+        for (i = 0; i < claims.length; i++) {
+            if (claims[i]['owner'] == users[u]['user_nick'])
+                userclaims.push(claims[i]);
+        }
+        for (i = 0; i < userclaims.length; i++) {
+            if (me.nick == users[u]['user_nick'])
+                sclaims += ("<span class='claim ui-state-default'><span class='num'>" + userclaims[i]['piece_id'] + "</span>&nbsp;[" + userclaims[i]['vote_balance'] + "&nbsp;<div title='Снять заявку' class='close'></div>]</span> ");
+            else
+                sclaims += ("<span class='claim ui-state-default'><span class='num'>" + userclaims[i]['piece_id'] + "</span>&nbsp;[<div title='За' class='up'></div>&nbsp;" + userclaims[i]['vote_balance'] + "&nbsp;<div title='Против' class='down'></div>]</span><br />");
+        }
+        newhtml += ("<tr><td class='nick'>" + (users[u]['online'] ? "<img src='/img/onl.png'>&nbsp;" : "") + "<span class='nickname'>" + users[u]['user_nick'] + "</span></td><td class='msg'>" + sreserved + "</td><td>" + sclaims + "</td></tr>");
+    }
+    newhtml += "</table>";
+    $('#userlist').html(newhtml);
+    $('#pac_text').autocomplete('option', 'source', nicks);
+    $('.nickname').click( function() { $('#pac_text').val($('#pac_text').val() + $(this).text() + ': '); $("#pac_text").focus(); } );
+    $('.up').click( function() {
+        var piece_id = $(this).parent().find('span.num').text();
+        var user_nick = $(this).parent().parent().parent().find('span.nickname').text();
+        for (var i = 0; i < claims.length; i++) {
+            if (claims[i]['owner'] == user_nick && claims[i]['piece_id'] == piece_id) {
+                Vote(claims[i]['claim_id'], 1);
+                break;
+            }
+        }
+        $(this).remove(); } );
+    $('.down').click( function() {
+        var piece_id = $(this).parent().find('span.num').text();
+        var user_nick = $(this).parent().parent().parent().find('span.nickname').text();
+        for (var i = 0; i < claims.length; i++) {
+            if (claims[i]['owner'] == user_nick && claims[i]['piece_id'] == piece_id) {
+                Vote(claims[i]['claim_id'], -1);
+                break;
+            }
+        }
+        $(this).remove(); } );
+    $('.close').click( function() {
+        var piece_id = $(this).parent().find('span.num').text();
+        var user_nick = $(this).parent().parent().parent().find('span.nickname').text();
+        for (var i = 0; i < claims.length; i++) {
+            if (claims[i]['owner'] == user_nick && claims[i]['piece_id'] == piece_id) {
+                CloseClaim(claims[i]['claim_id']);
+                break;
+            }
+        }
+        $(this).remove(); } );
+    $('.num').click( function() { SelectPiece($(this).text()); } );
 }
 
 function Debug(data) {

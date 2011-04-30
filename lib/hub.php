@@ -1,7 +1,7 @@
 <?php
 
 class HubResult {
-    protected $data = array();
+    public $data = array();
     protected $responded = false;
 
     // Api for handlers
@@ -126,7 +126,7 @@ function process_hub_message($str, $res) {
         $from = $channels->find($pieid, $sesid);
         $data = array( 'reason' =>  $reason );
 
-        dispatch('user_exit', 'async', $from, $data, $res);
+        dispatch('session_exit', 'async', $from, $data, $res);
         break;
     case 'session_join':
         list($pieid, $sesid) = $args;
@@ -134,7 +134,13 @@ function process_hub_message($str, $res) {
         $from = $channels->find($pieid, $sesid);
         $data = array();
 
-        dispatch('user_join', 'async', $from, $data, $res);
+        dispatch('session_join', 'async', $from, $data, $res);
+        break;
+    case 'session_action':
+        list($pieid, $sesid, $action) = $args;
+
+        $from = $channels->find($pieid, $sesid);
+        dispatch('session_act_' . $action, 'async', $from, array(), $res);
         break;
     case 'pie_exit':
         list($pieid) = $args;

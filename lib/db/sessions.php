@@ -19,6 +19,9 @@ class Channel {
             $this->_nick = $_SESSION['nick'];
         }
 
+        // anon_nick
+        $this->_anon_nick = isset($_SESSION['nick']) ? $_SESSION['nick'] : 'anon???';
+
         // id
         $this->_user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : '0';
 
@@ -32,6 +35,12 @@ class Channel {
     function nick() {
         isset($this->_nick) || $this->_load_from_session();
         return $this->_nick;
+    }
+
+    // returns osm name or anon####
+    function anon_nick() {
+        isset($this->_anon_nick) || $this->_load_from_session();
+        return $this->_anon_nick;
     }
 
     // returns current role in the pie
@@ -59,7 +68,7 @@ class Channel {
 
         // Ok, we have no rights, do checks
         if ($min_role == "member") {
-            throw new Exception("Please, <a href='/app/auth_osm.php' target='_blank'>log in</a> to access this feature");
+            throw new Exception("Please, <a href='/app/auth.php' target='_blank'>log in</a> to access this feature");
         }
         throw new Exception("You need $min_role rights to access this feature");
     }
