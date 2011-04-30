@@ -235,3 +235,7 @@ bottom: 2em !important;
 .olControlPermalink {
 bottom: 0.5em !important;
 }
+
+.claim, .nick {
+white-space: nowrap;
+}
