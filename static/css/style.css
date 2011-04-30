@@ -162,6 +162,10 @@ top: 10px;
 left: 10px;
 }
 
+#progress_bar {
+	margin-top: 0.2em;
+}
+
 #userlist table {
 border-collapse: collapse;
 }

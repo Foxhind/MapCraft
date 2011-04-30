@@ -8,6 +8,33 @@ var users = [];
 var claims = [];
 var me;
 
+var Progress = {
+    draw: function(width) {
+        var w = this.width = width || 200;
+        var p = this.paper = Raphael("progress_bar", w + 2, 24);
+
+        var a  = this.area   = p.rect(1, 1, w, 23).attr({fill: "90-#333-#fff", "fill-opacity": 0.3, "stroke-opacity": 0.3});
+
+        var common = {
+            stroke: "none",
+            opacity: "0.3"
+        };
+        var nb = this.none   = p.rect(1, 1, 0, 23).attr(common).attr({fill: "#f77"});
+        var pb = this.partly = p.rect(1, 1, 0, 23).attr(common).attr({fill: "#ff7"});
+        var gb = this.good   = p.rect(1, 1, 0, 23).attr(common).attr({fill: "#7f7"});
+    },
+
+    update: function(cnone, cpartly, cgood, t) {
+        if (!t) t = 1000;
+        var sum = cnone + cpartly + cgood;
+        var xnone = 0;
+        var xpartly = cnone / sum * this.width;
+        var xgood = cpartly / sum * this.width + xpartly;
+        this.none.animate(  {            width: xpartly},            t);
+        this.partly.animate({x: xpartly, width: xgood - xpartly},    t);
+        this.good.animate(  {x: xgood,   width: this.width - xgood}, t);
+    }
+};
 var In = {};
 var Out = {};
 
@@ -601,8 +628,9 @@ function SetStyle() {
     $('head').append(linkpatch);
 }
 
-
 $(document).ready(function () {
+    Progress.draw();
+
     // Инициализация клиента хаба
     PieHub.init({
         pieid: parseInt(window.location.pathname.split('pie/')[1]),
