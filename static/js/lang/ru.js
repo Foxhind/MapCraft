@@ -35,4 +35,13 @@ var trans = [
 
 'Yes',
 'Да',
+
+'Piece has been freed',
+'Кусок освобождён',
+
+'Piece has been reserved',
+'Кусок зарезервирован'
 ];
+
+for ( i = 0; i < 10 ; i++ )
+    trans.push('New state: ' + i + '/9', 'Новый статус: ' + i + '/9');

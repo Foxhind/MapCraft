@@ -269,6 +269,10 @@ white-space: nowrap;
 	color: gray;
 }
 
+#comments .info strong {
+color: black
+}
+
 #comments .date {
 white-space: nowrap;
 font-size: smaller;

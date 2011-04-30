@@ -142,8 +142,9 @@ In.piece_comment = function (data) {
         if ($('#dprop .loading').length != 0)
             comments_div.html('');
 
+        var msg = data['type'] == 'comment' ? data['message'] : _(data['message']);
         var date = data['date'].replace(/\.\d+$/, '');
-        $('#dprop #comments').append('<p><strong>' + data['author'] + '</strong><span class="date">' + date + '</span><br />' + data['message'] + '</p>');
+        $('#dprop #comments').append('<p class="' + data['type'] + '"><strong>' + data['author'] + '</strong><span class="date">' + date + '</span><br />' + msg + '</p>');
     }
 };
 
