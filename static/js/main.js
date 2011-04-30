@@ -3,7 +3,7 @@ var kmllayer;
 
 var selectedFeature;
 var selectCtrl;
-var color = ["#a2ff0000","#ff4000","#ff6000","#ff7000","#ff8000","#ff9000","#ffb000","#ffd000","#ffff00","#00ff00"];
+var color = ["#ff0000","#ff4000","#ff6000","#ff7000","#ff8000","#ff9000","#ffb000","#ffd000","#ffff00","#00ff00"];
 var users = [];
 var claims = [];
 var me;
