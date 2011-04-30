@@ -78,7 +78,7 @@ function handle_piece_free($type, $from, $data, $res)
     else {
         $owner = pg_fetch_result($result, 0 ,0);
         if ($owner !== $from->user_id())
-            throw new Exception("This piece isn't owned by you.");
+            throw new Exception("This is not your piece");
     }
 
     $result = pg_query($connection, 'UPDATE pieces SET owner = NULL WHERE id = '.$piece_id);
@@ -115,7 +115,7 @@ function handle_piece_state($type, $from, $data, $res)
     if (!pg_field_is_null($result, 0, 0)) {
         $owner = pg_fetch_result($result, 0 ,0);
         if ($owner !== $from->user_id())
-            throw new Exception("This piece is owned by $owner.");
+            throw new Exception("This is not your piece");
     }
 
     $result = pg_query($connection, 'UPDATE pieces SET state = '.$state.' WHERE id = '.$piece_id);
