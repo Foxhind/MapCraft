@@ -514,8 +514,11 @@ function CloseClaim(claim_id) {
 }
 
 function Send() {
-    PieHub.push(Out.chat($("#pac_text").val()));
-    $("#pac_text").val("");
+    var text = $("#pac_text").val();
+    if (!text.match(/^\s*$/)) {
+        PieHub.push(Out.chat(text));
+        $("#pac_text").val("");
+    }
     $("#pac_text").focus();
     return false;
 }
