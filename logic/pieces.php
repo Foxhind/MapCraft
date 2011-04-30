@@ -127,6 +127,7 @@ function handle_piece_state($type, $from, $data, $res)
                     "state" => $state );
     $res->to_pie($from, array('piece_state', $pinfo));
     $res->to_pie($from, info_msg("%s has set state for #%s to %s/9", $from->nick(), $piece_id, $state));
+    _update_piece_progress($res, $from);
 }
 
 function handle_piece_comment($type, $from, $data, $res)
@@ -149,6 +150,34 @@ function handle_piece_comment($type, $from, $data, $res)
         'message' => $comment,
         'date' => $timestamp
     )) );
+}
+
+function handle_piece_progress($type, $from, $data, $res)
+{
+    _update_piece_progress($res, $from);
+}
+
+// -------------------------
+// Helpers
+// -------------------------
+
+function _update_piece_progress($res, $from)
+{
+    global $connection;
+
+    $result = pg_query($connection, "SELECT state FROM pieces WHERE pie = " . $from->pieid);
+    $states = pg_fetch_all_columns($result, 0);
+    $progress = array(0,0,0);
+    foreach ($states as $st) {
+        switch ($st) {
+        case 0:  $progress[0] ++; break;
+        case 9:  $progress[2] ++; break;
+        default: $progress[1] ++;
+        }
+    }
+
+    $event = array('piece_progress', array('progress' => $progress));
+    $res->to_pie($from, $event);
 }
 
 ?>

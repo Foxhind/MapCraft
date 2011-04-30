@@ -160,6 +160,11 @@ In.piece_state = function (data) {
     kmllayer.redraw(true);
 };
 
+In.piece_progress = function(data) {
+    var cnts = data['progress'];
+    Progress.update(cnts[0], cnts[1], cnts[2], 400);
+};
+
 In.refresh_pie_data = function (data) {
     if (typeof(data['url']) == 'string')
         kmllayer.addOptions({protocol: new OpenLayers.Protocol.HTTP({url: data['url'], format: new OpenLayers.Format.KML({extractStyles: true, extractAttributes: true, maxDepth: 0})})});
@@ -296,6 +301,10 @@ Out.piece_reserve = function (piece_id) {
 Out.piece_free = function (piece_id) {
     if (typeof(piece_id) != 'string' && typeof(piece_id) != 'number') return false;
     return ['piece_free', {piece_id: piece_id.toString()}];
+};
+
+Out.piece_progress = function () {
+    return ['piece_progress', {}];
 };
 
 Out.vote_claim = function (claim_id, vote) {
@@ -533,6 +542,7 @@ function Debug(data) {
 function Enter() {
     PieHub.push( Out.get_chat_history() );
     PieHub.push( Out.whoami() );
+    PieHub.push( Out.piece_progress() );
 }
 
 function Vote(claim_id, vote) {
