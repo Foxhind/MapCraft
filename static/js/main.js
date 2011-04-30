@@ -712,7 +712,7 @@ $(document).ready(function () {
     $('#bstatus').button({disabled: true});
     $('#bstatus').click(function() { $('#sstatus').slider('value', selectedFeature.attributes.description); $('#vcolor').css({ color: color[$('#sstatus').slider('value')] }); $('#newstatus').text($('#sstatus').slider('value')); $('#dstatus').dialog('open'); });
     $('#pac_nick').button({ icons: { primary: 'ui-icon-person'} });
-    $('#pac_nick').click(function() { window.open('/app/auth.php?reload=1'); } );
+    $('#pac_nick').click(function() { window.open('/app/auth.php'); } );
     $('#pac_color').button();
     $('#pac_color').click(PromptColor);
     $('#dchat').dialog( { resize: function(event, ui) { $('#chat').height($(this).height() - 45); $('#chat').width($(this).width() - 30); } } );
