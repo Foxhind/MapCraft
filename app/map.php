@@ -40,5 +40,7 @@ selectControl.handlers.feature.stopDown = false;
 olmap.addControl(selectControl);
 selectControl.activate();
 
-if (!olmap.getCenter()) {olmap.zoomToMaxExtent(); olmap.zoomTo(1);}
+if (!olmap.getCenter()) {
+    olmap.setCenter(new OpenLayers.LonLat(508764.86018, 3874440.08903), 2);
+}
 </script>
