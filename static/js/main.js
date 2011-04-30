@@ -153,30 +153,35 @@ In.user_list = function (data) {
     RedrawUsersList();
 };
 
-In.user_add = function (data) {
-    users.push(data);
-    RedrawUsersList();
-};
-
-In.user_remove = function (data) {
-    for (var i = 0; i < users.length; i++) {
-        if (users[i]['user_nick'] == data['user_nick']) {
-            users.splice(i, 1);
-            break;
-        }
-    }
-    RedrawUsersList();
-};
-
 In.user_update = function (data) {
+    var idx = -1;
     for (var i = 0; i < users.length; i++) {
         if (users[i]['user_nick'] == data['current_nick']) {
-            for(var field in data) {
-                users[i][field] = data[field];
-            }
+            idx = i;
             break;
         }
     }
+    // If user entry is not found, add one
+    if (idx == -1) {
+        var entry = {
+            user_nick: data['current_nick'],
+            color: data['color'] || '000',
+            online: data['online'] || false,
+            reserved: data['reserved'] || []
+        };
+        users.push(entry);
+        idx = users.length - 1;
+    } else {
+        // If found then update and delete if needed
+        for(var field in data) {
+            users[i][field] = data[field];
+        }
+    }
+
+    if(is_user_entry_is_empty(users[i])) {
+        users.splice(i, 1);
+    }
+
     RedrawUsersList();
 };
 
@@ -267,6 +272,24 @@ Out.vote_claim = function (claim_id, vote) {
 Out.whoami = function() {
     return ['whoami', {}];
 };
+
+function is_user_entry_is_empty(entry) {
+    if(entry.online) return false;
+    if(entry.reserved.length) return false;
+
+    // search for claims
+    found = false;
+    for (idx in claims) {
+        if (claims[idx]['owner'] == entry.user_nick) {
+            found = true;
+            break;
+        }
+    }
+    if(found) return false;
+
+    // all checks failed -- entry is useless
+    return true;
+}
 
 function Dispatch(data) {
     if (typeof In[data[0]] == 'function')
