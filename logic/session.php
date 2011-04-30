@@ -11,7 +11,7 @@ function handle_session_join($type, $from, $data, $res) {
     }
 
     if ($is_new) {
-        $msg = info_msg($from->nick() . ' has joined');
+        $msg = info_msg('%s has joined', $from->nick());
         $res->to_pie($from, $msg);
     }
 }
@@ -28,7 +28,7 @@ function handle_session_exit($type, $from, $data, $res) {
     }
 
     if ($is_last) {
-        $msg = info_msg($from->nick() . ' has quit: ' . $data['reason']);
+        $msg = info_msg('%s has quit: %s', $from->nick(), $data['reason']);
         $res->to_pie($from, $msg);
     }
 }

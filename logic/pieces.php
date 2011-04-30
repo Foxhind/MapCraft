@@ -58,7 +58,7 @@ function handle_piece_reserve($type, $from, $data, $res)
     $piece_ids = pg_fetch_all_columns($result, 0);
     $res->to_pie($from, array( 'user_update', array('current_nick' => $nick,
                                                     'reserved' => $piece_ids) ));
-    $res->to_pie($from, info_msg("User %s has reserved piece #%s.", $nick, $piece_id));
+    $res->to_pie($from, info_msg("%s has reserved piece #%s.", $nick, $piece_id));
 }
 
 function handle_piece_free($type, $from, $data, $res)
@@ -97,7 +97,7 @@ function handle_piece_free($type, $from, $data, $res)
     $res->to_pie($from, array( 'user_update', array('current_nick' => $nick,
                                                     'reserved' => $piece_ids) ));
 
-    $res->to_pie($from, info_msg("User %s has freed piece #%s.", $nick, $piece_id));
+    $res->to_pie($from, info_msg("%s has freed piece #%s.", $nick, $piece_id));
 }
 
 function handle_piece_state($type, $from, $data, $res)
@@ -126,7 +126,7 @@ function handle_piece_state($type, $from, $data, $res)
     $pinfo = array( "piece_id" => $piece_id,
                     "state" => $state );
     $res->to_pie($from, array('piece_state', $pinfo));
-    $res->to_pie($from, info_msg("User %s has set state for #%s to %s/9", $from->nick(), $piece_id, $state));
+    $res->to_pie($from, info_msg("%s has set state for #%s to %s/9", $from->nick(), $piece_id, $state));
 }
 
 function handle_piece_comment($type, $from, $data, $res)
