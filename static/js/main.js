@@ -4,6 +4,7 @@ var kmllayer;
 var selectedFeature;
 var selectCtrl;
 var color = ["#ff0000","#ff4000","#ff6000","#ff7000","#ff8000","#ff9000","#ffb000","#ffd000","#ffff00","#00ff00"];
+var supported_langs = ['en', 'ru', 'jp'];
 var users = [];
 var claims = [];
 var me;
@@ -357,13 +358,17 @@ function LoadSettings() {
             SetStyle();
         }
     }
-    if (localStorage.lang) {
+    if (localStorage.lang && false) {
         $('#slang').val(localStorage.lang);
         LoadLanguage();
     }
     else {
-        $('#slang').val(navigator.language ? navigator.language : (navigator.browserLanguage ? navigator.browserLanguage : "en"));
-        localStorage.lang = $('#slang').val();
+        var lang = navigator.language ? navigator.language : (navigator.browserLanguage ? navigator.browserLanguage : "en");
+        lang = lang.replace(/-\w+$/, '');
+        lang = lang in supported_langs ? lang : "en";
+
+        $('#slang').val(lang);
+        localStorage.lang = lang;
         LoadLanguage();
     }
 }
