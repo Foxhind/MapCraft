@@ -43,11 +43,12 @@ route_one_safely(HubReq, Line) ->
 
 route_one("respond", HubReq, [{json, Json}]) ->
 	sync = HubReq#hub_req.type,
+	stats:incr({router, to, caller}),
 	HubReq#hub_req.caller ! {answer, HubReq, Json},
 	ok;
 
 route_one("to_sender", HubReq, [Msg]) ->
-	stats:incr({router, to_sender}),
+	stats:incr({router, to, sender}),
 	PieId = HubReq#hub_req.pieid,
 	SesId = HubReq#hub_req.sesid,
 	TabId = HubReq#hub_req.tabid,
@@ -56,13 +57,13 @@ route_one("to_sender", HubReq, [Msg]) ->
 	ok;
 
 route_one("to_session", _, [PieId, SesId, Msg]) ->
-	stats:incr({router, to_session}),
+	stats:incr({router, to, session}),
 	Dests = pie:lookup(PieId, SesId),
 	push_event_to_chans(Dests, Msg),
 	ok;
 
 route_one("to_pie", _, [PieId, Msg]) ->
-	stats:incr({router, to_pie}),
+	stats:incr({router, to, pie}),
 	Dests = pie:lookup(PieId),
 	push_event_to_chans(Dests, Msg),
 	ok.
@@ -85,7 +86,7 @@ push({Pid, ChanId, online}, Cmd) ->
 	Pid ! {send, self(), ChanId, Cmd},
 	receive
 		{Pid, ok} ->
-			stats:incr({router, routed}),
+			stats:incr({router, to, channel}),
 			ok;
 		{Pid, _Ans} ->
 			ok = mqueue:store(ChanId, Cmd)
