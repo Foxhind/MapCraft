@@ -88,6 +88,28 @@ header {
     font-weight: bold;
     margin-bottom: 10px;
 }
+ul.pages {
+    list-style-type: none;
+    margin: 10px;
+    text-align: center;
+}
+ul.pages li {
+    display: inline-block;
+}
+a.pagenum, a.apagenum {
+    background-color: #e2f1e2;
+    border: 1px solid #6D926C;
+    display: block;
+    margin: 1px;
+    min-width: 1.2em;
+}
+a.pagenum:hover {
+    background-color: #fff;
+}
+a.apagenum {
+    background-color: #ecf5eb;
+    text-decoration: none;
+}
 #panel li {
     display: inline-block;
     list-style-type: none;
