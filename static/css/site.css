@@ -96,7 +96,7 @@ ul.pages {
 ul.pages li {
     display: inline-block;
 }
-a.pagenum, a.apagenum {
+a.pagenum, span.apagenum {
     background-color: #e2f1e2;
     border: 1px solid #6D926C;
     display: block;
@@ -106,8 +106,8 @@ a.pagenum, a.apagenum {
 a.pagenum:hover {
     background-color: #fff;
 }
-a.apagenum {
-    background-color: #ecf5eb;
+span.apagenum {
+    background-color: #fff;
     text-decoration: none;
 }
 #panel li {

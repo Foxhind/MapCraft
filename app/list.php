@@ -5,7 +5,9 @@ $result = pg_query($connection, 'SELECT COUNT(id) FROM pies WHERE visible = true
 $piescount = intval(pg_fetch_result($result, 0, 0));
 
 $piespp = 10;
-$start = isset($_GET['start']) ? intval($_GET['start']) : (isset($_GET['pagenum']) ? (intval($_GET['pagenum']) - 1) * $piespp : 0);
+$radius = 1;
+$pagenum = isset($_GET['pagenum']) ? intval($_GET['pagenum']) : 1;
+$start = ($pagenum - 1) * $piespp;
 if ($start > $piescount or $start < 0)
     header('Location: /list');
 
@@ -21,14 +23,33 @@ if (pg_num_rows($result) > 0) {
     echo '</table>';
 
     // Pages
-    // TODO: Big ranges cutting (1 2 ... 4 [5] 6 ... 15 16)
     if ($piescount > $piespp) {
-        $numpages = ($piescount - ($piescount % $piespp)) / $piespp + 1;
-        if ($numpages > 1) {
-            $currentnum = ($start - ($start % $piespp)) / $piespp + 1;
+        $maxpage = intval(ceil($piescount / $piespp)); // 2
+        if ($maxpage > 1) {
             echo '<ul class="pages">';
-            foreach (range(1, $numpages) as $num)
-                echo '<li><a href="/list?pagenum='.$num.'" class="'.($num == $currentnum ? 'apagenum' : 'pagenum').'">'.$num.'</a></li>';
+            if ($pagenum > (2 + $radius * 2)) {
+                foreach (range(1, 1 + $radius) as $num)
+                    echo '<li><a href="/list?pagenum='.$num.'" class="pagenum">'.$num.'</a></li>';
+                echo ' … ';
+                foreach (range($pagenum - $radius, $pagenum - 1) as $num)
+                    echo '<li><a href="/list?pagenum='.$num.'" class="pagenum">'.$num.'</a></li>';
+            }
+            else
+                if ($pagenum > 1)
+                    foreach (range(1, $pagenum - 1) as $num)
+                        echo '<li><a href="/list?pagenum='.$num.'" class="pagenum">'.$num.'</a></li>';
+            echo '<li><span class="apagenum">'.$pagenum.'</span></li>';
+            if (($maxpage - $pagenum) >= (2 + $radius * 2)) {
+                foreach (range($pagenum + 1, $pagenum + $radius) as $num)
+                    echo '<li><a href="/list?pagenum='.$num.'" class="pagenum">'.$num.'</a></li>';
+                echo ' … ';
+                foreach (range($maxpage - $radius, $maxpage) as $num)
+                    echo '<li><a href="/list?pagenum='.$num.'" class="pagenum">'.$num.'</a></li>';
+            }
+            else
+                if ($pagenum < $maxpage)
+                    foreach (range($pagenum + 1, $maxpage) as $num)
+                        echo '<li><a href="/list?pagenum='.$num.'" class="pagenum">'.$num.'</a></li>';
             echo '</ul>';
         }
     }
