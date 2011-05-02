@@ -6,7 +6,7 @@ if (!isset($_GET['page']))
 <!doctype html>
 <html>
 <head>
-<title>MapCraft — massively mapping helper</title>
+<title>MapCraft — massively mapping management tool</title>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <link rel="stylesheet" href="/css/site.css" type="text/css" media="screen, projection" />
 </head>
@@ -36,6 +36,6 @@ include $_GET['page'].'.php';
 ?>
 </div>
 <footer>
-by Hind, osmisto, 2011
+by <a href="http://wiki.openstreetmap.org/wiki/User:Hind">Hind</a>, <a href="http://wiki.openstreetmap.org/wiki/User:Osmisto">osmisto</a>, 2011<br /><a href="https://github.com/Foxhind/MapCraft">on GitHub</a>
 </footer>
 </body>
