@@ -11,14 +11,16 @@ $start = ($pagenum - 1) * $piespp;
 if ($start > $piescount or $start < 0)
     header('Location: /list');
 
-$result = pg_query($connection, 'SELECT pies.id, pies.name, users.nick, pies.start, pies.ends, count(pieces.id) AS num, sum(pieces.state) / (count(pieces.id) * 9.0) * 100 AS state FROM pies INNER JOIN pieces ON pies.id = pieces.pie JOIN users ON pies.author=users.id WHERE pies.visible = true GROUP BY pies.id, pies.name, users.nick, pies.start, pies.ends LIMIT '.$piespp.' OFFSET '.$start);
+$result = pg_query($connection, 'SELECT pies.id, pies.name, pies.description, users.nick, pies.start, pies.ends, count(pieces.id) AS num, sum(pieces.state) / (count(pieces.id) * 9.0) * 100 AS state FROM pies INNER JOIN pieces ON pies.id = pieces.pie JOIN users ON pies.author=users.id WHERE pies.visible = true GROUP BY pies.id, pies.name, pies.description, users.nick, pies.start, pies.ends LIMIT '.$piespp.' OFFSET '.$start);
 
 if (pg_num_rows($result) > 0) {
+    echo '<script>function toggledesc (row) { var rows = row.parentNode.getElementsByClassName("desc"); var thisrow = null; for(var i = 0; i < rows.length; i++) { thisrow = (rows[i] == row.nextSibling); rows[i].style.display = thisrow ? ((rows[i].style.display == "none") ? "table-row" : "none") : "none"; } }</script>';
     echo '<table class="list">';
     echo '<tr><th>Название</th><th>Сектора</th><th>Готовность</th><th>Создатель</th><th>Открыт</th><th>Закрыт</th></tr>';
     while ($row = pg_fetch_array($result)) {
         $state = round(floatval($row['state']));
-        echo '<tr><td><a href="/pie/'.$row['id'].'" target="_blank">'.$row['name'].'</a></td><td>'.$row['num'].'</td><td><meter value="'.$state.'" min="0" max="100" low="33" high="67">'.$state.'&nbsp;%</meter></td><td>'.$row['nick'].'</td><td>'.$row['start'].'</td><td>'.($row['ends'] ? $row['ends'] : '—').'</td></tr>';
+        echo '<tr onclick="toggledesc(this)"><td><a href="/pie/'.$row['id'].'" target="_blank">'.$row['name'].'</a></td><td>'.$row['num'].'</td><td><meter value="'.$state.'" min="0" max="100" low="33" high="67">'.$state.'&nbsp;%</meter></td><td>'.$row['nick'].'</td><td>'.$row['start'].'</td><td>'.($row['ends'] ? $row['ends'] : '—').'</td></tr>';
+        echo '<tr class="desc"><td colspan="6">'.(empty($row['description']) ? 'Нет описания' : $row['description']).'</td></tr>';
     }
     echo '</table>';
 

@@ -144,14 +144,19 @@ table.list th {
 table.list td {
     padding: 10px;
 }
-table.list tr:nth-child(odd) {
+table.list tr:nth-child(4n) {
     background: #ecf5eb;
 }
-table.list tr:nth-child(even) {
+table.list tr:nth-child(4n+2) {
     background: #e2f1e2;
+}
+table.list tr:nth-child(2n+1) {
+    background: #ffffff;
+    display: none;
 }
 table.list tr:first-child {
     background: #6d926c;
     text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
     color: #fff;
+    display: table-row;
 }
