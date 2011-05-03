@@ -29,7 +29,7 @@ WEB
   IMAGEURL "/tmp/"
   METADATA
     "wms_title"   "WMS Server"
-    "wms_onlineresource" "http://mapcraft.nanodesu.ru/cgi-bin/mapserv?map='.$pie_id.'.map"
+    "wms_onlineresource" "http://mapcraft.nanodesu.ru/cgi-bin/mapserv?map=/srv/www.mapcraft.nanodesu.ru/data/wms/'.$pie_id.'.map&"
     "wms_srs"   "EPSG:4326 EPSG:3857"
     "wms_feature_info_mime_type" "text/html"
     "wms_abstract"      "Pie"
@@ -41,9 +41,9 @@ PROJECTION
 END
 
 LAYER
-  NAME "gelen"
+  NAME "pie"
   METADATA
-    "wms_title"  "pie"
+    "wms_title"  "pie'.$pie_id.'"
   END
   TYPE POLYGON
   STATUS DEFAULT
