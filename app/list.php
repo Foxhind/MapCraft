@@ -17,8 +17,12 @@ if (pg_num_rows($result) > 0) {
     echo '<script>
     function toggledesc (row) {
         var rows = row.parentNode.getElementsByClassName("desc");
-        for(var i = 0; i < rows.length; i++)
-            rows[i].style.display = (rows[i] == row.nextSibling) ? ((rows[i].style.display == "table-row") ? "none" : "table-row") : "none";
+        for(var i = 0; i < rows.length; i++) {
+            var div = rows[i].getElementsByTagName("div")[0];
+            var visible = (rows[i] == row.nextSibling) ? (div.style.height != "1.2em") : false;
+            div.style.height = visible ? "1.2em" : "0";
+            div.style.padding = visible ? "10px" : "0";
+        }
     }
 </script>';
     echo '<table class="list">';
@@ -26,7 +30,7 @@ if (pg_num_rows($result) > 0) {
     while ($row = pg_fetch_array($result)) {
         $state = round(floatval($row['state']));
         echo '<tr onclick="toggledesc(this)"><td><a href="/pie/'.$row['id'].'" target="_blank">'.$row['name'].'</a></td><td>'.$row['num'].'</td><td><meter value="'.$state.'" min="0" max="100" low="33" high="67">'.$state.'&nbsp;%</meter></td><td>'.$row['nick'].'</td><td>'.$row['start'].'</td><td>'.($row['ends'] ? $row['ends'] : '—').'</td></tr>';
-        echo '<tr class="desc"><td colspan="6">'.(empty($row['description']) ? 'Нет описания' : $row['description']).'</td></tr>';
+        echo '<tr class="desc"><td colspan="6"><div>'.(empty($row['description']) ? 'Нет описания' : $row['description']).'</div></td></tr>';
     }
     echo '</table>';
 

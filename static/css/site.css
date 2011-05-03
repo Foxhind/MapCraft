@@ -18,6 +18,9 @@ body {
     padding: 5px 15px 5px 15px;
     color: #fff;
     -webkit-transition: all 0.1s ease;
+    -moz-transition: all 0.1s ease;
+    -o-transition: all 0.1s ease;
+    transition: all 0.1s ease;
 }
 #login:hover {
     padding: 5px 15px 15px 15px;
@@ -123,6 +126,9 @@ span.apagenum {
     text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
     padding: 15px 15px 5px 15px;
     -webkit-transition: all 0.1s ease;
+    -moz-transition: all 0.1s ease;
+    -o-transition: all 0.1s ease;
+    transition: all 0.1s ease;
 }
 #panel li:hover {
     padding: 20px 15px 5px 15px;
@@ -156,18 +162,35 @@ table.list td {
 }
 table.list tr:nth-child(4n) {
     background: #ecf5eb;
+    cursor: pointer;
     -webkit-transition: all 0.5s ease;
+    -moz-transition: all 0.5s ease;
+    -o-transition: all 0.5s ease;
+    transition: all 0.5s ease;
 }
 table.list tr:nth-child(4n+2) {
     background: #e2f1e2;
+    cursor: pointer;
     -webkit-transition: all 0.5s ease;
+    -moz-transition: all 0.5s ease;
+    -o-transition: all 0.5s ease;
+    transition: all 0.5s ease;
 }
 table.list tr:hover {
     background: #f0f8f0;
 }
-table.list tr:nth-child(2n+1) {
+tr.desc td {
     background: #ffffff;
-    display: none;
+    padding: 0;
+}
+tr.desc div {
+    overflow: hidden;
+    height: 0;
+    padding: 0;
+    -webkit-transition: all 0.2s ease;
+    -moz-transition: all 0.2s ease;
+    -o-transition: all 0.2s ease;
+    transition: all 0.2s ease;
 }
 table.list tr:first-child {
     background: #6d926c;
