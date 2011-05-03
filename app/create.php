@@ -2,6 +2,7 @@
 <?php
 
 require '../lib/update_kml.php';
+require '../lib/create_map.php';
 
 $osm_user = $_SESSION['osm_user'];
 if (isset($osm_user)) {
@@ -147,6 +148,7 @@ if (isset($osm_user)) {
         $result = pg_query($connection, 'INSERT INTO access VALUES('.$user_id.', '.$pie_id.', \''.$osm_user.'\', \'o\')');
 
         update_kml($pie_id);
+        create_map($pie_id);
         echo 'Готово!';
     }
     else {

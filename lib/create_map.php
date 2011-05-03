@@ -1,4 +1,8 @@
-MAP
+<?php
+function create_map($pie_id) {
+    $map = fopen(dirname(__FILE__).'/../data/wms/'.$pie_id.'.map', 'w');
+    if (!empty($map)) {
+        fwrite($map, 'MAP
 
 IMAGETYPE PNG24
 NAME WMS_server
@@ -9,14 +13,14 @@ UNITS METERS
 IMAGECOLOR 255 255 255
 IMAGEQUALITY 95
 IMAGETYPE png
-FONTSET etc/fonts.txt
+FONTSET ../fonts/fonts.txt
 
 OUTPUTFORMAT
 NAME png
-DRIVER 'GD/PNG'
-MIMETYPE 'image/png'
+DRIVER "GD/PNG"
+MIMETYPE "image/png"
 IMAGEMODE RGBA
-EXTENSION 'png'
+EXTENSION "png"
 END
 
 
@@ -25,7 +29,7 @@ WEB
   IMAGEURL "/tmp/"
   METADATA
     "wms_title"   "WMS Server"
-    "wms_onlineresource" "http://mapcraft.nanodesu.ru/cgi-bin/mapserv?map=pie.map"
+    "wms_onlineresource" "http://mapcraft.nanodesu.ru/cgi-bin/mapserv?map='.$pie_id.'.map"
     "wms_srs"   "EPSG:4326 EPSG:3857"
     "wms_feature_info_mime_type" "text/html"
     "wms_abstract"      "Pie"
@@ -44,15 +48,15 @@ LAYER
   TYPE POLYGON
   STATUS DEFAULT
   CONNECTIONTYPE OGR
-  CONNECTION "../pie.kml"
+  CONNECTION "../../static/kml/'.$pie_id.'.kml"
   PROJECTION
     "init=epsg:4326"
   END
-  LABELITEM 'name'
+  LABELITEM "name"
   CLASSITEM "description"
     CLASS
-		NAME '0'
-        EXPRESSION '0'
+		NAME "0"
+        EXPRESSION "0"
 		STYLE
 			WIDTH 3
 			OUTLINECOLOR 255 0 0
@@ -65,8 +69,8 @@ LAYER
 		END 
 	END
     CLASS
-		NAME '1'
-        EXPRESSION '1'
+		NAME "1"
+        EXPRESSION "1"
 		STYLE
 			WIDTH 3
 			OUTLINECOLOR 255 76 0
@@ -79,8 +83,8 @@ LAYER
 		END 
 	END
     CLASS
-		NAME '2'
-        EXPRESSION '2'
+		NAME "2"
+        EXPRESSION "2"
 		STYLE
 			WIDTH 3
 			OUTLINECOLOR 255 134 0
@@ -93,8 +97,8 @@ LAYER
 		END 
 	END
     CLASS
-		NAME '3'
-        EXPRESSION '3'
+		NAME "3"
+        EXPRESSION "3"
 		STYLE
 			WIDTH 3
 			OUTLINECOLOR 255 192 0
@@ -107,8 +111,8 @@ LAYER
 		END 
 	END
     CLASS
-		NAME '4'
-        EXPRESSION '4'
+		NAME "4"
+        EXPRESSION "4"
 		STYLE
 			WIDTH 3
 			OUTLINECOLOR 255 238 0
@@ -121,8 +125,8 @@ LAYER
 		END 
 	END
     CLASS
-		NAME '5'
-        EXPRESSION '5'
+		NAME "5"
+        EXPRESSION "5"
 		STYLE
 			WIDTH 3
 			OUTLINECOLOR 255 255 0
@@ -135,8 +139,8 @@ LAYER
 		END 
 	END
     CLASS
-		NAME '6'
-        EXPRESSION '6'
+		NAME "6"
+        EXPRESSION "6"
 		STYLE
 			WIDTH 3
 			OUTLINECOLOR 200 255 0
@@ -149,8 +153,8 @@ LAYER
 		END 
 	END
     CLASS
-		NAME '7'
-        EXPRESSION '7'
+		NAME "7"
+        EXPRESSION "7"
 		STYLE
 			WIDTH 3
 			OUTLINECOLOR 150 255 0
@@ -163,8 +167,8 @@ LAYER
 		END 
 	END
     CLASS
-		NAME '8'
-        EXPRESSION '8'
+		NAME "8"
+        EXPRESSION "8"
 		STYLE
 			WIDTH 3
 			OUTLINECOLOR 95 255 0
@@ -177,8 +181,8 @@ LAYER
 		END 
 	END
     CLASS
-		NAME '9'
-        EXPRESSION '9'
+		NAME "9"
+        EXPRESSION "9"
 		STYLE
 			WIDTH 3
 			OUTLINECOLOR 0 255 0
@@ -192,4 +196,8 @@ LAYER
 	END
 END
 
-END
+END');
+        fclose($map);
+    }
+}
+?>
