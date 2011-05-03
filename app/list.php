@@ -33,7 +33,7 @@ if (pg_num_rows($result) > 0) {
 </script>
 <?php
     echo '<table class="list">';
-    echo '<tr><th>Name</th><th>Pieces</th><th>Progress</th><th>Author</th><th>Opened</th><th>Closed</th></tr>';
+    echo '<tr><th>Name</th><th>Pieces</th><th>Progress</th><th>Author</th><th>Created</th><th>Closed</th></tr>';
     while ($row = pg_fetch_array($result)) {
         $state = round(floatval($row['state']));
         $wms_link = 'wms:http://'.$_SERVER['HTTP_HOST'].'/wms/'.$row['id'].'?';
