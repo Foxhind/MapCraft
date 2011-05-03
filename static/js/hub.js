@@ -10,7 +10,8 @@ PieHub = {
     options: {
         pieid: null,
         hub_url: '/hub',
-        poll_callback: null
+        poll_callback: null,
+        ses_init_url: "/app/init_session.php"
     },
     myid: null,
     registered: false,
@@ -21,8 +22,12 @@ PieHub = {
      */
     init: function(options) {
         $.extend(this.options, options);
-        this.myid = this.gen_myid();
-        this.register_channel();
+
+        // Init my id (can be async process)
+        // On finish register us in the hub
+        this.init_myid(function() {
+            PieHub.register_channel();
+        });
     },
 
     /*
@@ -179,13 +184,11 @@ PieHub = {
         this.restart_poll();
     },
 
-	/*
-	 * Session save and restore sessionID
-	 */
-	store_sesid: function(id) {
-        // skip, we do not store into cookie
-	},
-    load_sesid: function() {
+
+    /*
+     * Session ID sync/async loading
+     */
+    read_sesid_from_cookie: function() {
         var ca = document.cookie.split(/\s*;\s*/);
         for (var i = 0; i < ca.length; i++) {
             var cookie = ca[i].split('=', 2);
@@ -195,13 +198,27 @@ PieHub = {
         }
         return false;
     },
+    load_sesid: function(cb) {
+        // try to read sesid from cookie
+        var sesid = this.read_sesid_from_cookie();
+        if(sesid) {
+            cb(sesid);
+            return true;
+        };
+        // on fail try to do ajax request to php script
+        jQuery.get(this.options.ses_init_url, function(data) {
+            cb(data);
+        });
+        return true;
+    },
     gen_random: function(templ) {
         return templ.replace(/X/g, function(c) { return (Math.random()*16|0).toString(16); });
     },
-    // MyID = SesId/TabId
-    gen_myid: function() {
-        var id = this.load_sesid() || this.gen_random("XXXXXXXXXXXXXX");
-        this.store_sesid(id);
-        return id + "/" + this.gen_random("XXXXXX");
+    init_myid: function(cb) {
+        // Load sesid, on finish set myid = SesId/TabId and continue init process
+        this.load_sesid(function(sesid) {
+            PieHub.myid  = sesid + "/" + PieHub.gen_random("XXXXXX");
+            cb();
+        });
     }
 };
