@@ -12,7 +12,7 @@ if (!isset($_GET['page']))
 </head>
 
 <body>
-<header>MapCraft</header>
+<header>MapCraft&nbsp;<sup>beta</sup></header>
 <div id="panel"><nav><ul>
 <?php
 echo '<li class="c1'.($_GET['page']=='map'?' current':'').'"><a href="/map">Map</a></li>';

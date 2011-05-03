@@ -154,6 +154,9 @@ small {
     font-size: 80%;
     color: #aaa;
 }
+sup {
+    font-size: 60%;
+}
 table.list {
     border-spacing: 0;
     width: 100%;
