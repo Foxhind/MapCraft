@@ -1,4 +1,4 @@
-<div id="pageheader" style="background-color: #92836c;">Создание нового пирога</div>
+<div id="pageheader" style="background-color: #92836c;">New pie creating</div>
 <?php
 
 require '../lib/update_kml.php';
@@ -9,20 +9,20 @@ if (isset($osm_user)) {
     if (isset($_POST['captcha'])) {
         if ($_SESSION['security_code'] != strtolower($_POST['captcha'])) {
             unset($_SESSION['security_code']);
-            echo 'Неправильно введена капча.<br /><a href="javascript:history.back();">Назад</a>';
+            echo 'Incorrect captcha.<br /><a href="javascript:history.back();">Back</a>';
             exit();
         }
         unset($_SESSION['security_code']);
         if ($_FILES['file']['size'] > 524288) {
-            echo 'Слишком большой файл.<br /><a href="javascript:history.back();">Назад</a>';
+            echo 'Too big file. It must be less than 512 kb.<br /><a href="javascript:history.back();">Back</a>';
             exit();
         }
         if (!is_uploaded_file($_FILES['file']['tmp_name'])) {
-            echo 'Не указан файл с пирогом.<br /><a href="javascript:history.back();">Назад</a>';
+            echo 'Not specified osm file.<br /><a href="javascript:history.back();">Back</a>';
             exit();
         }
         if (!isset($_POST['name']) or empty($_POST['name'])) {
-            echo 'Не указано название.<br /><a href="javascript:history.back();">Назад</a>';
+            echo 'Not specified pie name.<br /><a href="javascript:history.back();">Back</a>';
             exit();
         }
 
@@ -30,7 +30,7 @@ if (isset($osm_user)) {
 
         $user = pg_fetch_assoc(pg_query($connection, 'SELECT * FROM users WHERE nick=\''.$osm_user.'\''), 0);
         if (!$user) {
-            echo 'Пользователь '.$osm_user.' не имеет прав на создание пирогов.<br /><a href="javascript:history.back();">Назад</a>';
+            echo 'User '.$osm_user.' hasn\'t access to pie creating.<br /><a href="javascript:history.back();">Back</a>';
             exit();
         }
 
@@ -85,15 +85,15 @@ if (isset($osm_user)) {
 
         $data = file_get_contents($_FILES['file']['tmp_name']);
         if (!xml_parse($parser, $data)) {
-            echo 'Ошибка XML: '.xml_error_string(xml_get_error_code($parser)).' в строке '.xml_get_current_line_number($parser);
-            echo '<br /><a href="javascript:history.back();">Назад</a>';
+            echo 'XML error: '.xml_error_string(xml_get_error_code($parser)).' at line '.xml_get_current_line_number($parser);
+            echo '<br /><a href="javascript:history.back();">Back</a>';
             exit();
         }
 
         xml_parser_free($parser);
 
         if (count($coordinates) < 2) {
-            echo 'Число секторов должно быть больше одного, иначе вся эта затея не имеет смысла.<br /><a href="javascript:history.back();">Назад</a>';
+            echo 'Pieces count must be over one.<br /><a href="javascript:history.back();">Back</a>';
             exit();
         }
 
@@ -149,45 +149,48 @@ if (isset($osm_user)) {
 
         update_kml($pie_id);
         create_map($pie_id);
-        echo 'Готово!';
+
+        $pie_link = 'http://'.$_SERVER['HTTP_HOST'].'/pie/'.$pie_id;
+        $wms_link = 'wms:http://'.$_SERVER['HTTP_HOST'].'/wms/'.$pie_id.'?';
+        echo 'Done!<br />Pie link: <a href=".$pie_link.">'.$pie_link.'</a><br />WMS link: '.$wms_link;
     }
     else {
 ?>
 <form action="" method="post" enctype="multipart/form-data">
 <fieldset>
-    <div class="row">Всю информацию, за исключением геометрии пирога, можно будет изменить в дальнейшем.</div>
+    <div class="row">All data exсluding geometry can be changed later.</div>
     <div class="row"><div>
-        <label for="name">Название <em>*</em><br/><small>Город, местность и т.п.</small></label>
+        <label for="name">Name <em>*</em><br/><small>City, locality etc.</small></label>
         <input type="text" id="name" name="name" />
     </div><div>
-        <label for="file">osm-файл <em>*</em><br/><small>Импортируются замкнутые полигоны без тегов, файл меньше 512 Кб.</small></label>
+        <label for="file">osm-file <em>*</em><br/><small>All closed ways without tags will be imported. File must be less than 512 kb.</small></label>
         <input type="file" id="file" name="file" />
     </div></div>
     <div class="row"><div>
-        <label for="description">Описание</label>
+        <label for="description">Description</label>
         <textarea id="description" name="description"></textarea>
     </div></div>
     <div class="row"><div>
-        <label for="raccess">Доступ к просмотру<br/><small>Список ников через запятую, пустое поле — доступ всем.</small></label>
-        <input type="text" id="raccess" name="raccess" />
+        <!--<label for="raccess">Access to view<br/><small>List of nicks separated by commas; empty field — all.</small></label>-->
+        <input type="hidden" id="raccess" name="raccess" value="" />
     </div><div>
-        <label for="waccess">Доступ к изменению<br/><small>Список ников через запятую, пустое поле — доступ всем.</small></label>
-        <input type="text" id="waccess" name="waccess" />
+        <!--<label for="waccess">Access to modify<br/><small>List of nicks separated by commas; empty field — all.</small></label>-->
+        <input type="hidden" id="waccess" name="waccess" value="" />
     </div></div>
     <div class="row"><div>
-        <label><input class="btn" type="checkbox" id="hide" name="hide" /> Скрыть пирог<br/><small>Скрытие не влияет на права доступа!</small></label>
+        <label><input class="btn" type="checkbox" id="hide" name="hide" /> Hidden pie<!--<br/><small>This doesn't affect the access!</small>--></label>
     </div></div>
     <div class="row"><div>
-        <label for="captcha">Капча <em>*</em> <img src="/app/captcha.php" /></label>
+        <label for="captcha">Captcha <em>*</em> <img src="/app/captcha.php" /></label>
         <input type="text" id="captcha" name="captcha" />
     </div></div>
-    <input class="btn" type="submit" value="&nbsp Создать »" />
+    <input class="btn" type="submit" value="&nbsp Create »" />
 </fieldset>
 <?php
     }
 }
 else {
-    echo 'Анонимусы не могут печь пироги! Залогиньтесь же!';
+    echo 'Anonymous can\'t create pies. <a href="/app/auth.php?reload=1" target="_blank">Log in</a>, please.';
 }
 ?>
 </form>

@@ -15,18 +15,18 @@ if (!isset($_GET['page']))
 <header>MapCraft</header>
 <div id="panel"><nav><ul>
 <?php
-echo '<li class="c1'.($_GET['page']=='map'?' current':'').'"><a href="/map">Карта</a></li>';
-echo '<li class="c2'.($_GET['page']=='list'?' current':'').'"><a href="/list">Список</a></li>';
-echo '<li class="c3'.($_GET['page']=='create'?' current':'').'"><a href="/create">Новый пирог</a></li>';
+echo '<li class="c1'.($_GET['page']=='map'?' current':'').'"><a href="/map">Map</a></li>';
+echo '<li class="c2'.($_GET['page']=='list'?' current':'').'"><a href="/list">List</a></li>';
+echo '<li class="c3'.($_GET['page']=='create'?' current':'').'"><a href="/create">New pie</a></li>';
 ?>
 </ul></nav></div>
 <div id="login">
 <?php
 if (isset($_SESSION['osm_user']))
-    echo $_SESSION['osm_user'].'&nbsp; &nbsp;<a href="/app/auth.php?action=logout&reload=1" target=\"_blank\">Выход</a>';
+    echo $_SESSION['osm_user'].'&nbsp; &nbsp;<a href="/app/auth.php?action=logout&reload=1" target=\"_blank\">Logout</a>';
 else {
 	include '../lib/config.php';
-	echo "<a href=\"/app/auth.php?reload=1\" target=\"_blank\">Вход</a>";
+	echo '<a href="/app/auth.php?reload=1" target="_blank">Login</a>';
 }
 ?>
 </div>

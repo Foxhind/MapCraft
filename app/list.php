@@ -19,18 +19,19 @@ if (pg_num_rows($result) > 0) {
         var rows = row.parentNode.getElementsByClassName("desc");
         for(var i = 0; i < rows.length; i++) {
             var div = rows[i].getElementsByTagName("div")[0];
-            var visible = (rows[i] == row.nextSibling) ? (div.style.height != "1.2em") : false;
-            div.style.height = visible ? "1.2em" : "0";
+            var visible = (rows[i] == row.nextSibling) ? (div.style.height != "auto") : false;
+            div.style.height = visible ? "auto" : "0";
             div.style.padding = visible ? "10px" : "0";
         }
     }
 </script>';
     echo '<table class="list">';
-    echo '<tr><th>Название</th><th>Сектора</th><th>Готовность</th><th>Создатель</th><th>Открыт</th><th>Закрыт</th></tr>';
+    echo '<tr><th>Name</th><th>Pieces</th><th>Progress</th><th>Author</th><th>Opened</th><th>Closed</th></tr>';
     while ($row = pg_fetch_array($result)) {
         $state = round(floatval($row['state']));
+        $wms_link = 'wms:http://'.$_SERVER['HTTP_HOST'].'/wms/'.$row['id'].'?';
         echo '<tr onclick="toggledesc(this)"><td><a href="/pie/'.$row['id'].'" target="_blank">'.$row['name'].'</a></td><td>'.$row['num'].'</td><td><meter value="'.$state.'" min="0" max="100" low="33" high="67">'.$state.'&nbsp;%</meter></td><td>'.$row['nick'].'</td><td>'.$row['start'].'</td><td>'.($row['ends'] ? $row['ends'] : '—').'</td></tr>';
-        echo '<tr class="desc"><td colspan="6"><div>'.(empty($row['description']) ? 'Нет описания' : $row['description']).'</div></td></tr>';
+        echo '<tr class="desc"><td colspan="6"><div>WMS: '.$wms_link.'<br />'.(empty($row['description']) ? 'No description' : $row['description']).'</div></td></tr>';
     }
     echo '</table>';
 
@@ -67,6 +68,6 @@ if (pg_num_rows($result) > 0) {
     }
 }
 else {
-    echo '<div id="pageheader" style="background-color: #6D926C;">Список пуст</div>';
+    echo '<div id="pageheader" style="background-color: #6D926C;">List is empty</div>';
 }
 ?>

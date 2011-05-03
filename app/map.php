@@ -1,4 +1,4 @@
-<div id="pageheader" style="background-color: #637d8c;">Карта</div>
+<div id="pageheader" style="background-color: #637d8c;">Map</div>
 <div id="olmap"></div>
 <script type="text/javascript" src="http://openlayers.org/api/OpenLayers.js"></script>
 <script type="text/javascript">
