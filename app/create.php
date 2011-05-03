@@ -163,7 +163,7 @@ if (isset($osm_user)) {
         <label for="name">Name <em>*</em><br/><small>City, locality etc.</small></label>
         <input type="text" id="name" name="name" />
     </div><div>
-        <label for="file">osm-file <em>*</em><br/><small>All closed ways without tags will be imported. File must be less than 512 kb.</small></label>
+        <label for="file">Geometry <em>*</em><br/><small>File in .osm format. It should contain only closed ways without tags. The size must be less then 512Kb. Can be created in JOSM</small></label>
         <input type="file" id="file" name="file" />
     </div></div>
     <div class="row"><div>
@@ -178,7 +178,7 @@ if (isset($osm_user)) {
         <input type="hidden" id="waccess" name="waccess" value="" />
     </div></div>
     <div class="row"><div>
-        <label><input class="btn" type="checkbox" id="hide" name="hide" /> Hidden pie<!--<br/><small>This doesn't affect the access!</small>--></label>
+        <label><input class="btn" type="checkbox" id="hide" name="hide" />Hidden pie<!--<br/><small>This doesn't affect the access!</small>--></label>
     </div></div>
     <div class="row"><div>
         <label for="captcha">Captcha <em>*</em> <img src="/app/captcha.php" /></label>
