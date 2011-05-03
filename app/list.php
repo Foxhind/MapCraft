@@ -14,7 +14,8 @@ if ($start > $piescount or $start < 0)
 $result = pg_query($connection, 'SELECT pies.id, pies.name, pies.description, users.nick, pies.start, pies.ends, count(pieces.id) AS num, sum(pieces.state) / (count(pieces.id) * 9.0) * 100 AS state FROM pies INNER JOIN pieces ON pies.id = pieces.pie JOIN users ON pies.author=users.id WHERE pies.visible = true GROUP BY pies.id, pies.name, pies.description, users.nick, pies.start, pies.ends LIMIT '.$piespp.' OFFSET '.$start);
 
 if (pg_num_rows($result) > 0) {
-    echo '<script>
+?>
+<script>
     function toggledesc (row) {
         var rows = row.parentNode.getElementsByClassName("desc");
         for(var i = 0; i < rows.length; i++) {
@@ -24,14 +25,20 @@ if (pg_num_rows($result) > 0) {
             div.style.padding = visible ? "10px" : "0";
         }
     }
-</script>';
+    function getquery (uri) {
+        var xmlhttp = new XMLHttpRequest();
+        xmlhttp.open('GET', uri, true);
+        xmlhttp.send(null);
+    }
+</script>
+<?php
     echo '<table class="list">';
     echo '<tr><th>Name</th><th>Pieces</th><th>Progress</th><th>Author</th><th>Opened</th><th>Closed</th></tr>';
     while ($row = pg_fetch_array($result)) {
         $state = round(floatval($row['state']));
         $wms_link = 'wms:http://'.$_SERVER['HTTP_HOST'].'/wms/'.$row['id'].'?';
         echo '<tr onclick="toggledesc(this)"><td><a href="/pie/'.$row['id'].'" target="_blank">'.$row['name'].'</a></td><td>'.$row['num'].'</td><td><meter value="'.$state.'" min="0" max="100" low="33" high="67">'.$state.'&nbsp;%</meter></td><td>'.$row['nick'].'</td><td>'.$row['start'].'</td><td>'.($row['ends'] ? $row['ends'] : '—').'</td></tr>';
-        echo '<tr class="desc"><td colspan="6"><div>WMS: '.$wms_link.'<br />'.(empty($row['description']) ? 'No description' : $row['description']).'</div></td></tr>';
+        echo '<tr class="desc"><td colspan="6"><div><p>WMS link: <span class="pseudolink" onclick="getquery(\'http://127.0.0.1:8111/imagery?title='.$row['name'].'&urldecode=false&url=wms:'.$wms_link.'\')">'.$wms_link.'</span></p><br />'.(empty($row['description']) ? 'No description' : $row['description']).'</div></td></tr>';
     }
     echo '</table>';
 

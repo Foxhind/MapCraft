@@ -152,7 +152,7 @@ if (isset($osm_user)) {
 
         $pie_link = 'http://'.$_SERVER['HTTP_HOST'].'/pie/'.$pie_id;
         $wms_link = 'wms:http://'.$_SERVER['HTTP_HOST'].'/wms/'.$pie_id.'?';
-        echo 'Done!<br />Pie link: <a href=".$pie_link.">'.$pie_link.'</a><br />WMS link: '.$wms_link;
+        echo 'Done!<p>Pie link: <a href=".$pie_link.">'.$pie_link.'</a></p><p>WMS link: '.$wms_link.'</p>';
     }
     else {
 ?>

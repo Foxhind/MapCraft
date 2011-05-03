@@ -145,6 +145,11 @@ span.apagenum {
 #panel li.current {
     padding: 25px 15px 5px 15px;
 }
+.pseudolink {
+    text-decoration: none;
+    border-bottom: 1px dotted;
+    cursor: pointer;
+}
 small {
     font-size: 80%;
     color: #aaa;
