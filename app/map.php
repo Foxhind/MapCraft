@@ -30,7 +30,7 @@ function onFeatureUnselect(evt) {
 var options = {controls: [new OpenLayers.Control.Navigation(), new OpenLayers.Control.ScaleLine(), new OpenLayers.Control.Permalink(), new OpenLayers.Control.Attribution(), new OpenLayers.Control.PanZoomBar()],  units: "m", numZoomLevels: 18, maxResolution: 156543.0339, maxExtent: new OpenLayers.Bounds(-20037508, -20037508, 20037508, 20037508.34) };
 olmap = new OpenLayers.Map(document.getElementById('olmap'), options);
 var mapnik = new OpenLayers.Layer.OSM();
-kmllayer = new OpenLayers.Layer.Vector("Pies", { strategies: [new OpenLayers.Strategy.Fixed()], protocol: new OpenLayers.Protocol.HTTP({url: "http://mapcraft.nanodesu.ru/app/json_pies.php", format: new OpenLayers.Format.GeoJSON() })});
+kmllayer = new OpenLayers.Layer.Vector("Cakes", { strategies: [new OpenLayers.Strategy.Fixed()], protocol: new OpenLayers.Protocol.HTTP({url: "http://mapcraft.nanodesu.ru/app/json_pies.php", format: new OpenLayers.Format.GeoJSON() })});
 kmllayer.events.on({'featureselected': onFeatureSelect, 'featureunselected': onFeatureUnselect});
 olmap.addLayers([mapnik, kmllayer]);
 

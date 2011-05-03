@@ -636,7 +636,7 @@ function onSelectPiece(e) {
     $('#bowner').click( function() { $(e.attributes.owner ? (e.attributes.owner == me.nick ? '#drefuse' : '#dclaim') : '#dtake').dialog('open'); });
     $('#bowner').button("option", "label", e.attributes.owner ? e.attributes.owner : ldata[12]);
     $('#bowner').button("option", "icons", { primary: (e.attributes.owner ? (e.attributes.owner == me.nick ? 'ui-icon-closethick' : 'ui-icon-circle-check') : 'ui-icon-flag')});
-    $("#dprop").dialog("option", "title", "Свойства: " + e.attributes.name);
+    $("#dprop").dialog("option", "title", ldata[6] + ": " + e.attributes.name);
     $("#dprop").dialog("open");
     $('#bstatus').button("option", "label", e.attributes.description + '/9');
     $('#bstatus').button("enable");
@@ -654,7 +654,7 @@ function onUnselectPiece(e) {
     $('#bowner').button("option", "icons", {primary: 'ui-icon-flag'});
     $('#bowner').unbind('click');
     $('#bstatus').button("option", "label", '0/9');
-    $('#dprop').dialog("option", "title", "Свойства");
+    $('#dprop').dialog("option", "title", ldata[6]);
     $('#comments').html("");
     $('#bowner').button("disable");
     $('#bstatus').button("disable");

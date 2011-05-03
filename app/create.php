@@ -1,4 +1,4 @@
-<div id="pageheader" style="background-color: #92836c;">New pie creating</div>
+<div id="pageheader" style="background-color: #92836c;">New cake creating</div>
 <?php
 
 require '../lib/update_kml.php';
@@ -22,7 +22,7 @@ if (isset($osm_user)) {
             exit();
         }
         if (!isset($_POST['name']) or empty($_POST['name'])) {
-            echo 'Not specified pie name.<br /><a href="javascript:history.back();">Back</a>';
+            echo 'Not specified cake name.<br /><a href="javascript:history.back();">Back</a>';
             exit();
         }
 
@@ -30,7 +30,7 @@ if (isset($osm_user)) {
 
         $user = pg_fetch_assoc(pg_query($connection, 'SELECT * FROM users WHERE nick=\''.$osm_user.'\''), 0);
         if (!$user) {
-            echo 'User '.$osm_user.' hasn\'t access to pie creating.<br /><a href="javascript:history.back();">Back</a>';
+            echo 'User '.$osm_user.' hasn\'t access to cake creating.<br /><a href="javascript:history.back();">Back</a>';
             exit();
         }
 
@@ -93,7 +93,7 @@ if (isset($osm_user)) {
         xml_parser_free($parser);
 
         if (count($coordinates) < 2) {
-            echo 'Pieces count must be over one.<br /><a href="javascript:history.back();">Back</a>';
+            echo 'Slices count must be over one.<br /><a href="javascript:history.back();">Back</a>';
             exit();
         }
 
@@ -152,7 +152,7 @@ if (isset($osm_user)) {
 
         $pie_link = 'http://'.$_SERVER['HTTP_HOST'].'/pie/'.$pie_id;
         $wms_link = 'wms:http://'.$_SERVER['HTTP_HOST'].'/wms/'.$pie_id.'?';
-        echo 'Done!<p>Pie link: <a href="'.$pie_link.'" target="_blank">'.$pie_link.'</a></p><p>WMS link: '.$wms_link.'</p>';
+        echo 'Done!<p>Cake link: <a href="'.$pie_link.'" target="_blank">'.$pie_link.'</a></p><p>WMS link: '.$wms_link.'</p>';
     }
     else {
 ?>
@@ -178,7 +178,7 @@ if (isset($osm_user)) {
         <input type="hidden" id="waccess" name="waccess" value="" />
     </div></div>
     <div class="row"><div>
-        <label><input class="btn" type="checkbox" id="hide" name="hide" />Hidden pie<!--<br/><small>This doesn't affect the access!</small>--></label>
+        <label><input class="btn" type="checkbox" id="hide" name="hide" />Hidden cake<!--<br/><small>This doesn't affect the access!</small>--></label>
     </div></div>
     <div class="row"><div>
         <label for="captcha">Captcha <em>*</em> <img src="/app/captcha.php" /></label>
@@ -190,7 +190,7 @@ if (isset($osm_user)) {
     }
 }
 else {
-    echo 'Anonymous can\'t create pies. <a href="/app/auth.php?reload=1" target="_blank">Log in</a>, please.';
+    echo 'Anonymous can\'t create cakes. <a href="/app/auth.php?reload=1" target="_blank">Log in</a>, please.';
 }
 ?>
 </form>

@@ -17,7 +17,7 @@ if (!isset($_GET['page']))
 <?php
 echo '<li class="c1'.($_GET['page']=='map'?' current':'').'"><a href="/map">Map</a></li>';
 echo '<li class="c2'.($_GET['page']=='list'?' current':'').'"><a href="/list">List</a></li>';
-echo '<li class="c3'.($_GET['page']=='create'?' current':'').'"><a href="/create">New pie</a></li>';
+echo '<li class="c3'.($_GET['page']=='create'?' current':'').'"><a href="/create">New cake</a></li>';
 ?>
 </ul></nav></div>
 <div id="login">
