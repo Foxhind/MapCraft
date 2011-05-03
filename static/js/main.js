@@ -238,7 +238,7 @@ In.user_update = function (data) {
 };
 
 In.anons_update = function (data) {
-    count = data.count;
+    count = parseInt(data.count);
     text = '';
     if (count) {
         text = 'and ' + count + ' anon';
