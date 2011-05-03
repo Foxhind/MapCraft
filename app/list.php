@@ -38,7 +38,7 @@ if (pg_num_rows($result) > 0) {
         $state = round(floatval($row['state']));
         $wms_link = 'wms:http://'.$_SERVER['HTTP_HOST'].'/wms/'.$row['id'].'?';
         echo '<tr onclick="toggledesc(this)"><td><a href="/pie/'.$row['id'].'" target="_blank">'.$row['name'].'</a></td><td>'.$row['num'].'</td><td><meter value="'.$state.'" min="0" max="100" low="33" high="67">'.$state.'&nbsp;%</meter></td><td>'.$row['nick'].'</td><td>'.$row['start'].'</td><td>'.($row['ends'] ? $row['ends'] : '—').'</td></tr>';
-        echo '<tr class="desc"><td colspan="6"><div><p>WMS link: <span class="pseudolink" onclick="getquery(\'http://127.0.0.1:8111/imagery?title='.$row['name'].'&urldecode=false&url=wms:'.$wms_link.'\')">'.$wms_link.'</span></p><br />'.(empty($row['description']) ? 'No description' : $row['description']).'</div></td></tr>';
+        echo '<tr class="desc"><td colspan="6"><div><p>WMS link:  <span class="pseudolink" onclick="getquery(\'http://127.0.0.1:8111/imagery?title='.$row['name'].'&urldecode=false&url='.$wms_link.'\')">'.$wms_link.'</span></p><br />'.(empty($row['description']) ? 'No description' : $row['description']).'</div></td></tr>';
     }
     echo '</table>';
 
