@@ -17,6 +17,10 @@ body {
     text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
     padding: 5px 15px 5px 15px;
     color: #fff;
+    -webkit-transition: all 0.1s ease;
+}
+#login:hover {
+    padding: 5px 15px 15px 15px;
 }
 div#logo {
     position: absolute;
@@ -110,12 +114,18 @@ span.apagenum {
     background-color: #fff;
     text-decoration: none;
 }
+#panel a {
+    color: #fff;
+}
 #panel li {
     display: inline-block;
     list-style-type: none;
     text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
     padding: 15px 15px 5px 15px;
-    color: #fff;
+    -webkit-transition: all 0.1s ease;
+}
+#panel li:hover {
+    padding: 20px 15px 5px 15px;
 }
 #panel li.c1 {
     background: #637d8c;
@@ -146,9 +156,14 @@ table.list td {
 }
 table.list tr:nth-child(4n) {
     background: #ecf5eb;
+    -webkit-transition: all 0.5s ease;
 }
 table.list tr:nth-child(4n+2) {
     background: #e2f1e2;
+    -webkit-transition: all 0.5s ease;
+}
+table.list tr:hover {
+    background: #f0f8f0;
 }
 table.list tr:nth-child(2n+1) {
     background: #ffffff;
