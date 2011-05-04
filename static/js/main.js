@@ -23,7 +23,6 @@ function LoadTransData() {
     for (i in trans) _trans_hash[trans[i]] = trans[++i];
 }
 
-
 var Progress = {
     draw: function(width) {
         var w = this.width = width || 200;
@@ -51,8 +50,6 @@ var Progress = {
         this.good.animate(  {x: xgood,   width: this.width - xgood}, t).attr({title: cgood});
     }
 };
-var In = {};
-var Out = {};
 
 function config_get(key, defval) {
     if (typeof(MapCraft) == 'undefined' || typeof(MapCraft.config) == 'undefined') {
@@ -60,6 +57,19 @@ function config_get(key, defval) {
     }
     return MapCraft.config[key];
 }
+
+function ParseText (text) {
+    text = text.replace(/(http\:\/\/[A-Za-z0-9%&_\-./]+)/g, '<a href="$1" target="_blank">$1</a>');
+    text = text.replace(/\b#(\d+)\b/g, '<span class="piecenum" onclick="SelectPiece($1)">#$1</span>');
+    text = text.replace(/\bc(\d+)\b/g, '<a href="http://www.openstreetmap.org/browse/changeset/$1" target="_blank">c$1</a>');
+    text = text.replace(/\bn(\d+)\b/g, '<a href="http://www.openstreetmap.org/browse/node/$1" target="_blank">n$1</a>');
+    text = text.replace(/\bw(\d+)\b/g, '<a href="http://www.openstreetmap.org/browse/way/$1" target="_blank">w$1</a>');
+    text = text.replace(/\br(\d+)\b/g, '<a href="http://www.openstreetmap.org/browse/relation/$1" target="_blank">r$1</a>');
+	return text;
+}
+
+var In = {};
+var Out = {};
 
 In.chat = function (data) {
     if (typeof(data['message']) == 'undefined')
@@ -85,8 +95,7 @@ In.chat = function (data) {
     if (typeof(data['author']) != 'undefined')
         author = data['author'];
     var history_class = data['history'] ? 'history' : '';
-    var message = data['message'].replace(/(http\:\/\/[A-Za-z0-9_\-./]+)/g, '<a href="$1" target="_blank">$1</a>');
-    message = message.replace(/#([0-9]+)/g, '<span class="piecenum" onclick="SelectPiece($1)">#$1</span>');
+    var message = ParseText(data['message']);
     var chatbox = $("#chat");
     var isEnd = (chatbox.attr("scrollHeight") - chatbox.height() - chatbox.scrollTop() < 20);
     chat.append("<tr class='" + history_class + "'><td class='nick'>" + author + "</td><td class='" + mclass + "'>" + message + "</td><td class='time'>" + time + "</td></tr>");
@@ -144,6 +153,7 @@ In.piece_comment = function (data) {
             comments_div.html('');
 
         var msg = data['type'] == 'comment' ? data['message'] : _(data['message']);
+        msg = ParseText(msg);
         var date = data['date'].replace(/\.\d+$/, '');
         $('#dprop #comments').append('<p class="' + data['type'] + '"><strong>' + data['author'] + '</strong><span class="date">' + date + '</span><br />' + msg + '</p>');
     }
