@@ -60,7 +60,7 @@ function config_get(key, defval) {
 
 function ParseText (text) {
     text = text.replace(/(http\:\/\/[A-Za-z0-9%&_\-./]+)/g, '<a href="$1" target="_blank">$1</a>');
-    text = text.replace(/(\s)#(\d+)\b/g, '$1<span class="piecenum" onclick="SelectPiece($1)">#$2</span>');
+    text = text.replace(/(\s)#(\d+)\b/g, '$1<span class="piecenum" onclick="SelectPiece($2)">#$2</span>');
     text = text.replace(/\bc(\d+)\b/g, '<a href="http://www.openstreetmap.org/browse/changeset/$1" target="_blank">c$1</a>');
     text = text.replace(/\bn(\d+)\b/g, '<a href="http://www.openstreetmap.org/browse/node/$1" target="_blank">n$1</a>');
     text = text.replace(/\bw(\d+)\b/g, '<a href="http://www.openstreetmap.org/browse/way/$1" target="_blank">w$1</a>');
