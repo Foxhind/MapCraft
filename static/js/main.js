@@ -58,14 +58,98 @@ function config_get(key, defval) {
     return MapCraft.config[key];
 }
 
-function ParseText (text) {
-    text = text.replace(/(http\:\/\/[A-Za-z0-9%&_\-./]+)/g, '<a href="$1" target="_blank">$1</a>');
-    text = text.replace(/(\s)#(\d+)\b/g, '$1<span class="piecenum" onclick="SelectPiece($2)">#$2</span>');
-    text = text.replace(/\bc(\d+)\b/g, '<a href="http://www.openstreetmap.org/browse/changeset/$1" target="_blank">c$1</a>');
-    text = text.replace(/\bn(\d+)\b/g, '<a href="http://www.openstreetmap.org/browse/node/$1" target="_blank">n$1</a>');
-    text = text.replace(/\bw(\d+)\b/g, '<a href="http://www.openstreetmap.org/browse/way/$1" target="_blank">w$1</a>');
-    text = text.replace(/\br(\d+)\b/g, '<a href="http://www.openstreetmap.org/browse/relation/$1" target="_blank">r$1</a>');
-	return text;
+var TextReplacer = {
+    shortcuts: {
+        c: 'http://www.openstreetmap.org/browse/changeset/%s',
+        n: 'http://www.openstreetmap.org/browse/node/%s',
+        w: 'http://www.openstreetmap.org/browse/way/%s',
+        r: 'http://www.openstreetmap.org/browse/relation/%s',
+        '#': 'javascript:SelectPiece(%s)',
+        'bug': 'https://github.com/Foxhind/MapCraft/issues/%s'
+    },
+
+    // Using template, replacment  value and link text
+    // it creates new link for the chat
+    create_elem: function(tpl, val, text) {
+        var elem;
+        var url = tpl.replace(/\%s/, val);
+        if(url.indexOf('javascript:') == 0) {
+            elem = '<span class="javascript" onclick="' + url.substr(11) + '">' + text + '</span>';
+        } else {
+            elem = '<a href="' + url + '" target="_blank">' + text  + '</a>';
+        }
+        return elem;
+    },
+
+    // Returns replacement value if the string matches template
+    match: function(tpl, str) {
+        tpl = tpl + '!END!';
+        str = str + '!END!';
+        var parts = tpl.split('%s');
+        if (str.indexOf(parts[0]) != 0) {
+            return null;
+        }
+        var i_beg = parts[0].length;
+        var i_end = str.indexOf(parts[1]);
+        if (i_end == -1) {
+            return null;
+        }
+        return str.substr(i_beg, i_end - i_beg);
+    },
+
+    // Searches is there any template in shortcuts that matches given url
+    search_in_shortcuts: function(url) {
+        for (sc in this.shortcuts) {
+            var tpl = this.shortcuts[sc];
+            var val = this.match(tpl, url);
+            if ( val != null ) {
+                return {sc: sc, val: val};
+            }
+        }
+        return null;
+    },
+
+    // converts given token to <a>..</a> if this is a shortcut or URL
+    format_token: function(token) {
+        var m;
+        // shortcut<ID> -> url
+        if( (m = token.match(/^([a-z#]+)(\d+)$/)) != null) {
+            if (m[1] in this.shortcuts) {
+                return this.create_elem(this.shortcuts[m[1]], m[2], token);
+            }
+        }
+        // any other URL
+        if( (m = token.match(/^(?:https?|ftp):\/\/\S+$/)) != null) {
+            var data = this.search_in_shortcuts(m[0]);
+            if (data != null) {
+                return this.create_elem(m[0], '', data.sc + data.val);
+            } else {
+                return this.create_elem(m[0], '%s', m[0]);
+            }
+        }
+        return token;
+    },
+
+    // separates next token from the string
+    // returns: { head, sep, tail }.
+    // given string = head + sep + tail;
+    next: function(str) {
+        var m;
+        if ( (m= str.match(/^((?:https?|ftp):\S+)(\s*)(.*)$/)) != null ) {
+            return {head: m[1], sep: m[2], tail: m[3]};  // URL found
+        }
+        if ( (m = str.match(/^(\S*?)([\s\(\)\,\.\;\!\?]+)(.*)$/)) != null ) {
+            return {head: m[1], sep: m[2], tail: m[3]};  // simple token found
+        }
+        return {head: str, sep: "", tail: ""};
+    },
+
+    // tokenize string and replace all links and shortcuts in it
+    parse: function(str) {
+        if(str == "") { return str; }
+        var next = this.next(str);
+        return this.format_token(next.head) + next.sep + this.parse(next.tail);
+    }
 }
 
 var In = {};
@@ -95,7 +179,7 @@ In.chat = function (data) {
     if (typeof(data['author']) != 'undefined')
         author = data['author'];
     var history_class = data['history'] ? 'history' : '';
-    var message = ParseText(data['message']);
+    var message = TextReplacer.parse(data['message']);
     var chatbox = $("#chat");
     var isEnd = (chatbox.attr("scrollHeight") - chatbox.height() - chatbox.scrollTop() < 20);
     chat.append("<tr class='" + history_class + "'><td class='nick'>" + author + "</td><td class='" + mclass + "'>" + message + "</td><td class='time'>" + time + "</td></tr>");
@@ -153,7 +237,7 @@ In.piece_comment = function (data) {
             comments_div.html('');
 
         var msg = data['type'] == 'comment' ? data['message'] : _(data['message']);
-        msg = ParseText(msg);
+        msg = TextReplacer.parse(msg);
         var date = data['date'].replace(/\.\d+$/, '');
         $('#dprop #comments').append('<p class="' + data['type'] + '"><strong>' + data['author'] + '</strong><span class="date">' + date + '</span><br />' + msg + '</p>');
     }
