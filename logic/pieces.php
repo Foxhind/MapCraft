@@ -40,9 +40,9 @@ function handle_piece_reserve($type, $from, $data, $res)
     if (!pg_field_is_null($result, 0, 0)) {
         $owner = pg_fetch_result($result, 0 ,0);
         if ($owner !== $from->user_id())
-            throw new Exception("This piece is already owned by $owner.");
+            throw new Exception("This slice is already owned by $owner.");
         else
-            throw new Exception("This piece is your already.");
+            throw new Exception("This slice is your already.");
     }
 
     $result = pg_query($connection, 'UPDATE pieces SET owner = '.$user_id.' WHERE id = '.$piece_id);
@@ -59,8 +59,8 @@ function handle_piece_reserve($type, $from, $data, $res)
     $piece_ids = pg_fetch_all_columns($result, 0);
     $res->to_pie($from, array( 'user_update', array('current_nick' => $nick,
                                                     'reserved' => $piece_ids) ));
-    $res->to_pie($from, info_msg("%s has reserved piece #%s.", $nick, $piece_id));
-    _add_piece_info_log($res, $from, $piece_id, "Piece has been reserved");
+    $res->to_pie($from, info_msg("%s has reserved slice #%s.", $nick, $piece_id));
+    _add_piece_info_log($res, $from, $piece_id, "Slice has been reserved");
 }
 
 function handle_piece_free($type, $from, $data, $res)
@@ -73,14 +73,14 @@ function handle_piece_free($type, $from, $data, $res)
 
     $result = pg_query($connection, 'SELECT owner FROM pieces WHERE id = '.$piece_id);
     if (pg_num_rows($result) == 0)
-        throw new Exception("This piece isn't exists.");
+        throw new Exception("This slice isn't exists.");
     if (pg_field_is_null($result, 0, 0)) {
-        throw new Exception("This piece isn't owned by you.");
+        throw new Exception("This slice isn't owned by you.");
     }
     else {
         $owner = pg_fetch_result($result, 0 ,0);
         if ($owner !== $from->user_id())
-            throw new Exception("This is not your piece");
+            throw new Exception("This is not your slice");
     }
 
     $result = pg_query($connection, 'UPDATE pieces SET owner = NULL WHERE id = '.$piece_id);
@@ -99,8 +99,8 @@ function handle_piece_free($type, $from, $data, $res)
     $res->to_pie($from, array( 'user_update', array('current_nick' => $nick,
                                                     'reserved' => $piece_ids) ));
 
-    $res->to_pie($from, info_msg("%s has freed piece #%s.", $nick, $piece_id));
-    _add_piece_info_log($res, $from, $piece_id, "Piece has been freed");
+    $res->to_pie($from, info_msg("%s has freed slice #%s.", $nick, $piece_id));
+    _add_piece_info_log($res, $from, $piece_id, "Slice has been freed");
 }
 
 function handle_piece_state($type, $from, $data, $res)
@@ -114,11 +114,11 @@ function handle_piece_state($type, $from, $data, $res)
 
     $result = pg_query($connection, 'SELECT owner FROM pieces WHERE id = '.$piece_id);
     if (pg_num_rows($result) == 0)
-        throw new Exception("This piece isn't exists.");
+        throw new Exception("This slice isn't exists.");
 
     $owner = pg_fetch_result($result, 0 ,0);
     if ($owner !== $from->user_id())
-        throw new Exception("This is not your piece");
+        throw new Exception("This is not your slice");
 
     $result = pg_query($connection, 'UPDATE pieces SET state = '.$state.' WHERE id = '.$piece_id);
 
