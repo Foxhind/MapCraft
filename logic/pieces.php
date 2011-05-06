@@ -55,7 +55,7 @@ function handle_piece_reserve($type, $from, $data, $res)
     $res->to_pie($from, array('piece_owner', $pinfo));
 
     // Updating owner
-    $result = pg_query($connection, 'SELECT id FROM pieces WHERE owner = '.$user_id);
+    $result = pg_query($connection, 'SELECT id FROM pieces WHERE owner = '.$user_id . ' and pie = ' . $from->pieid );
     $piece_ids = pg_fetch_all_columns($result, 0);
     $res->to_pie($from, array( 'user_update', array('current_nick' => $nick,
                                                     'reserved' => $piece_ids) ));
@@ -93,7 +93,7 @@ function handle_piece_free($type, $from, $data, $res)
     $res->to_pie($from, array('piece_owner', $pinfo));
 
     // Updating owner
-    $result = pg_query($connection, 'SELECT id FROM pieces WHERE owner = '.$from->user_id());
+    $result = pg_query($connection, 'SELECT id FROM pieces WHERE owner = '.$from->user_id() . ' and pie = ' . $from->pieid );
     $piece_ids = pg_fetch_all_columns($result, 0);
     if ($piece_ids === false) $piece_ids = array();
     $res->to_pie($from, array( 'user_update', array('current_nick' => $nick,
