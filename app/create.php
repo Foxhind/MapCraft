@@ -4,8 +4,8 @@
 require '../lib/update_kml.php';
 require '../lib/create_map.php';
 
-$osm_user = $_SESSION['osm_user'];
-if (isset($osm_user)) {
+$user_id = $_SESSION['user_id'];
+if (isset($user_id)) {
     if (isset($_POST['captcha'])) {
         if ($_SESSION['security_code'] != strtolower($_POST['captcha'])) {
             unset($_SESSION['security_code']);
@@ -28,11 +28,12 @@ if (isset($osm_user)) {
 
         include '../lib/config.php';
 
-        $user = pg_fetch_assoc(pg_query($connection, 'SELECT * FROM users WHERE nick=\''.$osm_user.'\''), 0);
-        if (!$user) {
-            echo 'User '.$osm_user.' hasn\'t access to cake creating.<br /><a href="javascript:history.back();">Back</a>';
+        $result = pg_fetch_assoc(pg_query($connection, 'SELECT * FROM users WHERE id=\''.$user_id.'\''), 0);
+        if (!$result) {
+            echo 'The user with id =  '.$user_id.' is not present in the base. Please logout and login back. <br /><a href="javascript:history.back();">Back</a>';
             exit();
         }
+        $osm_user = pg_fetch_result($result, 0, "nick");
 
         $coordinates = array();
         $nodes = array();
@@ -99,7 +100,7 @@ if (isset($osm_user)) {
 
         // Adding pie
         $bboxcenter = json_encode( array(($bbox[0]+$bbox[2])/2, ($bbox[1]+$bbox[3])/2) );
-        $result = pg_query($connection, 'INSERT INTO pies VALUES(DEFAULT, \''.pg_escape_string($_POST['name']).'\', '.pg_escape_string($user['id']).', DEFAULT, NULL, \''.pg_escape_string(htmlspecialchars($_POST['description'])).'\', '.(isset($_POST['hide']) ? 'false' : 'true').', \''.$bboxcenter.'\') RETURNING id');
+        $result = pg_query($connection, 'INSERT INTO pies VALUES(DEFAULT, \''.pg_escape_string($_POST['name']).'\', '.pg_escape_string($user_id).', DEFAULT, NULL, \''.pg_escape_string(htmlspecialchars($_POST['description'])).'\', '.(isset($_POST['hide']) ? 'false' : 'true').', \''.$bboxcenter.'\') RETURNING id');
         $pie_id = pg_fetch_result($result, 0, 0);
 
         // Adding pieces
