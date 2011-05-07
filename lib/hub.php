@@ -46,6 +46,22 @@ class HubResult {
                               json_encode($msg)));
     }
 
+    function stat()
+    {
+        $this->append('stat!' . join('!', func_get_args()));
+    }
+
+    function stat_pie($from)
+    {
+        $args = func_get_args();
+        $from = array_shift($args);
+        array_unshift($args, $from->pieid || $from);
+        array_unshift($args, 'pie');
+
+        $stat_func = array($this, 'stat');
+        call_user_func_array($stat_func, $args);
+    }
+
     // Internal hub helpers
     function append($str)
     {

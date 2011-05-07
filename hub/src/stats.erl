@@ -4,6 +4,8 @@
 -compile(export_all).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, code_change/3, terminate/2]).
 
+-define(TO_ATOM, ["pie", "users", "count", "sends", "chat", "message", "fails", "channel", "length"]).
+
 start_link() ->
 	gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
@@ -29,6 +31,20 @@ get_next(Key) ->
 	{ok, Next} = gen_server:call(?MODULE, {get_next, Key}),
 	Next.
 
+op(Key, "++", {}) ->
+	incr(Key);
+op(Key, "--", {}) ->
+	decr(Key);
+op(Key, "=", {Val}) ->
+	set(Key, list_to_integer(Val)).
+
+external(List) ->
+	{Key, Op, Args} = fetch_key(List, []),
+	op(Key, Op, Args).
+
+%%
+%% Dumping and Output
+%%
 dump() ->
 	{ok, Dump} = gen_server:call(?MODULE, dump),
 	Dump.
@@ -94,6 +110,22 @@ get_mem_info() ->
 
 get_sys_info() ->
 	[ {{erlang, processes, count}, erlang:system_info(process_count)} ].
+
+
+fetch_key([Op | LArgs], RKey) when Op == "++"; Op == "--"; Op == "=" ->
+	Key = list_to_tuple(lists:reverse(RKey)),
+	Args = list_to_tuple(LArgs),
+	{Key, Op, Args};
+fetch_key([Head | Tail], RKey) ->
+	fetch_key(Tail, [convert_key_part(Head) | RKey]).
+
+convert_key_part(Key) ->
+	case lists:member(Key, ?TO_ATOM) of
+		true ->
+			list_to_atom(Key);
+		_ ->
+			Key
+	end.
 
 %%
 %% Implementation

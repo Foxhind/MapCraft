@@ -13,6 +13,7 @@ function handle_session_join($type, $from, $data, $res) {
     if ($is_new) {
         $msg = info_msg('%s has joined', $from->nick());
         $res->to_pie($from, $msg);
+        $res->stat_pie($from, 'users', '++');
     }
 }
 
@@ -30,6 +31,7 @@ function handle_session_exit($type, $from, $data, $res) {
     if ($is_last) {
         $msg = info_msg('%s has quit: %s', $from->nick(), $data['reason']);
         $res->to_pie($from, $msg);
+        $res->stat_pie($from, 'users', '--');
     }
 }
 
@@ -76,11 +78,13 @@ function handle_session_act_logout($type, $from, $data, $res) {
 
 function handle_pie_exit($type, $from, $data, $res) {
     _clear_pie($data['pie_id']);
+    $res->stat_pie($data['pie_id'], 'users', '=', 0);
 }
 
 // Special sync call, respond with "ok" if pie allowed to be created
 function handle_pie_create($type, $from, $data, $res) {
     _clear_pie($data['pie_id']);
+    $res->stat_pie($data['pie_id'], 'users', '=', 0);
     $res->respond("ok");
 }
 

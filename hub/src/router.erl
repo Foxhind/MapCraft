@@ -66,6 +66,10 @@ route_one("to_pie", _, [PieId, Msg]) ->
 	stats:incr({router, to, pie}),
 	Dests = pie:lookup(PieId),
 	push_event_to_chans(Dests, Msg),
+	ok;
+
+route_one("stat", _, Args) ->
+	stats:external(Args),
 	ok.
 
 %route_one("to_all", _, [_Msg]) ->

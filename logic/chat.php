@@ -17,6 +17,7 @@ function handle_chat($type, $from, $data, $res) {
 
     if ($data['type'] == 'public') {
         $res->to_pie($from, $msg);
+        $res->stat_pie($from, 'chat', 'sends', '++');
     } else {
         $to = find_session_by_nick($from, $data['target_nick']);
         $res->to_session($from, $msg);
