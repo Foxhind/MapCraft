@@ -43,15 +43,15 @@ loop(Req) ->
 				Req:not_found()
 		end
 	catch
+		exit:normal ->
+			fail(Req);
 		Type:What ->
 			Report = ["web request failed",
 					  {path, Path},
 					  {type, Type}, {what, What},
 					  {trace, erlang:get_stacktrace()}],
 			error_logger:error_report(Report),
-			%% NOTE: mustache templates need \ because they are not awesome.
-			Req:respond({500, [{"Content-Type", "text/plain"}],
-						 "request failed, sorry\n"})
+			fail(Req)
 	end.
 
 %%
