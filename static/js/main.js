@@ -65,7 +65,8 @@ var TextReplacer = {
         w: 'http://www.openstreetmap.org/browse/way/%s',
         r: 'http://www.openstreetmap.org/browse/relation/%s',
         '#': 'javascript:SelectPiece(%s)',
-        'bug': 'https://github.com/Foxhind/MapCraft/issues/%s'
+        'bug': 'https://github.com/Foxhind/MapCraft/issues/%s',
+        'user:': 'http://openstreetmap.org/user/%s'
     },
 
     // Using template, replacment  value and link text
@@ -118,6 +119,14 @@ var TextReplacer = {
                 return this.create_elem(this.shortcuts[m[1]], m[2], token);
             }
         }
+
+        // shortcut:<TEXT> -> url
+        if( (m = token.match(/^([a-z]+:)(\w+)$/)) != null) {
+            if (m[1] in this.shortcuts) {
+                return this.create_elem(this.shortcuts[m[1]], m[2], token);
+            }
+        }
+
         // any other URL
         if( (m = token.match(/^(?:https?|ftp):\/\/\S+$/)) != null) {
             var data = this.search_in_shortcuts(m[0]);
