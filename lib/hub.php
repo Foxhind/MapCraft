@@ -55,7 +55,9 @@ class HubResult {
     {
         $args = func_get_args();
         $from = array_shift($args);
-        array_unshift($args, $from->pieid || $from);
+
+        $pie_id = gettype($from) == 'string' ? $from : $from->pieid;
+        array_unshift($args, $pie_id);
         array_unshift($args, 'pie');
 
         $stat_func = array($this, 'stat');
