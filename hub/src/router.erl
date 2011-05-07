@@ -65,7 +65,7 @@ route_one("to_session", _, [PieId, SesId, Msg]) ->
 route_one("to_pie", _, [PieId, Msg]) ->
 	stats:incr({router, to, pie}),
 	Dests = pie:lookup(PieId),
-	push_event_to_chans(Dests, Msg),
+	push_event_to_chans(Dests, Msg, allow_empty),
 	ok;
 
 route_one("stat", _, Args) ->
@@ -79,7 +79,12 @@ route_one("stat", _, Args) ->
 %%
 %% Pushing event to channels
 %%
-push_event_to_chans([_|_] = Dests, Msg) ->
+push_event_to_chans(Dests, Msg) ->
+	push_event_to_chans(Dests, Msg, none).
+
+push_event_to_chans([], _Msg, allow_empty) ->
+	ok;
+push_event_to_chans([_|_] = Dests, Msg, _) ->
 	Cmd = api:format_line([event, Msg]),
 	[ push(Dest, Cmd) || Dest <- Dests ].
 

@@ -182,6 +182,4 @@ function _remove_chat_member($res, $from, $user_id) {
     return $is_last;
 }
 
-
-
 ?>
