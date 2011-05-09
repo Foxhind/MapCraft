@@ -26,7 +26,7 @@ class Channel {
         $this->_user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : '0';
 
         // role
-        $this->_role = isset($_SESSION['secret']) ? 'member' : 'anon';
+        $this->_role = isset($_SESSION['user_id']) ? 'member' : 'anon';
 
         session_write_close();
     }
