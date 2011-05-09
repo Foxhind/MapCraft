@@ -5,28 +5,28 @@ function getquery (uri) {
     xmlhttp.send(null);
 }
 
+function get_toggle_id(e) {
+    return e.id.match(/(\d+)$/)[0] || null;
+}
+
 function toggleDetails(e) {
+    var toggle_id = get_toggle_id(e.target);
 
-    // Do not expand on link
-    if ($(e.target).context.localName == 'a') {
-        return true;
-    }
-
-    var to_show = this.nextSibling;
-    $('.desc').each(function() {
-        var $div = $('div', this).first();
-        show = $div.css('height') == '0px' && this == to_show;
-
-        $div.css('height', show ? 'auto' : '0');
-        $div.css('padding', show ? '10px' : '0');
+    $('.list_descr').each(function() {
+        var id = get_toggle_id(this);
+        if (id == toggle_id) {
+            $('#toggle_' + id).toggleClass('closed');
+            $(this).toggleClass('closed');
+        } else {
+            $('#toggle_' + id).addClass('closed');
+            $(this).addClass('closed');
+        }
     });
-
-    return false;
 }
 
 
 $(function() {
 
     // on row click expand or collapse it
-    $('.entry').click(toggleDetails);
+    $('.list_toggle').click(toggleDetails);
 });

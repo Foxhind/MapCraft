@@ -21,8 +21,21 @@ if (pg_num_rows($result) > 0) {
         $state = round(floatval($row['state']));
         $wms_link = 'wms:http://'.$_SERVER['HTTP_HOST'].'/wms/'.$row['id'].'?';
         $created = preg_replace('/\.\d+$/', '', $row['start']);
-        echo '<tr class="entry"><td><a href="/pie/'.$row['id'].'" target="_blank">'.$row['name'].'</a></td><td>'.$row['num'].'</td><td><meter value="'.$state.'" min="0" max="100" low="33" high="67">'.$state.'&nbsp;%</meter></td><td><a href="http://www.openstreetmap.org/user/'.$row['nick'].'" target="_blank">'.$row['nick'].'</a></td><td>'.$created.'</td><td>'.($row['ends'] ? $row['ends'] : '—').'</td></tr>';
-        echo '<tr class="desc"><td colspan="6"><div><p>WMS link:  <span class="pseudolink" onclick="getquery(\'http://127.0.0.1:8111/imagery?title='.$row['name'].'&urldecode=false&url='.$wms_link.'\')">'.$wms_link.'</span></p><br />'.(empty($row['description']) ? 'No description' : $row['description']).'</div></td></tr>';
+        $id = $row['id'];
+        $pie_link = '/pie/' . $id;
+        // Base line
+        echo '<tr>';
+        echo '<td><span class="list_toggle closed" id="toggle_'.$id.'"></span><a href="'.$pie_link.'" target="_blank">'.$row['name'].'</a></td>';
+        echo '<td>'.$row['num'].'</td>';
+        echo '<td><meter value="'.$state.'" min="0" max="100" low="33" high="67">'.$state.'&nbsp;%</meter></td>';
+        echo '<td><a href="http://www.openstreetmap.org/user/'.$row['nick'].'" target="_blank">'.$row['nick'].'</a></td>';
+        echo '<td>'.$created.'</td>';
+        echo '<td>'.($row['ends'] ? $row['ends'] : '—').'</td>';
+        echo '</tr>';
+        // Descr
+        echo '<tr class="list_descr closed" id="descr_'.$id.'">';
+        echo '<td colspan="6"><div><p>WMS link:  <span class="pseudolink" onclick="getquery(\'http://127.0.0.1:8111/imagery?title='.$row['name'].'&urldecode=false&url='.$wms_link.'\')">'.$wms_link.'</span></p><br />'.(empty($row['description']) ? 'No description' : $row['description']).'</div></td>';
+        echo '</tr>';
     }
     echo '</table>';
 

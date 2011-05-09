@@ -187,22 +187,39 @@ table.list tr:nth-child(4n+2) {
 table.list tr:hover {
     background: #f0f8f0;
 }
-tr.desc td {
-    background: #ffffff;
-    padding: 0;
-}
-tr.desc div {
-    overflow: hidden;
-    height: 0;
-    padding: 0;
-    -webkit-transition: all 0.2s ease;
-    -moz-transition: all 0.2s ease;
-    -o-transition: all 0.2s ease;
-    transition: all 0.2s ease;
-}
 table.list tr:first-child {
     background: #6d926c;
     text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
     color: #fff;
     display: table-row;
+}
+
+.list_descr td {
+	background: #ffffff;
+    padding: 0 !important;
+}
+.list_descr div {
+    overflow: hidden;
+	height: auto;
+	padding: 10px;
+    -webkit-transition: all 0.2s ease;
+    -moz-transition: all 0.2s ease;
+    -o-transition: all 0.2s ease;
+    transition: all 0.2s ease;
+}
+.list_descr.closed div {
+	height: 0;
+	padding: 0;
+}
+
+
+.list_toggle {
+	padding: 0 10px;
+	margin-right: 1em;
+	background: url(/img/collapse.png);
+	background-repeat: no-repeat;
+}
+
+.list_toggle.closed {
+	background: url(/img/expand.png);
 }
