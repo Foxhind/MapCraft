@@ -114,16 +114,18 @@ var TextReplacer = {
     format_token: function(token) {
         var m;
         // shortcut<ID> -> url
-        if( (m = token.match(/^([a-z#]+)(\d+)$/)) != null) {
-            if (m[1] in this.shortcuts) {
-                return this.create_elem(this.shortcuts[m[1]], m[2], token);
+        if( (m = token.match(/^([a-zA-Z#]+)(\d+)$/)) != null) {
+            var sc = m[1].toLowerCase();
+            if (sc in this.shortcuts) {
+                return this.create_elem(this.shortcuts[sc], m[2], token);
             }
         }
 
         // shortcut:<TEXT> -> url
-        if( (m = token.match(/^([a-z]+:)(\w+)$/)) != null) {
-            if (m[1] in this.shortcuts) {
-                return this.create_elem(this.shortcuts[m[1]], m[2], token);
+        if( (m = token.match(/^([a-zA-Z]+:)(\w+)$/)) != null) {
+            var sc = m[1].toLowerCase();
+            if (sc in this.shortcuts) {
+                return this.create_elem(this.shortcuts[sc], m[2], token);
             }
         }
 
