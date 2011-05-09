@@ -170,7 +170,6 @@ table.list td {
 }
 table.list tr:nth-child(4n) {
     background: #ecf5eb;
-    cursor: pointer;
     -webkit-transition: all 0.5s ease;
     -moz-transition: all 0.5s ease;
     -o-transition: all 0.5s ease;
@@ -178,7 +177,6 @@ table.list tr:nth-child(4n) {
 }
 table.list tr:nth-child(4n+2) {
     background: #e2f1e2;
-    cursor: pointer;
     -webkit-transition: all 0.5s ease;
     -moz-transition: all 0.5s ease;
     -o-transition: all 0.5s ease;
