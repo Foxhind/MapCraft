@@ -258,10 +258,9 @@ In.piece_owner = function (data) {
     var pieces = kmllayer.getFeaturesByAttribute('name', data['piece_id']);
     if (pieces.length > 0) {
         var isFreeing = (data['owner'] == '' && typeof(pieces[0].attributes.owner) != 'undefined');
-        if (isFreeing)
-            delete pieces[0].attributes.owner;
-        else
-            pieces[0].attributes.owner = data['owner'];
+        pieces[0].attributes.owner = isFreeing ? null : data['owner'];
+        updatePieceStyle(pieces[0], true);
+
         if (selectedFeature != null)
             if (data['piece_id'].toString() == selectedFeature.attributes.name)
                 $('#bowner').button("option", "label", (isFreeing ? ldata[12] : data['owner']) );
@@ -273,13 +272,12 @@ In.piece_state = function (data) {
     if (pieces.length > 0)
     {
         pieces[0].attributes.description = data['state'];
-        pieces[0].style.fillColor = color[parseInt(data['state'])];
+        updatePieceStyle(pieces[0], true);
     }
     if (selectedFeature != null) {
         if (data['piece_id'].toString() == selectedFeature.attributes.name)
             $('#bstatus').button("option", "label", data['state'].toString() + '/9');
     }
-    kmllayer.redraw(true);
 };
 
 In.piece_progress = function(data) {
@@ -733,9 +731,7 @@ function PostComment() {
 
 function onSelectPiece(e) {
     selectedFeature = e;
-    e.style.fillOpacity = "0.8";
-    e.style.strokeWidth = "3";
-    kmllayer.redraw(true);
+    updatePieceStyle(e, true);
     $("#comments").html("<div class='loading'></div>");
     $('#bowner').button("enable");
     $('#bowner').click( function() { $(e.attributes.owner ? (e.attributes.owner == me.nick ? '#drefuse' : '#dclaim') : '#dtake').dialog('open'); });
@@ -752,9 +748,7 @@ function onSelectPiece(e) {
 
 function onUnselectPiece(e) {
     selectedFeature = null;
-    e.style.fillOpacity = "0.5";
-    e.style.strokeWidth = "1";
-    kmllayer.redraw(true);
+    updatePieceStyle(e, true);
     $('#bowner').button("option", "label", ldata[12]);
     $('#bowner').button("option", "icons", {primary: 'ui-icon-flag'});
     $('#bowner').unbind('click');
@@ -765,6 +759,20 @@ function onUnselectPiece(e) {
     $('#bstatus').button("disable");
     $('#bremote').button("disable");
     $('#bcomment').button("disable");
+}
+
+function updatePieceStyle(e, redraw) {
+    e.style.label = e.attributes.owner;
+    e.style.fontSize = 10;
+    e.style.fillColor = color[parseInt(e.attributes.description)];
+
+    var selected = e == selectedFeature;
+    e.style.fillOpacity = selected ? "0.8" : "0.5";
+    e.style.strokeWidth = selected ? "3" : "1";
+
+    if(redraw) {
+        kmllayer.redraw(true);
+    }
 }
 
 function SetStyle() {
@@ -806,6 +814,11 @@ $(document).ready(function () {
             olmap.zoomToExtent(kmllayer.getDataExtent());
             olmap.zoomOut(); // a bit smaller
         }
+        var features = kmllayer.features;
+        for( i in features) {
+            updatePieceStyle(features[i], false);
+        }
+        kmllayer.redraw();
     });
 
     var ww = $(window).width();
