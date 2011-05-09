@@ -159,7 +159,7 @@ if (isset($user_id)) {
 ?>
 <form action="" method="post" enctype="multipart/form-data">
 <fieldset>
-    <div class="row">All data exсluding geometry can be changed later.</div>
+    <div class="row">All data exсluding geometry can be changed later... when the configuration dialog will be implemented</div>
     <div class="row"><div>
         <label for="name">Name <em>*</em><br/><small>City, locality etc.</small></label>
         <input type="text" id="name" name="name" />
