@@ -762,8 +762,8 @@ function onUnselectPiece(e) {
 }
 
 function updatePieceStyle(e, redraw) {
-    e.style.label = e.attributes.owner;
-    e.style.fontSize = 10;
+    e.style.label = e.attributes.owner ?  '⚐' : null;
+    e.style.fontSize = 25;
     e.style.fillColor = color[parseInt(e.attributes.description)];
 
     var selected = e == selectedFeature;
