@@ -8,6 +8,7 @@ var supported_langs = ['en', 'ru', 'jp'];
 var users = [];
 var claims = [];
 var me;
+var showOwned;
 
 // ---------------
 // Translations
@@ -495,6 +496,11 @@ function LoadSettings() {
     var show_pb = localStorage.progress_bar ? true : false;
     $('#sprogress_bar').attr('checked', show_pb);
     $('#progress_bar').toggle(show_pb);
+
+    // Show owned
+    showOwned = localStorage.show_owned ? true : false;
+    $('#sshow_owned').attr('checked', showOwned);
+    updateAllPieceStyles();
 }
 
 function ApplySettings() {
@@ -510,6 +516,10 @@ function ApplySettings() {
     var show_pb = $('#sprogress_bar').attr('checked') ? true : false;
     localStorage.progress_bar = show_pb ? 'show' : '';
     $('#progress_bar').toggle(show_pb);
+
+    showOwned = $('#sshow_owned').attr('checked') ? true : false;
+    localStorage.show_owned = showOwned ? 'show' : '';
+    updateAllPieceStyles();
 }
 
 function LoadLanguage() {
@@ -762,8 +772,8 @@ function onUnselectPiece(e) {
 }
 
 function updatePieceStyle(e, redraw) {
-    e.style.label = e.attributes.owner ?  '⚐' : null;
-    e.style.fontSize = 25;
+    e.style.label = e.attributes.owner && showOwned ?  e.attributes.owner : null;
+    e.style.fontSize = 11;
     e.style.fillColor = color[parseInt(e.attributes.description)];
 
     var selected = e == selectedFeature;
@@ -773,6 +783,14 @@ function updatePieceStyle(e, redraw) {
     if(redraw) {
         kmllayer.redraw(true);
     }
+}
+
+function updateAllPieceStyles() {
+    var features = kmllayer.features;
+    for( i in features) {
+        updatePieceStyle(features[i], false);
+    }
+    kmllayer.redraw();
 }
 
 function SetStyle() {
@@ -814,11 +832,7 @@ $(document).ready(function () {
             olmap.zoomToExtent(kmllayer.getDataExtent());
             olmap.zoomOut(); // a bit smaller
         }
-        var features = kmllayer.features;
-        for( i in features) {
-            updatePieceStyle(features[i], false);
-        }
-        kmllayer.redraw();
+        updateAllPieceStyles();
     });
 
     var ww = $(window).width();
