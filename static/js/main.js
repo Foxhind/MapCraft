@@ -79,7 +79,7 @@ var TextReplacer = {
         if(url.indexOf('http') == 0) {
             elem = '<a href="' + url + '" target="_blank">' + text  + '</a>';
         } else {
-            elem = '<span class="pseudolink" onclick="' + url.substr(11) + '">' + text + '</span>';
+            elem = '<span class="pseudolink" onclick="' + url + '">' + text + '</span>';
         }
         return elem;
     },
