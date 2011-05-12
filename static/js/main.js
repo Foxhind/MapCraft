@@ -760,6 +760,7 @@ function onSelectPiece(e) {
 function onUnselectPiece(e) {
     selectedFeature = null;
     updatePieceStyle(e, true);
+    window.location.hash = '';
     $('#bowner').button("option", "label", ldata[12]);
     $('#bowner').button("option", "icons", {primary: 'ui-icon-flag'});
     $('#bowner').unbind('click');
