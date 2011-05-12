@@ -90,6 +90,7 @@ color: darkblue;
 
 .pseudolink {
 cursor: pointer;
+border-bottom: 1px dotted;
 }
 
 .info {
