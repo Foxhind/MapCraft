@@ -76,7 +76,7 @@ var TextReplacer = {
     create_elem: function(tpl, val, text) {
         var elem;
         var url = tpl.replace(/\%s/, val);
-        if(url.indexOf('http://') == 0) {
+        if(url.indexOf('http') == 0) {
             elem = '<a href="' + url + '" target="_blank">' + text  + '</a>';
         } else {
             elem = '<span class="pseudolink" onclick="' + url.substr(11) + '">' + text + '</span>';
