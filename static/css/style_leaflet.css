@@ -18,6 +18,7 @@ overflow: hidden;
 border-width: 1px;
 border-color: #b6bccc #eaedf7;
 border-style: solid;
+z-index: -1;
 }
 
 #userlist {
