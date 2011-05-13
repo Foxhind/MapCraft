@@ -1,0 +1,21 @@
+<h2>Ups! Failed to send remote command to the JOSM</h2>
+
+How to find the cause:
+<ul>
+  <li> Make sure that <a href="http://josm.openstreetmap.de/" target="_blank">JOSM is opened</a>. If not, then run it and try again. </li>
+  <li> Go to JOSM preferences (F12), open tab 'Remove Control' and make sure that this function is enabled. If not, enable it and try again. </li>
+  <li> If you have <a href="http://www.mozilla.com/en-US/about/">Firefox</a> with addon <a href="http://noscript.net/" target="_blank">NoScript</a>
+	installed, then go to the plugin's preferences, tab 'Advanced' and look for tab <a href="http://noscript.net/abe/" target="_blank">ABE</a>.
+	If there is one, then open it. This function by default prevents external requests to local sites. You can disable it or add following
+	rules into "USER" section:
+	<pre>
+	  Site 127.0.0.1:8111
+	  Accept
+	</pre>
+	Then hit button 'Refresh', then 'OK' and try again.</li>
+</ul>
+
+Nothing helps? Go to <a href="https://github.com/Foxhind/MapCraft/issues" target="_blank">issue tracker</a> and search for similar bug. Try enter word 'Remote' into search box. May be there is a solve.
+
+<p>
+If there are no one, then try to localize the bug: switch browser, sniff network traffic on port 127.0.0.1:8111 and so on. Then fill new issue. Thank you.
