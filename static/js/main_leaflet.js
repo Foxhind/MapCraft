@@ -787,7 +787,7 @@ $(document).ready(function () {
     llmap = new L.Map('llmap');
 
     // set the map view to a given center and zoom and add the Mapnik layer
-    map.setView(new L.LatLng(51.505, -0.09), 13).addLayer(mapnik);
+    llmap.setView(new L.LatLng(51.505, -0.09), 13).addLayer(mapnik);
 
     //kmllayer = new OpenLayers.Layer.Vector("Pie", { strategies: [new OpenLayers.Strategy.Fixed()], protocol: new OpenLayers.Protocol.HTTP({url: "/kml/" + window.location.pathname.split('pie/')[1] + ".kml", format: new OpenLayers.Format.KML({extractStyles: true, extractAttributes: true, maxDepth: 0})}), projection: "EPSG:4326" });
     var p1 = new L.LatLng(51.509, -0.08);
@@ -795,6 +795,7 @@ $(document).ready(function () {
     var p3 = new L.LatLng(51.51, -0.047);
     var polygonPoints = [p1, p2, p3];
     var polygon = new L.Polygon(polygonPoints);
+    llmap.addLayer(polygon);
     polygon.on('click', onSelectPiece);
 
     var ww = $(window).width();
