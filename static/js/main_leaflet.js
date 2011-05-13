@@ -747,7 +747,7 @@ function updatePieceStyle(e, redraw) {
     e.style.strokeWidth = selected ? "3" : "1";
 
     if(redraw) {
-        kmllayer.redraw(true);
+        //kmllayer.redraw(true);
     }
 }
 
@@ -756,7 +756,7 @@ function updateAllPieceStyles() {
     for( i in features) {
         updatePieceStyle(features[i], false);
     }
-    kmllayer.redraw();
+    //kmllayer.redraw();
 }
 
 function SetStyle() {
