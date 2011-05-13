@@ -1,0 +1,284 @@
+* { padding: 0; margin: 0; font-family: Arial,sans; }
+body {
+margin: 0;
+padding: 0;
+border: 0;
+overflow: hidden;
+height: 100%; 
+max-height: 100%; 
+}
+
+#llmap {
+position: fixed; 
+top: 0;
+bottom: 0;
+left: 0;
+right: 0;
+overflow: hidden;
+border-width: 1px;
+border-color: #b6bccc #eaedf7;
+border-style: solid;
+}
+
+#userlist {
+top: 8px;
+bottom: 8px;
+left: 8px;
+right: 8px;
+height: 100%;
+width: 100%;
+}
+
+#userlist option {
+height: 20px;
+}
+
+#inputline {
+height: 20px;
+}
+
+#chatline {
+height: 100%;
+}
+
+#dchat {
+overflow: hidden;
+}
+
+#dprop {
+overflow: hidden;
+}
+
+#dchat > table {
+width: 100%;
+height: 100%;
+}
+
+#chat {
+overflow-x: hidden;
+overflow-y: auto;
+border-width: 1px;
+border-color: #b6bccc #eaedf7;
+border-style: solid;
+background: white;
+padding: 0 10px;
+}
+
+#chat td {
+text-align: left;
+vertical-align: top;
+
+}
+
+#chat .history {
+color: gray;
+}
+
+#chat .history .nick {
+	color: CadetBlue;
+}
+
+#chat .time {
+color: gray;
+font-size: smaller;
+}
+
+#chat .nick {
+text-align: right;
+color: darkblue;
+}
+
+.pseudolink {
+cursor: pointer;
+border-bottom: 1px dotted;
+}
+
+.info {
+color: darkgreen;
+}
+
+.info .pseudolink {
+border-bottom: 1px dotted #36c96c;
+}
+
+.error {
+color: #ff6445;
+}
+
+.error .pseudolink {
+border-bottom: 1px dotted #ff6445;
+}
+
+#pac_text {
+height: 16px;
+width: 100%;
+}
+
+#pac_nick {
+height: 20px;
+width: 100%;
+}
+
+#pac_color {
+height: 20px;
+width: 100%;
+}
+
+#comment_text {
+width: 100%;
+height: 100%;
+}
+
+#sstatus {
+margin: 20px 84px 20px 20px;
+}
+
+.ts {
+float: right;
+}
+
+#comments {
+overflow: scroll;
+border-width: 1px;
+border-color: #b6bccc #eaedf7;
+border-style: solid;
+background: white;
+width: 100%;
+height: 100%;
+text-align: left;
+white-space: pre-wrap;
+white-space: -moz-pre-wrap;
+white-space: -pre-wrap;
+white-space: -o-pre-wrap;
+word-wrap: break-word;
+}
+
+p {
+margin: 0 0 1em 0;
+}
+
+#panel {
+position: absolute;
+top: 10px;
+left: 10px;
+}
+
+#progress_bar {
+	margin-top: 0.2em;
+}
+
+#userlist table {
+border-collapse: collapse;
+}
+
+#userlist td {
+border: 1px solid #cccccc;
+padding: 5px;
+}
+
+#exclamation {
+width: 64px;
+height: 64px;
+background: url(../img/exclam.png) center center no-repeat;
+float: right;
+}
+
+#question {
+width: 64px;
+height: 64px;
+background: url(../img/quest.png) center center no-repeat;
+float: right;
+}
+
+.loading {
+background: url(../img/l.gif) center center no-repeat;
+height: 100%;
+width: 100%;
+}
+
+td.msg {
+width: 100%;
+}
+
+td.nick {
+max-width: 10em;
+overflow: hidden;
+border-right: 1px lightgray solid;
+padding-right: 0.2em;
+}
+
+.maxima {
+height: 100%;
+}
+
+.property {
+height: 0%;
+}
+
+.nickname {
+text-decoration: none;
+display: inline-block;
+border-bottom: 1px dotted black;
+cursor: pointer;
+}
+
+.up {
+background: url(../img/up.png);
+width: 10px;
+height: 10px;
+display: inline-block;
+cursor: pointer;
+}
+
+.down {
+background: url(../img/down.png);
+width: 10px;
+height: 10px;
+display: inline-block;
+cursor: pointer;
+}
+
+.close {
+background: url(../img/close.png);
+width: 10px;
+height: 10px;
+display: inline-block;
+cursor: pointer;
+}
+
+.num {
+text-decoration: none;
+display: inline-block;
+border-bottom: 1px dotted black;
+cursor: pointer;
+}
+
+.olControlAttribution {
+bottom: 2em !important;
+}
+
+.olControlPermalink {
+bottom: 0.5em !important;
+}
+
+.claim, .nick {
+white-space: nowrap;
+}
+
+#anonscounter {
+	margin-left: 1em;
+	color: gray;
+}
+
+#comments .info strong {
+color: black
+}
+
+#comments .date {
+white-space: nowrap;
+font-size: smaller;
+margin-top: 0.2em;
+float: right;
+margin-right: 1em;
+color: gray;
+}
