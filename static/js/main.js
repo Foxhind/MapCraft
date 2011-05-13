@@ -9,6 +9,7 @@ var users = [];
 var claims = [];
 var me;
 var showOwned;
+var chatScrollPosition = -1;
 
 // ---------------
 // Translations
@@ -65,9 +66,9 @@ var TextReplacer = {
         n: 'http://www.openstreetmap.org/browse/node/%s',
         w: 'http://www.openstreetmap.org/browse/way/%s',
         r: 'http://www.openstreetmap.org/browse/relation/%s',
-        '#': 'javascript:SelectPiece(%s)',
-        'bug': 'https://github.com/Foxhind/MapCraft/issues/%s',
-        'user:': 'http://openstreetmap.org/user/%s'
+        '#': 'SelectPiece(%s)',
+        'bug:': 'https://github.com/Foxhind/MapCraft/issues/%s',
+        'user:': 'http://www.openstreetmap.org/user/%s'
     },
 
     // Using template, replacment  value and link text
@@ -75,10 +76,10 @@ var TextReplacer = {
     create_elem: function(tpl, val, text) {
         var elem;
         var url = tpl.replace(/\%s/, val);
-        if(url.indexOf('javascript:') == 0) {
-            elem = '<span class="javascript" onclick="' + url.substr(11) + '">' + text + '</span>';
-        } else {
+        if(url.indexOf('http') == 0) {
             elem = '<a href="' + url + '" target="_blank">' + text  + '</a>';
+        } else {
+            elem = '<span class="pseudolink" onclick="' + url + '">' + text + '</span>';
         }
         return elem;
     },
@@ -712,9 +713,12 @@ function SetStatus(e) {
     PieHub.push( Out.piece_state(selectedFeature.attributes.name, $('#sstatus').slider('value')) );
 }
 
-function ScrollDown() {
-    var chatbox = $("#chat");
-    chatbox.scrollTop(chatbox.attr("scrollHeight") - chatbox.height());
+function ScrollDown(to) {
+    var chatbox = $('#chat');
+    if (typeof(to) == 'undefined')
+        chatbox.scrollTop(chatbox.attr("scrollHeight") - chatbox.height());
+    else
+        chatbox.scrollTop(to);
 }
 
 function TakePiece() {
@@ -742,6 +746,7 @@ function PostComment() {
 function onSelectPiece(e) {
     selectedFeature = e;
     updatePieceStyle(e, true);
+    window.location.hash = e.attributes.name;
     $("#comments").html("<div class='loading'></div>");
     $('#bowner').button("enable");
     $('#bowner').click( function() { $(e.attributes.owner ? (e.attributes.owner == me.nick ? '#drefuse' : '#dclaim') : '#dtake').dialog('open'); });
@@ -759,6 +764,7 @@ function onSelectPiece(e) {
 function onUnselectPiece(e) {
     selectedFeature = null;
     updatePieceStyle(e, true);
+    window.location.hash = '';
     $('#bowner').button("option", "label", ldata[12]);
     $('#bowner').button("option", "icons", {primary: 'ui-icon-flag'});
     $('#bowner').unbind('click');
@@ -828,7 +834,16 @@ $(document).ready(function () {
 
     // Zoom what it will be loaded
     kmllayer.events.register("loadend", this, function() {
-        if (!olmap.getCenter()) {
+        var hash = window.location.hash;
+        hash = hash.charAt(0) == '#' ? hash.substring(1, hash.length) : hash;
+        if (hash != '') {
+            SelectPiece(hash);
+            if (selectedFeature != null) {
+                olmap.zoomToExtent(selectedFeature.geometry.getBounds());
+                olmap.zoomOut();
+            }
+        }
+        else if (!olmap.getCenter()) {
             olmap.zoomToExtent(kmllayer.getDataExtent());
             olmap.zoomOut(); // a bit smaller
         }
@@ -934,7 +949,19 @@ $(document).ready(function () {
     $('#pac_nick').button({ icons: { primary: 'ui-icon-person'} });
     $('#pac_color').button();
     $('#pac_color').click(PromptColor);
-    $('#dchat').dialog( { resize: function(event, ui) { $('#chat').height($(this).height() - 45); $('#chat').width($(this).width() - 30); } } );
+    $('#dchat').dialog( { resize: function(event, ui) { $('#chat').height($(this).height() - 45); $('#chat').width($(this).width() - 30); },
+        beforeClose: function(event, ui) {
+            var chatbox = $("#chat");
+            var isEnd = (chatbox.attr("scrollHeight") - chatbox.height() - chatbox.scrollTop() < 20);
+            chatScrollPosition = isEnd ? -1 : chatbox.scrollTop();
+        },
+        open: function(event, ui) {
+            if (chatScrollPosition == -1)
+                ScrollDown();
+            else
+                ScrollDown(chatScrollPosition);
+        }
+    } );
     $('#dprop').dialog( { resize: function(event, ui)
         {
         $('#comments').width($('#dprop').width() - 15);
