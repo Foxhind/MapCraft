@@ -257,29 +257,29 @@ In.piece_comment = function (data) {
 };
 
 In.piece_owner = function (data) {
-    var pieces = kmllayer.getFeaturesByAttribute('name', data['piece_id']);
-    if (pieces.length > 0) {
-        var isFreeing = (data['owner'] == '' && typeof(pieces[0].attributes.owner) != 'undefined');
-        pieces[0].attributes.owner = isFreeing ? null : data['owner'];
-        updatePieceStyle(pieces[0], true);
+    //var pieces = kmllayer.getFeaturesByAttribute('name', data['piece_id']);
+    //if (pieces.length > 0) {
+        //var isFreeing = (data['owner'] == '' && typeof(pieces[0].attributes.owner) != 'undefined');
+        //pieces[0].attributes.owner = isFreeing ? null : data['owner'];
+        //updatePieceStyle(pieces[0], true);
 
-        if (selectedFeature != null)
-            if (data['piece_id'].toString() == selectedFeature.attributes.name)
-                $('#bowner').button("option", "label", (isFreeing ? ldata[12] : data['owner']) );
-    }
+        //if (selectedFeature != null)
+            //if (data['piece_id'].toString() == selectedFeature.attributes.name)
+                //$('#bowner').button("option", "label", (isFreeing ? ldata[12] : data['owner']) );
+    //}
 }
 
 In.piece_state = function (data) {
-    var pieces = kmllayer.getFeaturesByAttribute('name', data['piece_id']);
-    if (pieces.length > 0)
-    {
-        pieces[0].attributes.description = data['state'];
-        updatePieceStyle(pieces[0], true);
-    }
-    if (selectedFeature != null) {
-        if (data['piece_id'].toString() == selectedFeature.attributes.name)
-            $('#bstatus').button("option", "label", data['state'].toString() + '/9');
-    }
+    //var pieces = kmllayer.getFeaturesByAttribute('name', data['piece_id']);
+    //if (pieces.length > 0)
+    //{
+        //pieces[0].attributes.description = data['state'];
+        //updatePieceStyle(pieces[0], true);
+    //}
+    //if (selectedFeature != null) {
+        //if (data['piece_id'].toString() == selectedFeature.attributes.name)
+            //$('#bstatus').button("option", "label", data['state'].toString() + '/9');
+    //}
 };
 
 In.piece_progress = function(data) {
@@ -556,12 +556,12 @@ function PromptColor() {
 }
 
 function SelectPiece(num) {
-    if (selectedFeature != null)
-        selectCtrl.unselect(selectedFeature);
+    //if (selectedFeature != null)
+        //selectCtrl.unselect(selectedFeature);
 
-    pieces = kmllayer.getFeaturesByAttribute('name', num);
-    if (pieces.length > 0)
-        selectCtrl.select(pieces[0]);
+    //pieces = kmllayer.getFeaturesByAttribute('name', num);
+    //if (pieces.length > 0)
+        //selectCtrl.select(pieces[0]);
 }
 
 function OpenViaRemote() {
@@ -752,10 +752,10 @@ function updatePieceStyle(e, redraw) {
 }
 
 function updateAllPieceStyles() {
-    var features = kmllayer.features;
-    for( i in features) {
-        updatePieceStyle(features[i], false);
-    }
+    //var features = kmllayer.features;
+    //for( i in features) {
+        //updatePieceStyle(features[i], false);
+    //}
     //kmllayer.redraw();
 }
 
@@ -928,7 +928,7 @@ $(document).ready(function () {
     $('#bsettings').button( { icons: { primary: 'ui-icon-wrench'} } );
     $('#bsettings').click( function () { $('#dsettings').dialog('open'); } );
     $('#bpie').button( { icons: { primary: 'ui-icon-clock'} } );
-    $('#bpie').click( function() { kmllayer.setVisibility($(this).attr("checked")); });
+    //$('#bpie').click( function() { kmllayer.setVisibility($(this).attr("checked")); });
     $('#rfull').button({icons: { primary: 'ui-icon-bullet'}});
     $('#rfull').change( function() { $("div#dchat,div#duserlist,div#dprop").dialog("open"); $("div[id^='d']").parent().css({ opacity: $('#rtrans').attr("checked") ? 0.6 : 1.0 }); });
     $('#rtrans').button({icons: { primary: 'ui-icon-radio-off'}});
