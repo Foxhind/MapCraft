@@ -288,10 +288,7 @@ In.piece_progress = function(data) {
 };
 
 In.refresh_pie_data = function (data) {
-    if (typeof(data['url']) == 'string')
-        kmllayer.addOptions({protocol: new OpenLayers.Protocol.HTTP({url: data['url'], format: new OpenLayers.Format.KML({extractStyles: true, extractAttributes: true, maxDepth: 0})})});
-    kmllayer.refresh(true);
-    kmllayer.redraw(true);
+
 };
 
 In.reload = function (data) {
@@ -558,34 +555,6 @@ function PromptColor() {
     $('#dcolor').dialog("open");
 }
 
-OpenLayers.Layer.Vector.prototype.getFeaturesByAttribute = function getFeaturesByAttribute(attrName, attrValue, strict) {
-    var i,
-        feature,
-        doStrictComparison = !!(typeof strict !== 'undefined'),
-        useAttrValue = !!(typeof attrValue !== 'undefined'),
-        len = this.features.length,
-        foundFeatures = [];
-    for( i = 0; i < len; i++ ) {
-        feature = this.features[i];
-        if(feature && feature.attributes && typeof feature.attributes[attrName] !== 'undefined'){
-            if (useAttrValue) {
-                if (doStrictComparison) {
-                    if ( feature.attributes[attrName] === attrValue) {
-                        foundFeatures.push(feature);
-                    }
-                } else {
-                    if ( feature.attributes[attrName] == attrValue) {
-                        foundFeatures.push(feature);
-                    }
-                }
-            } else {
-                foundFeatures.push(feature);
-            }
-        }
-    }
-    return foundFeatures;
-};
-
 function SelectPiece(num) {
     if (selectedFeature != null)
         selectCtrl.unselect(selectedFeature);
@@ -596,15 +565,6 @@ function SelectPiece(num) {
 }
 
 function OpenViaRemote() {
-    if (selectedFeature != null)
-    {
-        var from = new OpenLayers.Projection("EPSG:900913");
-        var to = new OpenLayers.Projection("EPSG:4326");
-        var bounds = selectedFeature.geometry.getBounds().toArray()
-        var p1 = (new OpenLayers.LonLat(bounds[0], bounds[1])).transform(from, to);
-        var p2 = (new OpenLayers.LonLat(bounds[2], bounds[3])).transform(from, to);
-        $.get("http://127.0.0.1:8111/load_and_zoom", {left: p1.lon, right: p2.lon, top: p2.lat, bottom: p1.lat});
-    }
 }
 
 function SetNick() {
