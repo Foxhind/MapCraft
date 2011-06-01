@@ -11,7 +11,7 @@ $start = ($pagenum - 1) * $piespp;
 if ($start > $piescount or $start < 0)
     header('Location: /list');
 
-$result = pg_query($connection, 'SELECT pies.id, pies.name, pies.description, users.nick, pies.start, pies.ends, count(pieces.id) AS num, sum(pieces.state) / (count(pieces.id) * 9.0) * 100 AS state FROM pies INNER JOIN pieces ON pies.id = pieces.pie JOIN users ON pies.author=users.id WHERE pies.visible = true GROUP BY pies.id, pies.name, pies.description, users.nick, pies.start, pies.ends LIMIT '.$piespp.' OFFSET '.$start);
+$result = pg_query($connection, 'SELECT pies.id, pies.name, pies.description, users.nick, pies.start, pies.ends, count(pieces.id) AS num, sum(pieces.state) / (count(pieces.id) * 9.0) * 100 AS state FROM pies INNER JOIN pieces ON pies.id = pieces.pie JOIN users ON pies.author=users.id WHERE pies.visible = true GROUP BY pies.id, pies.name, pies.description, users.nick, pies.start, pies.ends ORDER BY pies.start LIMIT '.$piespp.' OFFSET '.$start);
 
 if (pg_num_rows($result) > 0) {
 
