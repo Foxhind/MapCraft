@@ -162,10 +162,10 @@ if (isset($user_id)) {
     <div class="row">All data exсluding geometry can be changed later... when the configuration dialog will be implemented</div>
     <div class="row"><div>
         <label for="name">Name <em>*</em><br/><small>City, locality etc.</small></label>
-        <input type="text" id="name" name="name" />
+        <input type="text" id="name" name="name" required="required" />
     </div><div>
         <label for="file">Geometry <em>*</em><br/><small>File in .osm format. It should contain only closed ways without tags. The size must be less then 512Kb. Can be created in JOSM</small></label>
-        <input type="file" id="file" name="file" />
+        <input type="file" id="file" name="file" required="required" />
     </div></div>
     <div class="row"><div>
         <label for="description">Description</label>
@@ -183,7 +183,7 @@ if (isset($user_id)) {
     </div></div>
     <div class="row"><div>
         <label for="captcha">Captcha <em>*</em> <img src="/app/captcha.php" /></label>
-        <input type="text" id="captcha" name="captcha" />
+        <input type="text" id="captcha" name="captcha" required="required" />
     </div></div>
     <input class="btn" type="submit" value="&nbsp Create »" />
 </fieldset>
