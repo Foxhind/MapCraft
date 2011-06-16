@@ -36,13 +36,13 @@ function handle_piece_reserve($type, $from, $data, $res)
 
     $result = pg_query($connection, 'SELECT owner FROM pieces WHERE id = '.$piece_id);
     if (pg_num_rows($result) == 0)
-        throw new Exception("This piece isn't exists.");
+        throw new Exception("This piece doesn't exist.");
     if (!pg_field_is_null($result, 0, 0)) {
         $owner = pg_fetch_result($result, 0 ,0);
         if ($owner !== $from->user_id())
             throw new Exception("This slice is already owned by $owner.");
         else
-            throw new Exception("This slice is your already.");
+            throw new Exception("This slice is yours already.");
     }
 
     $result = pg_query($connection, 'UPDATE pieces SET owner = '.$user_id.' WHERE id = '.$piece_id);
@@ -73,7 +73,7 @@ function handle_piece_free($type, $from, $data, $res)
 
     $result = pg_query($connection, 'SELECT owner FROM pieces WHERE id = '.$piece_id);
     if (pg_num_rows($result) == 0)
-        throw new Exception("This slice isn't exists.");
+        throw new Exception("This slice doesn't exist.");
     if (pg_field_is_null($result, 0, 0)) {
         throw new Exception("This slice isn't owned by you.");
     }
@@ -114,7 +114,7 @@ function handle_piece_state($type, $from, $data, $res)
 
     $result = pg_query($connection, 'SELECT owner FROM pieces WHERE id = '.$piece_id);
     if (pg_num_rows($result) == 0)
-        throw new Exception("This slice isn't exists.");
+        throw new Exception("This slice doesn't exist.");
 
     $owner = pg_fetch_result($result, 0 ,0);
     if ($owner !== $from->user_id())
