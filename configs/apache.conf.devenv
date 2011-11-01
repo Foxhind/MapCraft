@@ -3,6 +3,7 @@
 # ####################
 
 #ServerRoot "${SRC_ROOT}/static"
+ServerName mapcraft.local
 ServerAdmin developer@mapcraft.local
 Listen ${HTTPD_PORT}
 
