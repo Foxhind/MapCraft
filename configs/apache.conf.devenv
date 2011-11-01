@@ -1,0 +1,295 @@
+# ####################
+# Generic
+# ####################
+
+#ServerRoot "${SRC_ROOT}/static"
+ServerAdmin developer@mapcraft.local
+Listen ${HTTPD_PORT}
+
+LockFile ${TMP_DIR}/apache.lock
+PidFile ${PID_FILE}
+
+Timeout 300
+KeepAlive On
+
+MaxKeepAliveRequests 100
+KeepAliveTimeout 15
+
+DefaultType text/plain
+HostnameLookups Off
+
+#Include mods-enabled/*.load
+#Include mods-enabled/*.conf
+
+#Include conf.d/
+#Include sites-enabled/
+
+# #######################
+# Modules
+# #######################
+
+LoadModule auth_basic_module /usr/lib/apache2/modules/mod_auth_basic.so
+LoadModule authn_file_module /usr/lib/apache2/modules/mod_authn_file.so
+LoadModule authz_default_module /usr/lib/apache2/modules/mod_authz_default.so
+LoadModule authz_groupfile_module /usr/lib/apache2/modules/mod_authz_groupfile.so
+LoadModule authz_host_module /usr/lib/apache2/modules/mod_authz_host.so
+LoadModule authz_user_module /usr/lib/apache2/modules/mod_authz_user.so
+
+LoadModule php5_module /usr/lib/apache2/modules/libphp5.so
+
+LoadModule alias_module /usr/lib/apache2/modules/mod_alias.so
+LoadModule cgid_module /usr/lib/apache2/modules/mod_cgid.so
+LoadModule dir_module /usr/lib/apache2/modules/mod_dir.so
+LoadModule negotiation_module /usr/lib/apache2/modules/mod_negotiation.so
+LoadModule env_module /usr/lib/apache2/modules/mod_env.so
+LoadModule mime_module /usr/lib/apache2/modules/mod_mime.so
+LoadModule setenvif_module /usr/lib/apache2/modules/mod_setenvif.so
+LoadModule status_module /usr/lib/apache2/modules/mod_status.so
+
+
+
+# #######################
+# PHP
+# #######################
+
+
+# #######################
+# Logging
+# #######################
+
+LogFormat "%h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" combined
+
+ErrorLog ${LOGS_DIR}/apache-errors.log
+CustomLog ${LOGS_DIR}/apache-combined.log combined
+LogLevel warn
+
+# ######################
+# Content
+# ######################
+
+DocumentRoot ${SRC_ROOT}/static
+<Directory />
+	Options FollowSymLinks
+	AllowOverride None
+</Directory>
+
+ScriptAlias /app/ ${SRC_ROOT}/app/
+<Directory "${SRC_ROOT}/app/">
+	AllowOverride None
+	Options +ExecCGI -MultiViews +SymLinksIfOwnerMatch
+	Order allow,deny
+	Allow from all
+</Directory>
+
+
+# ###########################
+# Tail
+# ###########################
+
+<IfModule mod_php5.c>
+    <FilesMatch "\.ph(p3?|tml)$">
+	SetHandler application/x-httpd-php
+    </FilesMatch>
+    <FilesMatch "\.phps$">
+	SetHandler application/x-httpd-php-source
+    </FilesMatch>
+    # To re-enable php in user directories comment the following lines
+    # (from <IfModule ...> to </IfModule>.) Do NOT set it to On as it
+    # prevents .htaccess files from disabling it.
+    <IfModule mod_userdir.c>
+        <Directory /home/*/public_html>
+            php_admin_value engine Off
+        </Directory>
+    </IfModule>
+</IfModule>
+
+
+<IfModule mod_status.c>
+<Location /server-status>
+    SetHandler server-status
+    Order deny,allow
+    Deny from all
+    Allow from 127.0.0.1 ::1
+</Location>
+ExtendedStatus On
+#SeeRequestTail On
+<IfModule mod_proxy.c>
+    # Show Proxy LoadBalancer status in mod_status
+    ProxyStatus On
+</IfModule>
+</IfModule>
+
+
+<IfModule mod_setenvif.c>
+BrowserMatch "Mozilla/2" nokeepalive
+BrowserMatch "MSIE 4\.0b2;" nokeepalive downgrade-1.0 force-response-1.0
+BrowserMatch "RealPlayer 4\.0" force-response-1.0
+BrowserMatch "Java/1\.0" force-response-1.0
+BrowserMatch "JDK/1\.0" force-response-1.0
+
+BrowserMatch "Microsoft Data Access Internet Publishing Provider" redirect-carefully
+BrowserMatch "MS FrontPage" redirect-carefully
+BrowserMatch "^WebDrive" redirect-carefully
+BrowserMatch "^WebDAVFS/1.[012]" redirect-carefully
+BrowserMatch "^gnome-vfs/1.0" redirect-carefully
+BrowserMatch "^gvfs/1" redirect-carefully
+BrowserMatch "^XML Spy" redirect-carefully
+BrowserMatch "^Dreamweaver-WebDAV-SCM1" redirect-carefully
+BrowserMatch " Konqueror/4" redirect-carefully
+
+</IfModule>
+
+
+<IfModule mod_dir.c>
+DirectoryIndex index.html index.cgi index.pl index.php index.xhtml index.htm
+</IfModule>
+
+<IfModule mod_negotiation.c>
+LanguagePriority en ca cs da de el eo es et fr he hr it ja ko ltz nl nn no pl pt pt-BR ru sv tr zh-CN zh-TW
+ForceLanguagePriority Prefer Fallback
+</IfModule>
+
+<IfModule mod_mime.c>
+TypesConfig /etc/mime.types
+AddType application/x-compress .Z
+AddType application/x-gzip .gz .tgz
+AddType application/x-bzip2 .bz2
+
+AddLanguage am .amh
+AddLanguage ar .ara
+AddLanguage be .be
+AddLanguage bg .bg
+AddLanguage bn .bn
+AddLanguage br .br
+AddLanguage bs .bs
+AddLanguage ca .ca
+AddLanguage cs .cz .cs
+AddLanguage cy .cy
+AddLanguage da .dk
+AddLanguage de .de
+AddLanguage dz .dz
+AddLanguage el .el
+AddLanguage en .en
+AddLanguage eo .eo
+# es is ecmascript in /etc/mime.types
+RemoveType  es
+AddLanguage es .es
+AddLanguage et .et
+AddLanguage eu .eu
+AddLanguage fa .fa
+AddLanguage fi .fi
+AddLanguage fr .fr
+AddLanguage ga .ga
+AddLanguage gl .glg
+AddLanguage gu .gu
+AddLanguage he .he
+AddLanguage hi .hi
+AddLanguage hr .hr
+AddLanguage hu .hu
+AddLanguage hy .hy
+AddLanguage id .id
+AddLanguage is .is
+AddLanguage it .it
+AddLanguage ja .ja
+AddLanguage ka .ka
+AddLanguage kk .kk
+AddLanguage km .km
+AddLanguage kn .kn
+AddLanguage ko .ko
+AddLanguage ku .ku
+AddLanguage lo .lo
+AddLanguage lt .lt
+AddLanguage ltz .ltz
+AddLanguage lv .lv
+AddLanguage mg .mg
+AddLanguage mk .mk
+AddLanguage ml .ml
+AddLanguage mr .mr
+AddLanguage ms .msa
+AddLanguage nb .nob
+AddLanguage ne .ne
+AddLanguage nl .nl
+AddLanguage nn .nn
+AddLanguage no .no
+AddLanguage pa .pa
+AddLanguage pl .po
+AddLanguage pt-BR .pt-br
+AddLanguage pt .pt
+AddLanguage ro .ro
+AddLanguage ru .ru
+AddLanguage sa .sa
+AddLanguage se .se
+AddLanguage si .si
+AddLanguage sk .sk
+AddLanguage sl .sl
+AddLanguage sq .sq
+AddLanguage sr .sr
+AddLanguage sv .sv
+AddLanguage ta .ta
+AddLanguage te .te
+AddLanguage th .th
+AddLanguage tl .tl
+RemoveType  tr
+# tr is troff in /etc/mime.types
+AddLanguage tr .tr
+AddLanguage uk .uk
+AddLanguage ur .ur
+AddLanguage vi .vi
+AddLanguage wo .wo
+AddLanguage xh .xh
+AddLanguage zh-CN .zh-cn
+AddLanguage zh-TW .zh-tw
+
+AddCharset us-ascii    .ascii .us-ascii
+AddCharset ISO-8859-1  .iso8859-1  .latin1
+AddCharset ISO-8859-2  .iso8859-2  .latin2 .cen
+AddCharset ISO-8859-3  .iso8859-3  .latin3
+AddCharset ISO-8859-4  .iso8859-4  .latin4
+AddCharset ISO-8859-5  .iso8859-5  .cyr .iso-ru
+AddCharset ISO-8859-6  .iso8859-6  .arb .arabic
+AddCharset ISO-8859-7  .iso8859-7  .grk .greek
+AddCharset ISO-8859-8  .iso8859-8  .heb .hebrew
+AddCharset ISO-8859-9  .iso8859-9  .latin5 .trk
+AddCharset ISO-8859-10  .iso8859-10  .latin6
+AddCharset ISO-8859-13  .iso8859-13
+AddCharset ISO-8859-14  .iso8859-14  .latin8
+AddCharset ISO-8859-15  .iso8859-15  .latin9
+AddCharset ISO-8859-16  .iso8859-16  .latin10
+AddCharset ISO-2022-JP .iso2022-jp .jis
+AddCharset ISO-2022-KR .iso2022-kr .kis
+AddCharset ISO-2022-CN .iso2022-cn .cis
+AddCharset Big5        .Big5       .big5 .b5
+AddCharset cn-Big5     .cn-big5
+# For russian, more than one charset is used (depends on client, mostly):
+AddCharset WINDOWS-1251 .cp-1251   .win-1251
+AddCharset CP866       .cp866
+AddCharset KOI8      .koi8
+AddCharset KOI8-E      .koi8-e
+AddCharset KOI8-r      .koi8-r .koi8-ru
+AddCharset KOI8-U      .koi8-u
+AddCharset KOI8-ru     .koi8-uk .ua
+AddCharset ISO-10646-UCS-2 .ucs2
+AddCharset ISO-10646-UCS-4 .ucs4
+AddCharset UTF-7       .utf7
+AddCharset UTF-8       .utf8
+AddCharset UTF-16      .utf16
+AddCharset UTF-16BE    .utf16be
+AddCharset UTF-16LE    .utf16le
+AddCharset UTF-32      .utf32
+AddCharset UTF-32BE    .utf32be
+AddCharset UTF-32LE    .utf32le
+AddCharset euc-cn      .euc-cn
+AddCharset euc-gb      .euc-gb
+AddCharset euc-jp      .euc-jp
+AddCharset euc-kr      .euc-kr
+#Not sure how euc-tw got in - IANA doesn't list it???
+AddCharset EUC-TW      .euc-tw
+AddCharset gb2312      .gb2312 .gb
+AddCharset iso-10646-ucs-2 .ucs-2 .iso-10646-ucs-2
+AddCharset iso-10646-ucs-4 .ucs-4 .iso-10646-ucs-4
+AddCharset shift_jis   .shift_jis .sjis
+
+AddType text/html .shtml
+AddOutputFilter INCLUDES .shtml
+
+</IfModule>

@@ -1,0 +1,68 @@
+#!/bin/bash
+
+cd $(dirname $0)
+. ./common.sh
+
+export PID_FILE=$SRC_ROOT/tmp/nginx.pid
+export CONFIG=$TMP_DIR/nginx.conf
+
+CONFIG_TMPL=$CONF_DIR/nginx.conf.devenv
+NGINX=/usr/sbin/nginx
+
+
+usage() {
+	echo "Usage:  $0 <start|stop|restart|status>"
+exit 1;
+}
+
+is_running() {
+	[ ! -f $PID_FILE ] && return 1
+	! ps $(cat $PID_FILE) >/dev/null && return 1
+	return 0
+}
+
+status() {
+	is_running && echo "Running" || echo "Stopped"
+}
+
+start() {
+	convert_tmpl $CONFIG_TMPL $CONFIG
+	$NGINX -c $CONFIG
+	echo "nginx started"
+}
+
+stop() {
+	kill $(cat $PID_FILE)
+	echo "nginx stopped"
+}
+
+case "$1" in
+	status)
+		status
+	;;
+
+	start)
+		if is_running ; then
+			echo "Already running"
+			exit 1
+		fi
+		start
+	;;
+
+	stop)
+		if ! is_running ; then
+			echo "Already stopped"
+			exit 1
+		fi
+		stop
+	;;
+
+	restart)
+		stop
+		start
+	;;
+
+	*)
+		usage
+	;;
+esac

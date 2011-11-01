@@ -1,0 +1,54 @@
+worker_processes  1;
+
+error_log  ${LOGS_DIR}/nginx-error.log;
+pid        ${PID_FILE};
+
+events {
+    worker_connections  1024;
+    # multi_accept on;
+}
+
+http {
+	include       /etc/nginx/mime.types;
+
+	access_log    ${LOGS_DIR}/nginx-access.log;
+
+	sendfile        on;
+	#tcp_nopush     on;
+
+	#keepalive_timeout  0;
+	keepalive_timeout  65;
+	tcp_nodelay        on;
+
+	gzip  on;
+	gzip_disable "MSIE [1-6]\.(?!.*SV1)";
+
+	server {
+		listen   ${NGINX_PORT};
+		server_name  mapcraft-dev.local;
+
+		rewrite ^/pie/[0-9]+/?$                 /client.html last;
+		rewrite ^/(list|map|create)$            /app/index.php?page=$1 last;
+		rewrite ^/oauth_callback.php$           /app/oauth_callback.php last;
+
+		# Static files will be served by nginx
+		location / {
+			root ${SRC_ROOT}/static;
+			index index.html;
+		}
+
+		# Proxy php scripts to apache on 8000 port
+		location /app/ {
+			proxy_pass http://127.0.0.1:${HTTPD_PORT};
+			proxy_set_header Host $host;
+			proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+		}
+
+		# Proxy hub requests to mapcraft hub
+		location /hub {
+			proxy_pass http://127.0.0.1:${HUB_PORT};
+			proxy_buffering off;
+			proxy_read_timeout 3600;
+		}
+	}
+}

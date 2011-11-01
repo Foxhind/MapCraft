@@ -2,3 +2,5 @@
 
 static/js/config.js
 lib/config.php
+/tmp
+/logs
