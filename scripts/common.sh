@@ -32,3 +32,12 @@ test ! -d $TMP_DIR && mkdir $TMP_DIR
 export NGINX_PORT=2000
 export HTTPD_PORT=2100
 export HUB_PORT=2200
+
+# Database
+export DATABASE=mapcraft-devel
+export DB_USER=$USER
+export DB_PASS=""
+export DB_HOST="localhost"
+
+# Auth
+export AUTH_TYPE="fake"

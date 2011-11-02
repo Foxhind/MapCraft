@@ -1,0 +1,60 @@
+#!/bin/bash
+
+cd $(dirname $0)
+. ./common.sh
+
+usage() {
+	echo "Usage:  $0 <COMMAND>
+
+Commands:
+   init            -- reset and recreate all needed for developing
+   reset-db        -- delete database and reset it to initial scheme
+   configs-gen     -- regenerate all configs for developer's environment
+"
+exit 1;
+}
+
+PHP_CONFIG=${SRC_ROOT}/lib/config.php
+SCHEME=${SRC_ROOT}/data/scheme/scheme.sql
+
+gen-configs() {
+	# Init PHP script
+	convert_tmpl $PHP_CONFIG.template $PHP_CONFIG
+	echo "PHP config has been regenereated"
+}
+
+reset-db() {
+	dropdb $DATABASE 2>/dev/null
+	createdb $DATABASE
+	RC=$?
+	if [ $RC != 0 ] ; then
+		echo "To resolve this error please try following:"
+		echo "   su - ; su - postgres              -- change permissions to superuser"
+		echo "   createuser -PE $USER              -- create DB user as superuser"
+		echo "Drop rights and try again"
+		exit 2;
+	fi
+
+	# Prepare scheme
+	TMP_SCHEME=${TMP_DIR}/scheme.sql
+	cp $SCHEME ${TMP_SCHEME}
+	sed -i $TMP_SCHEME -e "s/mapcrafter/$DB_USER/g";
+	psql -d ${DATABASE} <${TMP_SCHEME}
+	echo "Developer's database has been recreated"
+}
+
+
+case "$1" in
+	init)
+		gen-configs
+		reset-db
+		;;
+	reset-db)
+		reset-db
+		;;
+	gen-configs)
+		gen-configs
+		;;
+	*)
+		usage;
+esac
