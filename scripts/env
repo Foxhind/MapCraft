@@ -43,9 +43,16 @@ reset-db() {
 	echo "Developer's database has been recreated"
 }
 
+compile-hub() {
+	echo "Compiling and getting all dependencies for hub ..."
+	cd ${SRC_ROOT}/hub
+	make all || exit 1;
+	echo "Hub has been compiled"
+}
 
 case "$1" in
 	init)
+		compile-hub
 		gen-configs
 		reset-db
 		;;
