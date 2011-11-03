@@ -35,9 +35,9 @@ export HUB_PORT=2200
 
 # Database
 export DATABASE=mapcraft-devel
-export DB_USER=$USER
-export DB_PASS=""
-export DB_HOST="localhost"
+export DB_USER=develcrafter
+export DB_PASS=develaccess
+export DB_HOST=localhost
 
 # Auth
 export AUTH_TYPE="fake"

@@ -24,16 +24,20 @@ gen-configs() {
 }
 
 reset-db() {
-	dropdb $DATABASE 2>/dev/null
 	createdb $DATABASE
 	RC=$?
 	if [ $RC != 0 ] ; then
 		echo "To resolve this error please try following:"
 		echo "   su - ; su - postgres              -- change permissions to superuser"
-		echo "   createuser -PE $USER              -- create DB user as superuser"
-		echo "Drop rights and try again"
+		echo "   createuser -s $USER               -- create DB user as superuser"
+		echo "   dropdb $DATABASE                  -- drop existing database"
+		echo "Return to your shell and try again"
 		exit 2;
 	fi
+
+	# Create special user
+	dropuser $DB_USER 2>/dev/null || true
+ 	psql $DATABASE -c "CREATE USER ${DB_USER} WITH PASSWORD '${DB_PASS}' LOGIN CREATEUSER"
 
 	# Prepare scheme
 	TMP_SCHEME=${TMP_DIR}/scheme.sql
