@@ -5,6 +5,8 @@ cd $(dirname $0)
 
 export PID_FILE=$SRC_ROOT/tmp/hub.pid
 START_SCRIPT=$SRC_ROOT/hub/start-dev.sh
+REMOTE="escript $SRC_ROOT/scripts/nodetool -sname hub_dev"
+HOSTNAME=${hostname}
 
 usage() {
 	echo "Usage:  $0 <start|stop|restart|status>"
@@ -12,9 +14,8 @@ usage() {
 }
 
 is_running() {
-	[ ! -f $PID_FILE ] && return 1
-	! ps $(cat $PID_FILE) >/dev/null && return 1
-	return 0
+	$REMOTE ping >/dev/null
+	return $?
 }
 
 status() {
@@ -22,13 +23,20 @@ status() {
 }
 
 start() {
-	$START_SCRIPT "$PID_FILE" -detached
+	$START_SCRIPT "$@"
 	echo "hub has been started"
 }
 
 stop() {
-	kill $(cat $PID_FILE)
-	echo "hub has been stopped"
+	$REMOTE stop && echo "hub has been stopped"
+}
+
+console() {
+	if is_running ; then
+		erl -sname 'hub_console' -remsh hub_dev@$HOSTNAME
+	else
+		start
+	fi
 }
 
 case "$1" in
@@ -41,7 +49,7 @@ case "$1" in
 			echo "Already running"
 			exit 1
 		fi
-		start
+		start -detached
 	;;
 
 	stop)
@@ -52,9 +60,13 @@ case "$1" in
 		stop
 	;;
 
+	console)
+		console
+	;;
+
 	restart)
 		stop
-		start
+		start -detached
 	;;
 
 	*)
