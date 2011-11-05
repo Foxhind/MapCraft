@@ -9,7 +9,6 @@ export CONFIG=$TMP_DIR/nginx.conf
 CONFIG_TMPL=$CONF_DIR/nginx.conf.devenv
 NGINX=/usr/sbin/nginx
 
-
 usage() {
 	echo "Usage:  $0 <start|stop|restart|status>"
 exit 1;
@@ -17,51 +16,52 @@ exit 1;
 
 is_running() {
 	[ ! -f $PID_FILE ] && return 1
-	! ps $(cat $PID_FILE) >/dev/null && return 1
+	! ps $(cat $PID_FILE 2>/dev/null) >/dev/null && return 1
 	return 0
 }
 
 status() {
-	is_running && echo "Running" || echo "Stopped"
+	is_running && echo "Nginx is running" || echo "Nginx is stopped"
 }
 
 start() {
+	if is_running ; then
+		echo "Nginx is already running"
+		return 1
+	fi
+
 	convert_tmpl $CONFIG_TMPL $CONFIG
-	$NGINX -c $CONFIG
-	echo "nginx started"
+	$NGINX -c $CONFIG && echo "Nginx has been started"
 }
 
 stop() {
+	if ! is_running ; then
+		echo "Nginx is already stopped"
+		return 1
+	fi
+
 	kill $(cat $PID_FILE)
-	echo "nginx stopped"
+
+	while is_running ; do
+		sleep 0.1
+	done
+	echo "Nginx has been stopped"
 }
 
 case "$1" in
 	status)
 		status
 	;;
-
 	start)
-		if is_running ; then
-			echo "Already running"
-			exit 1
-		fi
 		start
 	;;
-
 	stop)
-		if ! is_running ; then
-			echo "Already stopped"
-			exit 1
-		fi
 		stop
 	;;
-
 	restart)
 		stop
 		start
 	;;
-
 	*)
 		usage
 	;;

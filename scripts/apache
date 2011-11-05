@@ -17,51 +17,52 @@ exit 1;
 
 is_running() {
 	[ ! -f $PID_FILE ] && return 1
-	! ps $(cat $PID_FILE) >/dev/null && return 1
+	! ps $(cat $PID_FILE 2>/dev/null) >/dev/null && return 1
 	return 0
 }
 
 status() {
-	is_running && echo "Running" || echo "Stopped"
+	is_running && echo "Apache is running" || echo "Apache is stopped"
 }
 
 start() {
+	if is_running ; then
+		echo "Apache is already running"
+		return 1
+	fi
+
 	convert_tmpl $CONFIG_TMPL $CONFIG
-	$APACHE2 -f $CONFIG
-	echo "apache started"
+	$APACHE2 -f $CONFIG && echo "Apache has been started"
 }
 
 stop() {
+	if ! is_running ; then
+		echo "Apache is already stopped"
+		return 1
+	fi
+
 	kill $(cat $PID_FILE)
-	echo "apache stopped"
+
+	while is_running ; do
+		sleep 0.1
+	done
+	echo "Apache has been stopped"
 }
 
 case "$1" in
 	status)
 		status
 	;;
-
 	start)
-		if is_running ; then
-			echo "Already running"
-			exit 1
-		fi
 		start
 	;;
-
 	stop)
-		if ! is_running ; then
-			echo "Already stopped"
-			exit 1
-		fi
 		stop
 	;;
-
 	restart)
 		stop
 		start
 	;;
-
 	*)
 		usage
 	;;

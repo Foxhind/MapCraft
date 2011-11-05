@@ -6,34 +6,52 @@ cd $(dirname $0)
 export PID_FILE=$SRC_ROOT/tmp/hub.pid
 START_SCRIPT=$SRC_ROOT/hub/start-dev.sh
 REMOTE="escript $SRC_ROOT/scripts/nodetool -sname hub_dev"
-HOSTNAME=${hostname}
+HOSTNAME=$(hostname)
 
 usage() {
-	echo "Usage:  $0 <start|stop|restart|status>"
+	echo "Usage:  $0 <COMMAND>
+
+Commands:
+   start|stop|restart|status   -- control the daemon
+   console                     -- start hub in console mode or attach to remote console
+"
 	exit 1;
 }
 
 is_running() {
 	$REMOTE ping >/dev/null
-	return $?
 }
 
 status() {
-	is_running && echo "Running" || echo "Stopped"
+	is_running && echo "Hub is running" || echo "Hub is stopped"
 }
 
 start() {
-	$START_SCRIPT "$@"
-	echo "hub has been started"
+	if is_running ; then
+		echo "Hab is already running"
+		return 1
+	fi
+
+	$START_SCRIPT "$@" && echo "Hub has been started"
 }
 
 stop() {
-	$REMOTE stop && echo "hub has been stopped"
+	if ! is_running ; then
+		echo "Hub is already stopped"
+		return 1
+	fi
+
+	$REMOTE stop >/dev/null || return 1
+
+	while is_running ; do
+		sleep 0.1
+	done
+	echo "Hub has been stopped"
 }
 
 console() {
 	if is_running ; then
-		erl -sname 'hub_console' -remsh hub_dev@$HOSTNAME
+		erl -remsh hub_dev@$HOSTNAME
 	else
 		start
 	fi
@@ -43,32 +61,19 @@ case "$1" in
 	status)
 		status
 	;;
-
 	start)
-		if is_running ; then
-			echo "Already running"
-			exit 1
-		fi
 		start -detached
 	;;
-
 	stop)
-		if ! is_running ; then
-			echo "Already stopped"
-			exit 1
-		fi
 		stop
 	;;
-
 	console)
 		console
 	;;
-
 	restart)
 		stop
 		start -detached
 	;;
-
 	*)
 		usage
 	;;
