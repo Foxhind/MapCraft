@@ -10,6 +10,10 @@ Commands:
    init            -- reset and recreate all needed for developing
    reset-db        -- delete database and reset it to initial scheme
    gen-configs     -- regenerate all configs for developer's environment
+
+   all-start       \
+   all-stop         - control daemons (nginx, apache, hub)
+   all-restart     /
 "
 exit 1;
 }
@@ -58,6 +62,12 @@ compile-hub() {
 	echo "Hub has been compiled"
 }
 
+daemons-do() {
+	for daemon in nginx apache hub ; do
+		${SRC_ROOT}/scripts/$daemon "$@"
+	done
+}
+
 case "$1" in
 	init)
 		compile-hub
@@ -69,6 +79,15 @@ case "$1" in
 		;;
 	gen-configs)
 		gen-configs
+		;;
+	all-start)
+		daemons-do 'start'
+		;;
+	all-stop)
+		daemons-do 'stop'
+		;;
+	all-restart)
+		deamons-do 'restart'
 		;;
 	*)
 		usage;
