@@ -8,6 +8,8 @@ START_SCRIPT=$SRC_ROOT/hub/start-dev.sh
 REMOTE="escript $SRC_ROOT/scripts/nodetool -sname hub_dev"
 HOSTNAME=$(hostname)
 
+export CONFIG=$TMP_DIR/hub.conf
+
 usage() {
 	echo "Usage:  $0 <COMMAND>
 
@@ -28,11 +30,19 @@ status() {
 
 start() {
 	if is_running ; then
-		echo "Hab is already running"
+		echo "Hub is already running"
 		return 1
 	fi
 
-	$START_SCRIPT "$@" && echo "Hub has been started"
+	LOG_OPT=""
+	CONFIG_OPT=$(echo "-config" $HUB_CONFIG | sed -e 's/.config$//')
+
+	if echo "$@" | grep 'detached' >/dev/null; then
+		LOG_OPT="-sasl sasl_error_logger {file,\"${LOGS_DIR}/hub.log\"}"
+	fi
+
+
+	$START_SCRIPT $CONFIG_OPT $LOG_OPT "$@" && echo "Hub has been started"
 }
 
 stop() {

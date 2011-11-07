@@ -41,3 +41,7 @@ export DB_HOST=localhost
 
 # Auth
 export AUTH_TYPE="fake"
+
+
+# Configs
+export HUB_CONFIG=$TMP_DIR/hub.config

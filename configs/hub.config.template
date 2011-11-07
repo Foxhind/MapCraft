@@ -1,0 +1,6 @@
+%% -*- mode: erlang; indent-tabs-mode: nil  -*-
+[
+  {hub, [
+         {port, ${HUB_PORT}}
+        ]}
+].

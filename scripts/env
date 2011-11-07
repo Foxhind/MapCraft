@@ -9,7 +9,7 @@ usage() {
 Commands:
    init            -- reset and recreate all needed for developing
    reset-db        -- delete database and reset it to initial scheme
-   configs-gen     -- regenerate all configs for developer's environment
+   gen-configs     -- regenerate all configs for developer's environment
 "
 exit 1;
 }
@@ -17,10 +17,14 @@ exit 1;
 PHP_CONFIG=${SRC_ROOT}/lib/config.php
 SCHEME=${SRC_ROOT}/data/scheme/scheme.sql
 
+HUB_CONFIG_TEMPLATE=${CONF_DIR}/hub.config.template
+
 gen-configs() {
-	# Init PHP script
 	convert_tmpl $PHP_CONFIG.template $PHP_CONFIG
-	echo "PHP config has been regenereated"
+	echo "PHP config has been regenerated"
+
+	convert_tmpl $HUB_CONFIG_TEMPLATE $HUB_CONFIG
+	echo "Hub config has been regenerated"
 }
 
 reset-db() {
