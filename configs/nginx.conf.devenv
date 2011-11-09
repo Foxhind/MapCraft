@@ -14,11 +14,7 @@ http {
 	error_log  ${LOGS_DIR}/nginx-error.log;
 	access_log    ${LOGS_DIR}/nginx-access.log;
 
-	client_body_temp_path ${TMP_DIR}/nginx-body;
-	proxy_temp_path ${TMP_DIR}/nginx-proxy;
-	fastcgi_temp_path ${TMP_DIR}/nginx-fastcgi;
-	uwsgi_temp_path ${TMP_DIR}/nginx-uwsgi;
-	scgi_temp_path ${TMP_DIR}/nginx-scgi;
+${NGINX_CONF_MODS}
 
 	sendfile        on;
 	#tcp_nopush     on;

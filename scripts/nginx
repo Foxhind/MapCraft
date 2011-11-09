@@ -30,6 +30,7 @@ start() {
 		return 1
 	fi
 
+	export NGINX_CONF_MODS=$(nginx_conf_modifications)
 	convert_tmpl $CONFIG_TMPL $CONFIG
 	$NGINX -c $CONFIG && echo "Nginx has been started"
 }
@@ -46,6 +47,21 @@ stop() {
 		sleep 0.1
 	done
 	echo "Nginx has been stopped"
+}
+
+nginx_conf_modifications() {
+
+	echo "
+	client_body_temp_path ${TMP_DIR}/nginx-body;
+	proxy_temp_path ${TMP_DIR}/nginx-proxy;
+	fastcgi_temp_path ${TMP_DIR}/nginx-fastcgi;"
+
+	NGINX_VERSION=$(dpkg-query -W -f='${Version}\n' nginx)
+	if dpkg --compare-versions $NGINX_VERSION '>' 1.0.0 ; then
+		echo "
+	uwsgi_temp_path ${TMP_DIR}/nginx-uwsgi;
+	scgi_temp_path ${TMP_DIR}/nginx-scgi;"
+	fi
 }
 
 case "$1" in
