@@ -18,6 +18,14 @@ guess_src_root() {
 	echo $CUR
 }
 
+get_version() {
+	dpkg-query -W -f='${Version}\n' $1
+}
+
+version_ge() {
+	dpkg --compare-versions $1 '>=' $2
+}
+
 # Common variables
 export SRC_ROOT=$(guess_src_root)
 export CONF_DIR=$SRC_ROOT/configs

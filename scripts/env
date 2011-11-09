@@ -27,6 +27,7 @@ gen-configs() {
 	convert_tmpl $PHP_CONFIG.template $PHP_CONFIG
 	echo "PHP config has been regenerated"
 
+	export GPROC_OPTIONS=$(gproc_options)
 	convert_tmpl $HUB_CONFIG_TEMPLATE $HUB_CONFIG
 	echo "Hub config has been regenerated"
 }
@@ -66,6 +67,16 @@ daemons-do() {
 	for daemon in nginx apache hub ; do
 		${SRC_ROOT}/scripts/$daemon "$@"
 	done
+}
+
+gproc_options() {
+	ERL_VERSION=$(get_version erlang)
+
+	# Disable ETS tunning on erlang < 14B
+	if ! version_ge $ERL_VERSION 1:14.b ; then
+		echo "
+         {ets_options, []}"
+	fi
 }
 
 case "$1" in

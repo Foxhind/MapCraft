@@ -2,5 +2,8 @@
 [
   {hub, [
          {port, ${HUB_PORT}}
+        ]},
+  {gproc, [
+${GPROC_OPTIONS}
         ]}
 ].

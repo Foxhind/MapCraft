@@ -56,8 +56,8 @@ nginx_conf_modifications() {
 	proxy_temp_path ${TMP_DIR}/nginx-proxy;
 	fastcgi_temp_path ${TMP_DIR}/nginx-fastcgi;"
 
-	NGINX_VERSION=$(dpkg-query -W -f='${Version}\n' nginx)
-	if dpkg --compare-versions $NGINX_VERSION '>' 1.0.0 ; then
+	NGINX_VERSION=$(get_version nginx)
+	if version_ge $NGINX_VERSION 1.0.0 ; then
 		echo "
 	uwsgi_temp_path ${TMP_DIR}/nginx-uwsgi;
 	scgi_temp_path ${TMP_DIR}/nginx-scgi;"
