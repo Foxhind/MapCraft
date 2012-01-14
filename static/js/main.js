@@ -8,6 +8,7 @@ var supported_langs = ['en', 'ru', 'jp'];
 var users = [];
 var claims = [];
 var me;
+var showNicks;
 var showOwned;
 var chatScrollPosition = -1;
 
@@ -497,10 +498,12 @@ function LoadSettings() {
     var show_pb = localStorage.progress_bar ? true : false;
     $('#sprogress_bar').attr('checked', show_pb);
     $('#progress_bar').toggle(show_pb);
-
+    // Show nicks
+    showNicks = localStorage.show_nicks ? true : false;
+    $('#sshow_nicks').attr('checked', showNicks);
     // Show owned
     showOwned = localStorage.show_owned ? true : false;
-    $('#sshow_owned').attr('checked', showOwned);
+    $('#sshow_nicks').attr('checked', showOwned);
     updateAllPieceStyles();
 }
 
@@ -518,6 +521,8 @@ function ApplySettings() {
     localStorage.progress_bar = show_pb ? 'show' : '';
     $('#progress_bar').toggle(show_pb);
 
+    showNicks = $('#sshow_nicks').attr('checked') ? true : false;
+    localStorage.show_nicks = showNicks ? 'show' : '';
     showOwned = $('#sshow_owned').attr('checked') ? true : false;
     localStorage.show_owned = showOwned ? 'show' : '';
     updateAllPieceStyles();
@@ -551,11 +556,9 @@ function LoadLanguage() {
         $('#lclaim').text(ldata[25]);
         $('#lrefuse').text(ldata[26]);
         $('#lprogress_bar').text(_("Progress bar:"));
+        $('#lshow_nicks').text(ldata[28]);
+        $('#lshow_owned').text(ldata[29]);
     });
-}
-
-function PromptColor() {
-    $('#dcolor').dialog("open");
 }
 
 OpenLayers.Layer.Vector.prototype.getFeaturesByAttribute = function getFeaturesByAttribute(attrName, attrValue, strict) {
@@ -778,9 +781,10 @@ function onUnselectPiece(e) {
 }
 
 function updatePieceStyle(e, redraw) {
-    e.style.label = e.attributes.owner && showOwned ?  e.attributes.owner : null;
+    e.style.label = e.attributes.owner && showNicks ?  e.attributes.owner : null;
     e.style.fontSize = 11;
-    e.style.fillColor = color[parseInt(e.attributes.description)];
+    if (!showOwned && e.attributes.owner) e.style.fillColor = "None";
+    else e.style.fillColor = color[parseInt(e.attributes.description)];
 
     var selected = e == selectedFeature;
     e.style.fillOpacity = selected ? "0.8" : "0.5";
@@ -947,8 +951,6 @@ $(document).ready(function () {
     $('#bstatus').button({disabled: true});
     $('#bstatus').click(function() { $('#sstatus').slider('value', selectedFeature.attributes.description); $('#vcolor').css({ color: color[$('#sstatus').slider('value')] }); $('#newstatus').text($('#sstatus').slider('value')); $('#dstatus').dialog('open'); });
     $('#pac_nick').button({ icons: { primary: 'ui-icon-person'} });
-    $('#pac_color').button();
-    $('#pac_color').click(PromptColor);
     $('#dchat').dialog( { resize: function(event, ui) { $('#chat').height($(this).height() - 45); $('#chat').width($(this).width() - 30); },
         beforeClose: function(event, ui) {
             var chatbox = $("#chat");

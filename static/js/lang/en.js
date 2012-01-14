@@ -26,5 +26,7 @@ var ldata = [
 "Are you sure you want to take this slice?",
 "This slice has an owner already! Put to the vote the transfer for you?",
 "Are you sure you want to abandon the slice?",
-"Welcome to our chat, %s!"
+"Welcome to our chat, %s!",
+"Show nicks:",
+"Show owned slices:"
 ];
