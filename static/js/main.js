@@ -503,7 +503,7 @@ function LoadSettings() {
     $('#sshow_nicks').attr('checked', showNicks);
     // Show owned
     showOwned = localStorage.show_owned ? true : false;
-    $('#sshow_nicks').attr('checked', showOwned);
+    $('#sshow_owned').attr('checked', showOwned);
     updateAllPieceStyles();
 }
 
