@@ -1,6 +1,6 @@
 * { margin: 0; padding: 0; }
 BODY { padding: 10px; font-family: Myriad Pro,Arial,sans; }
-TABLE { width: 100%; }
+TABLE { width: 100%; border-spacing: 0 2px; }
 TABLE TD { vertical-align: top; padding: 2px; }
 TABLE TD.nick { font-weight: bold; text-align: center; text-shadow: 1px 1px 3px rgba(0,0,0,0.6); }
 TABLE TD.c1 { background: #637D8C; }
@@ -8,3 +8,11 @@ TABLE TD.c2 { background: #6D926C; }
 TABLE TD.c3 { background: #92836C; }
 TABLE TD.time A { color: inherit; text-decoration: none; }
 TABLE TD.time A SPAN { color: #CCCCCC; }
+
+@-o-keyframes pulse { 0% { background-color: #FFFF77; } 50% { background-color: #FFFFFF; } 100% { background-color: #FFFF77; } }
+@-ms-keyframes pulse { 0% { background-color: #FFFF77; } 50% { background-color: #FFFFFF; } 100% { background-color: #FFFF77; } }
+@-moz-keyframes pulse { 0% { background-color: #FFFF77; } 50% { background-color: #FFFFFF; } 100% { background-color: #FFFF77; } }
+@-webkit-keyframes pulse { 0% { background-color: #FFFF77; } 50% { background-color: #FFFFFF; } 100% { background-color: #FFFF77; } }
+@keyframes pulse { 0% { background-color: #FFFF77; } 50% { background-color: #FFFFFF; } 100% { background-color: #FFFF77; } }
+TABLE TR.target TD { background-color: #FFFF77; -o-animation: pulse 0.5s infinite; -moz-animation: pulse 0.5s infinite; -ms-animation: pulse 0.5s infinite; -webkit-animation: pulse 0.5s infinite; animation: pulse 0.5s infinite; }
+

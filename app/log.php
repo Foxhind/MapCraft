@@ -11,7 +11,7 @@
     $filename = $_SERVER['DOCUMENT_ROOT'].'/log/'.$pie_id.'.html';
     if (!file_exists($filename) || time() - filemtime($filename) > 300) {
         $log = fopen($filename, 'w');
-        fwrite($log, '<!doctype html><html><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><link rel="stylesheet" href="/css/log.css" type="text/css"><title>Log of cake '.$pie_id.'</title></head><body><table>');
+        fwrite($log, '<!doctype html><html><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><link rel="stylesheet" href="/css/log.css" type="text/css"><title>Log of cake '.$pie_id.'</title><script>function init(){document.getElementById(document.location.toString().split(\'#\', 2)[1]).className = "target";}</script></head><body onLoad="init();"><table>');
         $result = pg_query($connection, 'SELECT U.nick,C.message,round(date_part(\'epoch\',C.timestamp)) AS ts FROM chat AS C JOIN users AS U ON U.id=C.author WHERE pie='.$pie_id.' ORDER BY C.timestamp ASC');
         while ($row = pg_fetch_array($result)) {
 	    if (!isset($cmap[$row['nick']])) {
