@@ -6,14 +6,15 @@ cd $(dirname $0)
 usage() {
 	echo "Usage:  $0 <COMMAND>
 
-Commands:
-   init            -- reset and recreate all needed for developing
-   reset-db        -- delete database and reset it to initial scheme
-   gen-configs     -- regenerate all configs for developer's environment
+Initialization:
+   init            - reset and recreate all needed for developing
+   gen-configs     - regenerate all configs for developer's environment
+   reset-db        - delete database and reset it to initial scheme
 
-   all-start       \
-   all-stop         - control daemons (nginx, apache, hub)
-   all-restart     /
+Controll daemons (nginx, apache, hub):
+   all-start       - start all
+   all-stop        - stop all
+   all-restart     - restart one by one
 "
 exit 1;
 }
@@ -33,27 +34,31 @@ gen-configs() {
 }
 
 reset-db() {
-	createdb $DATABASE
-	RC=$?
-	if [ $RC != 0 ] ; then
-		echo "To resolve this error please try following:"
-		echo "   su - ; su - postgres              -- change permissions to superuser"
-		echo "   createuser -s $USER               -- create DB user as superuser"
-		echo "   dropdb $DATABASE                  -- drop existing database"
-		echo "Return to your shell and try again"
-		exit 2;
-	fi
+	# stop hub with logic. It can p
+	${SRC_ROOT}/scripts/hub 'stop'
+	HUB_FAILED_TO_STOP=$?
+
+	# dropdb if exists
+	dropdb $DATABASE || exit 1
+
+	# create it again
+	createdb $DATABASE || exit 1
 
 	# Create special user
 	dropuser $DB_USER 2>/dev/null || true
- 	psql $DATABASE -c "CREATE USER ${DB_USER} WITH PASSWORD '${DB_PASS}' LOGIN CREATEUSER"
+ 	psql $DATABASE -c "CREATE USER ${DB_USER} WITH PASSWORD '${DB_PASS}' LOGIN CREATEUSER" >/dev/null
 
 	# Prepare scheme
 	TMP_SCHEME=${TMP_DIR}/scheme.sql
 	cp $SCHEME ${TMP_SCHEME}
 	sed -i $TMP_SCHEME -e "s/mapcrafter/$DB_USER/g";
-	psql -d ${DATABASE} <${TMP_SCHEME}
+	psql -d ${DATABASE} <${TMP_SCHEME} >/dev/null
 	echo "Developer's database has been recreated"
+
+	# start hub again if it was stopped
+	if [ $HUB_FAILED_TO_STOP = 0 ] ; then
+		${SRC_ROOT}/scripts/hub 'start'
+	fi
 }
 
 compile-hub() {
