@@ -10,7 +10,7 @@ cause some bugs during deployment.
 2. Install dependencies:
 
     ```
-    apt-get install nginx apache2 erlang git postgresql php5 php5-pgsql php5-gd make curl
+    apt-get install nginx apache2 erlang git postgresql php5 php5-pgsql php5-gd make curl inotify-tools
     ```
 
     You don't have to modify system configs of apache and nginx to make it work.

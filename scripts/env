@@ -99,7 +99,7 @@ compile-hub() {
 }
 
 daemons-do() {
-	for daemon in nginx apache hub ; do
+	for daemon in nginx apache hub code-reloader ; do
 		${SRC_ROOT}/scripts/$daemon "$@"
 	done
 }

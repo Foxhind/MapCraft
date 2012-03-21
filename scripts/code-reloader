@@ -1,0 +1,110 @@
+#!/bin/bash
+
+cd $(dirname $0)
+. ./common.sh
+
+PID_FILE=$SRC_ROOT/tmp/code-reloader.pid
+LOG_FILE=$LOGS_DIR/code-reloader.log
+
+HUB_SRC_DIR=${SRC_ROOT}/hub/src
+LOGIC_SRC_DIR=${SRC_ROOT}/logic
+LIB_SRC_DIR=${SRC_ROOT}/lib
+
+# ------------------------------
+# Code reloader
+# -----------------------------
+
+start_reloader() {
+
+	inotifywait -e close_write -m --format "%w %f" \
+		$HUB_SRC_DIR \
+		$LOGIC_SRC_DIR \
+		$LIB_SRC_DIR \
+		| while read DIR FILE ; do
+
+		fullfile="$DIR$FILE"
+		extension=${FILE##*.}
+		echo "File $fullfile was modified"
+
+		# erlang source files
+		if [ $extension == 'erl' ] ; then
+			echo "... Recompile erlang module"
+			erlc -I ${SRC_ROOT}/hub/include -o ${SRC_ROOT}/hub/ebin $fullfile
+
+		# logic source/lib
+		elif [ $extension == 'php' ] ; then
+			# very dirty kill function
+			echo "... Check syntax and restart logic"
+			echo -n "... "
+			php -l $fullfile && pkill -HUP php
+		fi
+
+	done
+}
+
+
+# ------------------------------
+# Service wrapper
+# ------------------------------
+
+usage() {
+	echo "Usage:  $0 <start|stop|restart|status>"
+exit 1;
+}
+
+is_running() {
+	[ ! -f $PID_FILE ] && return 1
+	! ps $(cat $PID_FILE 2>/dev/null) >/dev/null && return 1
+	return 0
+}
+
+status() {
+	is_running && echo "Code reloader is running" || echo "Code reloader is stopped"
+}
+
+start() {
+	if is_running ; then
+		echo "Code reloader is already running"
+		return 1
+	fi
+
+	( start_reloader >>$LOG_FILE 2>&1 & echo $! >$PID_FILE )
+	echo "Code reloader has been started"
+}
+
+stop() {
+	if ! is_running ; then
+		echo "Code reloader is already stopped"
+		return 1
+	fi
+
+	pkill -P $(cat $PID_FILE)
+
+	while is_running ; do
+		sleep 0.1
+	done
+	echo "Code reloader has been stopped"
+}
+
+case "$1" in
+	status)
+		status
+	;;
+	start)
+		start
+	;;
+	stop)
+		stop
+	;;
+	restart)
+		stop
+		start
+	;;
+	foreground)
+		start_reloader
+		exit;
+	;;
+	*)
+		usage
+	;;
+esac
