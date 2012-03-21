@@ -29,11 +29,12 @@ HUB_CONFIG_TEMPLATE=${CONF_DIR}/hub.config.template
 
 gen-configs() {
 	convert_tmpl $PHP_CONFIG.template $PHP_CONFIG
-	echo "PHP config has been regenerated"
+	echo "config.php has been regenerated"
 
 	export GPROC_OPTIONS=$(gproc_options)
 	convert_tmpl $HUB_CONFIG_TEMPLATE $HUB_CONFIG
-	echo "Hub config has been regenerated"
+	echo "hub.config has been regenerated"
+
 }
 
 db-reset() {
@@ -135,7 +136,7 @@ case "$1" in
 		daemons-do 'stop'
 		;;
 	all-restart)
-		deamons-do 'restart'
+		daemons-do 'restart'
 		;;
 	*)
 		usage;

@@ -36,6 +36,9 @@ test ! -d $LOGS_DIR && mkdir $LOGS_DIR
 export TMP_DIR=$SRC_ROOT/tmp
 test ! -d $TMP_DIR && mkdir $TMP_DIR
 
+export SESSION_TMP_DIR=$TMP_DIR/sessions
+test ! -d $SESSION_TMP_DIR && mkdir $SESSION_TMP_DIR
+
 # Developer ports
 export NGINX_PORT=2000
 export HTTPD_PORT=2100
@@ -50,6 +53,6 @@ export DB_HOST=localhost
 # Auth
 export AUTH_TYPE="fake"
 
-
 # Configs
 export HUB_CONFIG=$TMP_DIR/hub.config
+export PHP_CONFIG=$TMP_DIR/php.ini
