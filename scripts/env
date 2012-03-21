@@ -9,7 +9,8 @@ usage() {
 Initialization:
    init            - reset and recreate all needed for developing
    gen-configs     - regenerate all configs for developer's environment
-   reset-db        - delete database and reset it to initial scheme
+   db-reset        - delete database and reset it to initial scheme
+   db-seed         - seed with demo data (the current data will be cleared!)
 
 Controll daemons (nginx, apache, hub):
    all-start       - start all
@@ -21,6 +22,8 @@ exit 1;
 
 PHP_CONFIG=${SRC_ROOT}/lib/config.php
 SCHEME=${SRC_ROOT}/data/scheme/scheme.sql
+SEED_DIR=${SRC_ROOT}/data/seed
+SEED=${SEED_DIR}/seed.sql
 
 HUB_CONFIG_TEMPLATE=${CONF_DIR}/hub.config.template
 
@@ -33,10 +36,14 @@ gen-configs() {
 	echo "Hub config has been regenerated"
 }
 
-reset-db() {
-	# stop hub with logic. It can p
+db-reset() {
+	# stop hub with logic. It can prevent dropdb
 	${SRC_ROOT}/scripts/hub 'stop'
 	HUB_FAILED_TO_STOP=$?
+
+	# stop apche. It can preven dropdb too
+	${SRC_ROOT}/scripts/apache 'stop'
+	APACHE_FAILED_TO_STOP=$?
 
 	# dropdb if exists
 	dropdb $DATABASE || exit 1
@@ -55,10 +62,32 @@ reset-db() {
 	psql -d ${DATABASE} <${TMP_SCHEME} >/dev/null
 	echo "Developer's database has been recreated"
 
+	# Clear static files (kml,wms etc)
+	rm -f ${SRC_ROOT}/static/kml/*.kml
+	rm -f ${SRC_ROOT}/data/wms/*.map
+
+	# start apache again if it was stopped
+	if [ $APACHE_FAILED_TO_STOP = 0 ] ; then
+		${SRC_ROOT}/scripts/apache 'start'
+	fi
+
 	# start hub again if it was stopped
 	if [ $HUB_FAILED_TO_STOP = 0 ] ; then
 		${SRC_ROOT}/scripts/hub 'start'
 	fi
+}
+
+db-seed() {
+	# firstly reset all
+	db-reset
+
+	psql -d ${DATABASE} <$SEED >/dev/null
+
+	# Restore saved static files (kml, wms, etc)
+	cp -f ${SEED_DIR}/kml/* ${SRC_ROOT}/static/kml
+	cp -f ${SEED_DIR}/wms/* ${SRC_ROOT}/data/wms
+
+	echo "Test data successfully seeded"
 }
 
 compile-hub() {
@@ -88,10 +117,13 @@ case "$1" in
 	init)
 		compile-hub
 		gen-configs
-		reset-db
+		db-seed
 		;;
-	reset-db)
-		reset-db
+	db-reset)
+		db-reset
+		;;
+	db-seed)
+		db-seed
 		;;
 	gen-configs)
 		gen-configs

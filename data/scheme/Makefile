@@ -1,17 +1,7 @@
-
-DB_NAME=mapcraft
-DB_USER=postgres
-
+DB_NAME=mapcraft-devel
 
 all:
-	@echo "Usage:\n   make <install|update>"
-
-
-install:
-	sudo -u ${DB_USER} psql -d ${DB_NAME} <scheme.sql
+	@echo "Usage:\n   make update"
 
 update:
-	sudo -u ${DB_USER} pg_dump -s ${DB_NAME} >scheme.sql
-
-console:
-	sudo -u ${DB_USER} psql -d ${DB_NAME}
+	pg_dump -s ${DB_NAME} >scheme.sql
