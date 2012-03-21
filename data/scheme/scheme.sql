@@ -181,7 +181,8 @@ CREATE TABLE pieces_comments (
     piece integer NOT NULL,
     author integer,
     text text NOT NULL,
-    "timestamp" timestamp without time zone DEFAULT (now())::timestamp without time zone NOT NULL
+    "timestamp" timestamp without time zone DEFAULT (now())::timestamp without time zone NOT NULL,
+    "type" character varying(255) NOT NULL
 );
 
 
