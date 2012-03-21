@@ -56,3 +56,6 @@ export AUTH_TYPE="fake"
 # Configs
 export HUB_CONFIG=$TMP_DIR/hub.config
 export PHP_CONFIG=$TMP_DIR/php.ini
+
+# Logging
+export LOGIC_LOG_FILE=$LOGS_DIR/logic.log

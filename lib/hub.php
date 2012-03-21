@@ -107,9 +107,11 @@ function _get_head($str) {
 }
 
 function dispatch($cmd, $type, $from, $data, $res) {
+    global $logger;
+
     $cb = 'handle_' . $cmd;
 
-    trigger_error("Dispatching cmd: $cmd, type: $type");
+    // $logger->debug("Dispatching cmd: $cmd, type: $type");
     if ( !function_exists($cb) ){
         throw new Exception("Callback for '$cmd' is no defined yet");
     }

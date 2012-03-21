@@ -30,26 +30,36 @@ $LOGIC_ID= isset($opts['i']) ? $opts['i'] : (string) rand(1,65535);
 $TEST_MODE = isset($opts['t']);
 $DEBUG_MODE = isset($opts['d']) || getenv('MC_DEBUG');
 
+// Logging
+include("Log.php");
+$logger = Log::singleton('file', $logic_log_file, "[id=$LOGIC_ID]");
+$logger->notice("Starting new logic server");
+
 // Main pipe reading/writing loop
 $fp=fopen("php://stdin","r");
 while(!feof($fp)) {
     $cmd = stream_get_line($fp, 4 * 1024 * 1024, "\n");
     $res = new HubResult();
 
+    if ($cmd == '')
+        continue;
+    $logger->info("IN  << $cmd");
+
     // Try to handle command. catch all exceptions
     try {
         process_hub_message($cmd, $res);
     }
     catch(Exception $e) {
-        trigger_error("Exception: " . $e->getMessage());
+        $logger->err("EXCEPTION: " . $e->getMessage());
         $msg = error_msg($e->getMessage());
         $res->to_sender($msg);
     }
 
     $res->output();
 
-    if($DEBUG_MODE)
-        trigger_error("Logic respond:\nvvvvvvvv\n" . join("\n", $res->data) . "\n^^^^^^^^^ ");
+    foreach ($res->data as $line) {
+        $logger->info("OUT >> $line");
+    }
 
     // break after first run in testing mode
     if($TEST_MODE)
