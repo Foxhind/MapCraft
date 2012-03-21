@@ -1,4 +1,6 @@
 <?php
+require '../lib/config.php';
+
 ini_set('session.gc_maxlifetime', 7776000);
 ini_set('session.cookie_lifetime', 7776000);
 session_set_cookie_params(7776000);
@@ -36,7 +38,6 @@ echo '<li class="c3'.($_GET['page']=='create'?' current':'').'"><a href="/create
 if (isset($_SESSION['osm_user']))
     echo $_SESSION['osm_user'].'&nbsp; &nbsp;<a href="/app/auth.php?action=logout&reload=1" target=\"_blank\">Logout</a>';
 else {
-	include '../lib/config.php';
 	echo '<a href="/app/auth.php?reload=1" target="_blank">Login</a>';
 }
 ?>

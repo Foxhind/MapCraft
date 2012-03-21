@@ -26,8 +26,6 @@ if (isset($user_id)) {
             exit();
         }
 
-        include '../lib/config.php';
-
         $result = pg_fetch_assoc(pg_query($connection, 'SELECT * FROM users WHERE id=\''.$user_id.'\''), 0);
         if (!$result) {
             echo 'The user with id =  '.$user_id.' is not present in the base. Please logout and login back. <br /><a href="javascript:history.back();">Back</a>';

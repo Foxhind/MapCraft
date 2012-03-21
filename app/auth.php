@@ -3,7 +3,7 @@ include '../lib/config.php';
 session_start();
 
 $reload = isset($_GET['reload']);
-$reload_ses_key = 'reload_after_login';
+$reload_key = 'reload_after_login';
 if (!isset($_GET['action'])) {
     $_GET['action'] = 'login';
 }
@@ -27,7 +27,7 @@ case 'logout':
     $sesid = session_id();
     session_unset();
     session_write_close();
-    system('curl -d "" "' . $hub_full_url . '/api/session/' . $sesid . '/logout"');
+    system('curl -s -d "" "' . $hub_full_url . '/api/session/' . $sesid . '/logout"');
 
     if ($reload)
         echo("<script>window.opener.location.reload(true);</script>");
@@ -41,7 +41,7 @@ case 'success':
 
     $sesid = session_id();
     session_write_close();
-    system('curl -d "" "' . $hub_full_url . '/api/session/' . $sesid . '/login"');
+    system('curl -s -d "" "' . $hub_full_url . '/api/session/' . $sesid . '/login"');
 
     if($reload)
         echo "<script>window.opener.location.reload(true);</script>";

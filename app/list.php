@@ -1,6 +1,4 @@
 <?php
-require '../lib/config.php';
-
 $result = pg_query($connection, 'SELECT COUNT(id) FROM pies WHERE visible = true');
 $piescount = intval(pg_fetch_result($result, 0, 0));
 
