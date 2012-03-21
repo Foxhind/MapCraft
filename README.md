@@ -1,7 +1,7 @@
 ### About ###
 
 
-### How to start developing ###
+### How to help with developing ###
 
 1. (optional) create virtual machine (vmware/virtualbox) and install Debian 6.0
 there. Another tested OS: Ubuntu 11.10. Any other is not tested yet and can
@@ -25,6 +25,12 @@ cause some bugs during deployment.
     createuser -s <your-login>
     ```
 
+    On Debian 6.0 you also have to remove suhosin module:
+
+    ```
+    apt-get purge php5-suhosin
+    ```
+
 4. Clone sources.
 
     ```
@@ -33,7 +39,7 @@ cause some bugs during deployment.
     ```
 
     Remember that you can allways register on github and
-    [fork](http://help.github.com/fork-a-repo/) this project, this way you 
+    [fork](http://help.github.com/fork-a-repo/) this project, this way you
     can freely commit and publish your improvements.
 
 5. Now prepare environment and start all:
@@ -45,7 +51,7 @@ cause some bugs during deployment.
 
     The first command will create necessary config files and initialize
     database. You can do those steps separately:
-    ```./scripts/env gen-configs```, ```./scripts/env reset-db```.
+    ```./scripts/env gen-configs```, ```./scripts/env db-seed```.
 
     The second command will start nginx apache and hub daemons with developers
     configs. You can control them separately: ```./scripts/apache```,
