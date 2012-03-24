@@ -47,7 +47,9 @@ db-reset() {
 	APACHE_FAILED_TO_STOP=$?
 
 	# dropdb if exists
-	dropdb $DATABASE || exit 1
+	if psql --list | grep $DATABASE >/dev/null ; then
+		dropdb $DATABASE || exit 1
+	fi
 
 	# create it again
 	createdb $DATABASE || exit 1

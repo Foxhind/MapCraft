@@ -10,7 +10,7 @@ cause some bugs during deployment.
 2. Install dependencies:
 
     ```
-    apt-get install nginx apache2 erlang git postgresql php5 php5-pgsql php5-gd make curl inotify-tools
+    apt-get install nginx apache2 erlang git postgresql php5 php5-pgsql php5-gd php-log make curl inotify-tools
     ```
 
     You don't have to modify system configs of apache and nginx to make it work.
@@ -46,7 +46,7 @@ cause some bugs during deployment.
 
     ```
     ./scripts/env init
-    ./scritps/env all-start
+    ./scripts/env all-start
     ```
 
     The first command will create necessary config files and initialize
