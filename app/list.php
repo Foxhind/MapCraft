@@ -17,7 +17,7 @@ if (pg_num_rows($result) > 0) {
     echo '<tr><th>Name</th><th>Slices</th><th>Progress</th><th>Author</th><th>Created</th><th>Closed</th></tr>';
     while ($row = pg_fetch_array($result)) {
         $state = round(floatval($row['state']));
-        $wms_link = 'wms:http://'.$_SERVER['HTTP_HOST'].'/wms/'.$row['id'].'?';
+        $wms_link = 'wms:http://'.$_SERVER['HTTP_HOST'].'/wms/'.$row['id'].'?SRS={proj}&WIDTH={width}&height={height}&BBOX={bbox}';
         $created = preg_replace('/\.\d+$/', '', $row['start']);
         $id = $row['id'];
         $pie_link = '/pie/' . $id;
