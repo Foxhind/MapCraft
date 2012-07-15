@@ -37,20 +37,28 @@ var Progress = {
             stroke: "none",
             opacity: "0.3"
         };
-        var nb = this.none   = p.rect(1, 1, 0, 23).attr(common).attr({fill: "#f33"});
-        var pb = this.partly = p.rect(1, 1, 0, 23).attr(common).attr({fill: "#ff3"});
-        var gb = this.good   = p.rect(1, 1, 0, 23).attr(common).attr({fill: "#3f3"});
+
+        this.parts = [];
+        for (var i = 0; i < 10; i++) {
+            this.parts[i] = p.rect(1, 1, 0, 23).attr(common).attr({fill: color[i]});
+        }
     },
 
-    update: function(cnone, cpartly, cgood, t) {
+    update: function(states, t) {
+        console.log(states, t);
+        var self = this;
         if (!t) t = 1000;
-        var sum = cnone + cpartly + cgood;
-        var xnone = 0;
-        var xpartly = cnone / sum * this.width;
-        var xgood = cpartly / sum * this.width + xpartly;
-        this.none.animate(  {            width: xpartly},            t).attr({title: cnone});;
-        this.partly.animate({x: xpartly, width: xgood - xpartly},    t).attr({title: cpartly});;
-        this.good.animate(  {x: xgood,   width: this.width - xgood}, t).attr({title: cgood});
+        var sum = _(states).reduce(function(n, s) {
+            return s + n;
+        }, 0);
+
+        var last_x = 0;
+        _(states).each(function(state, i) {
+            console.error(last_x, state, i);
+            var current_width = state / sum * self.width;
+            self.parts[i].animate( {x:last_x, width: current_width}, t).attr({title: state});
+            last_x += current_width;
+        });
     }
 };
 
@@ -289,7 +297,7 @@ In.piece_state = function (data) {
 
 In.piece_progress = function(data) {
     var cnts = data['progress'];
-    Progress.update(cnts[0], cnts[1], cnts[2], 400);
+    Progress.update(cnts, 400);
 };
 
 In.refresh_pie_data = function (data) {

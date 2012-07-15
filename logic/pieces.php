@@ -171,13 +171,9 @@ function _update_piece_progress($res, $from)
 
     $result = pg_query($connection, "SELECT state FROM pieces WHERE pie = " . $from->pieid);
     $states = pg_fetch_all_columns($result, 0);
-    $progress = array(0,0,0);
+    $progress = array(0,0,0,0,0,0,0,0,0,0);
     foreach ($states as $st) {
-        switch ($st) {
-        case 0:  $progress[0] ++; break;
-        case 9:  $progress[2] ++; break;
-        default: $progress[1] ++;
-        }
+        $progress[$st] ++;
     }
 
     $event = array('piece_progress', array('progress' => $progress));
