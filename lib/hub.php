@@ -89,14 +89,14 @@ function split_hub_message($str)
     $decoded = NULL;
 
     // Split and last 'json:' part if there is one
-    $parts = split("!json:", $str, 2);
+    $parts = preg_split("/!json:/", $str, 2);
     if (isset($parts[1])) {
         $str = $parts[0];
         $decoded = json_decode($parts[1], true);
     }
 
     // Split parts separated using '!'
-    $res = split('!', $str);
+    $res = preg_split('/!/', $str);
 
     if(!is_null($decoded)) {
        array_push($res, $decoded);

@@ -33,13 +33,14 @@ function handle_chat($type, $from, $data, $res) {
     // TODO: Move to handle_user_join?
 function handle_get_chat_history($type, $from, $data, $res) {
     global $connection;
+    global $logger;
 
     $result = pg_query($connection, 'SELECT chat.id, users.nick, message, timestamp FROM chat JOIN users ON users.id = author WHERE pie = '.$from->pieid.' ORDER BY timestamp DESC LIMIT 10');
     $messages = array();
     while ($row = pg_fetch_array($result)) {
         $messages[] = $row;
     }
-    array_reverse($messages);
+    $messages = array_reverse($messages);
     foreach ($messages as $row) {
         $msg = array(   'class' => 'chat',
                         'author' => $row['nick'],
