@@ -194,6 +194,10 @@ In.chat = function (data) {
         author = data['author'];
     var history_class = data['history'] ? 'history' : '';
     var message = TextReplacer.parse(data['message']);
+    if (message.substr(0, 4) === '/me ') {
+        message = author + message.substr(3);
+        author = '*';
+    }
     var chatbox = $("#chat");
     var isEnd = (chatbox.attr("scrollHeight") - chatbox.height() - chatbox.scrollTop() < 20);
     chat.append("<tr class='" + history_class + "'><td class='nick'>" + author + "</td><td class='" + mclass + "'>" + message + "</td><td class='time'>" + time + "</td></tr>");
