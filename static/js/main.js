@@ -66,6 +66,79 @@ var Progress = {
     }
 };
 
+var Chat = {
+    chatEl: function() {
+        return $("#chat tbody");
+    },
+
+    chatBoxEl: function() {
+        return $("chat");
+    },
+
+    append: function(message, type, author, ts, is_history) {
+
+        ts = this._stringify_timestamp(ts);
+        if (_.isUndefined(type)) type = 'msg';
+        if (_.isUndefined(author)) author = '-';
+
+        // Replace all special shortcuts
+        message = TextReplacer.parse(message);
+
+
+        // Suuport for me
+        if (message.substr(0, 4) === '/me ') {
+            message = author + message.substr(3);
+            author = '*';
+        }
+
+        // Append to the end and scroll
+        var chatbox = this.chatBoxEl();
+        var isEnd = (chatbox.attr("scrollHeight") - chatbox.height() - chatbox.scrollTop() < 20);
+        var history_class = is_history ? 'history' : '';
+        this.chatEl().append("<tr class='" + history_class + "'><td class='nick'>" + author + "</td><td class='" + type + "'>" + message + "</td><td class='time'>" + ts + "</td></tr>");
+        if (isEnd) {
+            ScrollDown();
+        }
+    },
+
+    handleCliCommand: function(text) {
+        console.log(text, text[0]);
+        if (!(text[0] === '/' && text.substr(0, 4) !== '/me ')) {
+            return false;
+        }
+
+        if (text === '/quit') {
+            window.location = '/';
+        } if (text === '/help') {
+            this.append("Supported commands:<br/>" +
+                "/quit      - quit to main list<br/>" +
+                "/me TEXT   - say in /me form<br/>" +
+                "/help      - show supported commands",
+                'cli');
+        } else {
+            this.append("Unsupported CLI command. Type '/help' to see known commands", 'cli');
+        }
+        return true;
+    },
+
+    _stringify_timestamp: function(ts) {
+        if (_.isString(ts)) {
+            return ts.substr(11, 8);
+        }
+
+        var d = new Date();
+        if (_.isNumber(ts)) {
+            d.setTime(ts*1000);
+        }
+
+        var s = d.getSeconds();
+        var m = d.getMinutes();
+        s = (s < 10) ? '0' + s : s;
+        m = (m < 10) ? '0' + m : m;
+        return d.getHours().toString() + ':' + m.toString() + ':' + s.toString();
+    }
+};
+
 function config_get(key, defval) {
     if (typeof(MapCraft) == 'undefined' || typeof(MapCraft.config) == 'undefined') {
         return defval;
@@ -184,36 +257,9 @@ var Out = {};
 In.chat = function (data) {
     if (typeof(data['message']) == 'undefined')
         return false;
-    var chat = $("#chat tbody");
-    var time = '';
-    var mclass = 'msg';
-    var author = '';
-    if (typeof(data['date']) == 'number') {
-        var d = new Date();
-        d.setTime(data['date']*1000);
-        var s = d.getSeconds();
-        var m = d.getMinutes();
-        s = (s < 10) ? '0' + s : s;
-        m = (m < 10) ? '0' + m : m;
-        time = d.getHours().toString() + ':' + m.toString() + ':' + s.toString()
-    }
-    else if (typeof(data['date']) == 'string') {
-        time = data['date'].substr(11, 8);
-    }
-    if (typeof(data['class']) != 'undefined')
-        mclass = data['class'];
-    if (typeof(data['author']) != 'undefined')
-        author = data['author'];
-    var history_class = data['history'] ? 'history' : '';
-    var message = TextReplacer.parse(data['message']);
-    if (message.substr(0, 4) === '/me ') {
-        message = author + message.substr(3);
-        author = '*';
-    }
-    var chatbox = $("#chat");
-    var isEnd = (chatbox.attr("scrollHeight") - chatbox.height() - chatbox.scrollTop() < 20);
-    chat.append("<tr class='" + history_class + "'><td class='nick'>" + author + "</td><td class='" + mclass + "'>" + message + "</td><td class='time'>" + time + "</td></tr>");
-    if (isEnd) ScrollDown();
+
+    Chat.append(data['message'], data['class'], data['author'], data['date'], data['history']);
+
 };
 
 In.claim_list = function (data) {
@@ -746,7 +792,11 @@ function CloseClaim(claim_id) {
 function Send() {
     var text = $("#pac_text").val();
     if (!text.match(/^\s*$/)) {
-        PieHub.push(Out.chat(text));
+        var is_cmd = Chat.handleCliCommand(text);
+
+        if (!is_cmd) {
+            PieHub.push(Out.chat(text));
+        }
         $("#pac_text").val("");
     }
     $("#pac_text").focus();
