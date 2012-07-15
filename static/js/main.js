@@ -16,7 +16,7 @@ var chatScrollPosition = -1;
 // Translations
 // ---------------
 var _trans_hash = {};
-function _(str) {
+function t(str) {
     if(_trans_hash[str]) return _trans_hash[str];
     return str;
 }
@@ -254,7 +254,7 @@ In.piece_comment = function (data) {
         if ($('#dprop .loading').length != 0)
             comments_div.html('');
 
-        var msg = data['type'] == 'comment' ? data['message'] : _(data['message']);
+        var msg = data['type'] == 'comment' ? data['message'] : t(data['message']);
         msg = TextReplacer.parse(msg);
         var date = data['date'].replace(/\.\d+$/, '');
         $('#dprop #comments').append('<p class="' + data['type'] + '"><strong>' + data['author'] + '</strong><span class="date">' + date + '</span><br />' + msg + '</p>');
@@ -559,7 +559,7 @@ function LoadLanguage() {
         $('#ltake').text(ldata[24]);
         $('#lclaim').text(ldata[25]);
         $('#lrefuse').text(ldata[26]);
-        $('#lprogress_bar').text(_("Progress bar:"));
+        $('#lprogress_bar').text(t("Progress bar:"));
         $('#lshow_nicks').text(ldata[28]);
         $('#lshow_owned').text(ldata[29]);
     });
