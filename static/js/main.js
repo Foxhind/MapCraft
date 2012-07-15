@@ -51,7 +51,6 @@ var Progress = {
     },
 
     update: function(states, t) {
-        console.log(states, t);
         var self = this;
         if (!t) t = 1000;
         var sum = _(states).reduce(function(n, s) {
@@ -60,7 +59,6 @@ var Progress = {
 
         var last_x = 0;
         _(states).each(function(state, i) {
-            console.error(last_x, state, i);
             var current_width = state / sum * self.width;
             self.parts[i].animate( {x:last_x, width: current_width}, t).attr({title: state});
             last_x += current_width;
@@ -385,6 +383,10 @@ In.youare = function (data) {
     PieHub.push( Out.get_user_list() );
 };
 
+In.after_init = function (data) {
+    selectPieceFromURL();
+};
+
 Out.claim = function (piece_id) {
     if (typeof(piece_id) != 'string' && typeof(piece_id) != 'number') return false;
     return ['claim', {piece_id: piece_id.toString()}];
@@ -456,6 +458,10 @@ Out.vote_claim = function (claim_id, vote) {
 
 Out.whoami = function() {
     return ['whoami', {}];
+};
+
+Out.init_session = function() {
+    return ['init_session', {}];
 };
 
 function is_user_entry_is_empty(entry) {
@@ -616,6 +622,20 @@ function SelectPiece(num) {
         selectCtrl.select(pieces[0]);
 }
 
+function selectPieceFromURL() {
+    var hash = window.location.hash;
+    hash = hash.charAt(0) == '#' ? hash.substring(1, hash.length) : hash;
+    if (hash === '') {
+        return;
+    }
+
+    SelectPiece(hash);
+    if (selectedFeature !== null) {
+        olmap.zoomToExtent(selectedFeature.geometry.getBounds());
+        olmap.zoomOut();
+    }
+}
+
 function OpenViaRemote() {
     if (selectedFeature != null)
     {
@@ -711,8 +731,8 @@ function Debug(data) {
 
 function Enter() {
     PieHub.push( Out.get_chat_history() );
-    PieHub.push( Out.whoami() );
     PieHub.push( Out.piece_progress() );
+    PieHub.push( Out.init_session() );
 }
 
 function Vote(claim_id, vote) {
@@ -859,19 +879,8 @@ $(document).ready(function () {
 
     // Zoom what it will be loaded
     kmllayer.events.register("loadend", this, function() {
-        var hash = window.location.hash;
-        hash = hash.charAt(0) == '#' ? hash.substring(1, hash.length) : hash;
-        if (hash != '') {
-            SelectPiece(hash);
-            if (selectedFeature != null) {
-                olmap.zoomToExtent(selectedFeature.geometry.getBounds());
-                olmap.zoomOut();
-            }
-        }
-        else if (!olmap.getCenter()) {
-            olmap.zoomToExtent(kmllayer.getDataExtent());
-            olmap.zoomOut(); // a bit smaller
-        }
+        olmap.zoomToExtent(kmllayer.getDataExtent());
+        olmap.zoomOut(); // a bit smaller
         updateAllPieceStyles();
     });
 

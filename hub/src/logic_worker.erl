@@ -77,7 +77,7 @@ skip_warning(_) ->
 read_response(Port, RespAcc, LineAcc) ->
 	receive
 		{Port, {data, {eol, "EOR"}}} ->
-			{ok, RespAcc};
+			{ok, lists:reverse(RespAcc)};
 
 		{Port, {data, {eol, Line}}} ->
 			Response = list_to_binary(lists:reverse([Line | LineAcc])),

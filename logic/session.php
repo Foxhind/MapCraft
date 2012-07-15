@@ -97,6 +97,12 @@ function handle_whoami($type, $from, $data, $res) {
     _youare($res, $from);
 }
 
+function handle_init_session($type, $from, $data, $res) {
+    # TODO move here all other initialization steps
+    _youare($res, $from);
+    $res->to_session($from, array("after_init"));
+}
+
 // ------------
 // Helpers
 // -----------
