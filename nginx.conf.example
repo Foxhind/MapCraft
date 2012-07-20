@@ -5,7 +5,7 @@ server {
 	access_log  /var/log/nginx/mapcraft.access.log;
 
 	rewrite ^/pie/[0-9]+/?$                 /client.html last;
-	rewrite ^/log/([0-9]+)/?$               /app/log.php?id=$1 last;
+	rewrite ^/(log|edit|delete)/([0-9]+)/?$ /app/$1.php?id=$2 last;
 	rewrite ^/(list|map|create)$            /app/index.php?page=$1 last;
 	rewrite ^/oauth_callback.php$           /app/oauth_callback.php last;
 

@@ -14,7 +14,7 @@ $result = pg_query($connection, 'SELECT pies.id, pies.name, pies.description, us
 if (pg_num_rows($result) > 0) {
 
     echo '<table class="list">';
-    echo '<tr><th>Name</th><th>Slices</th><th>Progress</th><th>Author</th><th>Created</th><th>Closed</th></tr>';
+    echo '<tr><th>Name</th><th>Slices</th><th>Progress</th><th>Author</th><th>Created</th><th>&nbsp;</th></tr>';
     while ($row = pg_fetch_array($result)) {
         $state = round(floatval($row['state']));
         $wms_link = 'wms:http://'.$_SERVER['HTTP_HOST'].'/wms/'.$row['id'].'?SRS={proj}&WIDTH={width}&height={height}&BBOX={bbox}';
@@ -28,7 +28,7 @@ if (pg_num_rows($result) > 0) {
         echo '<td><meter value="'.$state.'" min="0" max="100" low="33" high="67">'.$state.'&nbsp;%</meter></td>';
         echo '<td><a href="http://www.openstreetmap.org/user/'.$row['nick'].'" target="_blank">'.$row['nick'].'</a></td>';
         echo '<td>'.$created.'</td>';
-        echo '<td>'.($row['ends'] ? $row['ends'] : '—').'</td>';
+        echo '<td>'.(isset($_SESSION['osm_user']) && $row['nick'] === $_SESSION['osm_user'] ? '<a href="/delete/'.$id.'">Delete</a>' : '').'</td>';
         echo '</tr>';
         // Descr
         echo '<tr class="list_descr closed" id="descr_'.$id.'">';
