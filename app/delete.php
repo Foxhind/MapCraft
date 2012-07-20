@@ -13,7 +13,14 @@ if (empty($_SESSION['osm_user']) || empty($_REQUEST['id'])) {
 
 if (!empty($_POST['ok'])) {
     $id = intval($_REQUEST['id']);
-    $result = pg_query("DELETE FROM pies WHERE id={$id}");
+    pg_query("DELETE FROM votes WHERE claim IN (SELECT id FROM claims WHERE piece IN (SELECT id FROM pieces WHERE pie={$id}))");
+    pg_query("DELETE FROM claims WHERE piece IN (SELECT id FROM pieces WHERE pie={$id})");
+    pg_query("DELETE FROM pieces_comments WHERE piece IN (SELECT id FROM pieces WHERE pie={$id})");
+    pg_query("DELETE FROM pieces WHERE pie={$id}");
+    pg_query("DELETE FROM access WHERE pie={$id}");
+    pg_query("DELETE FROM chat_members WHERE pie={$id}");
+    pg_query("DELETE FROM chat WHERE pie={$id}");
+    pg_query("DELETE FROM pies WHERE id={$id}");
     header('Location: /');
     exit();
 }
