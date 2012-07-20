@@ -17,6 +17,10 @@ if (!empty($_POST['ok'])) {
     header('Location: /');
     exit();
 }
+elseif (!empty($_POST['cancel'])) {
+    header('Location: /list');
+    exit();
+}
 
 ?>
 <!doctype html>
@@ -37,7 +41,6 @@ if (!empty($_POST['ok'])) {
 <div id="login">
 <?php
 echo $_SESSION['osm_user'].'&nbsp; &nbsp;<a href="/app/auth.php?action=logout&reload=1" target=\"_blank\">Logout</a>';
-}
 ?>
 </div>
 <div id="content">
