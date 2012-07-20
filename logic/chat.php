@@ -1,4 +1,9 @@
 <?php
+/* This program is free software. It comes without any warranty, to
+ * the extent permitted by applicable law. You can redistribute it
+ * and/or modify it under the terms of the Do What The Fuck You Want
+ * To Public License, Version 2, as published by Sam Hocevar. See
+ * http://sam.zoy.org/wtfpl/COPYING for more details. */
 
 function handle_chat($type, $from, $data, $res) {
     global $connection;
@@ -28,13 +33,14 @@ function handle_chat($type, $from, $data, $res) {
     // TODO: Move to handle_user_join?
 function handle_get_chat_history($type, $from, $data, $res) {
     global $connection;
+    global $logger;
 
     $result = pg_query($connection, 'SELECT chat.id, users.nick, message, timestamp FROM chat JOIN users ON users.id = author WHERE pie = '.$from->pieid.' ORDER BY timestamp DESC LIMIT 10');
     $messages = array();
     while ($row = pg_fetch_array($result)) {
         $messages[] = $row;
     }
-    array_reverse($messages);
+    $messages = array_reverse($messages);
     foreach ($messages as $row) {
         $msg = array(   'class' => 'chat',
                         'author' => $row['nick'],

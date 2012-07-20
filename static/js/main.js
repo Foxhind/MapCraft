@@ -1,3 +1,9 @@
+/* This program is free software. It comes without any warranty, to
+ * the extent permitted by applicable law. You can redistribute it
+ * and/or modify it under the terms of the Do What The Fuck You Want
+ * To Public License, Version 2, as published by Sam Hocevar. See
+ * http://sam.zoy.org/wtfpl/COPYING for more details. */
+
 var olmap;
 var kmllayer;
 
@@ -16,7 +22,7 @@ var chatScrollPosition = -1;
 // Translations
 // ---------------
 var _trans_hash = {};
-function _(str) {
+function t(str) {
     if(_trans_hash[str]) return _trans_hash[str];
     return str;
 }
@@ -37,20 +43,99 @@ var Progress = {
             stroke: "none",
             opacity: "0.3"
         };
-        var nb = this.none   = p.rect(1, 1, 0, 23).attr(common).attr({fill: "#f33"});
-        var pb = this.partly = p.rect(1, 1, 0, 23).attr(common).attr({fill: "#ff3"});
-        var gb = this.good   = p.rect(1, 1, 0, 23).attr(common).attr({fill: "#3f3"});
+
+        this.parts = [];
+        for (var i = 0; i < 10; i++) {
+            this.parts[i] = p.rect(1, 1, 0, 23).attr(common).attr({fill: color[i]});
+        }
     },
 
-    update: function(cnone, cpartly, cgood, t) {
+    update: function(states, t) {
+        var self = this;
         if (!t) t = 1000;
-        var sum = cnone + cpartly + cgood;
-        var xnone = 0;
-        var xpartly = cnone / sum * this.width;
-        var xgood = cpartly / sum * this.width + xpartly;
-        this.none.animate(  {            width: xpartly},            t).attr({title: cnone});;
-        this.partly.animate({x: xpartly, width: xgood - xpartly},    t).attr({title: cpartly});;
-        this.good.animate(  {x: xgood,   width: this.width - xgood}, t).attr({title: cgood});
+        var sum = _(states).reduce(function(n, s) {
+            return s + n;
+        }, 0);
+
+        var last_x = 0;
+        _(states).each(function(state, i) {
+            var current_width = state / sum * self.width;
+            self.parts[i].animate( {x:last_x, width: current_width}, t).attr({title: state});
+            last_x += current_width;
+        });
+    }
+};
+
+var Chat = {
+    chatEl: function() {
+        return $("#chat tbody");
+    },
+
+    chatBoxEl: function() {
+        return $("chat");
+    },
+
+    append: function(message, type, author, ts, is_history) {
+
+        ts = this._stringify_timestamp(ts);
+        if (_.isUndefined(type)) type = 'msg';
+        if (_.isUndefined(author)) author = '-';
+
+        // Replace all special shortcuts
+        message = TextReplacer.parse(message);
+
+
+        // Suuport for me
+        if (message.substr(0, 4) === '/me ') {
+            message = author + message.substr(3);
+            author = '*';
+        }
+
+        // Append to the end and scroll
+        var chatbox = this.chatBoxEl();
+        var isEnd = (chatbox.attr("scrollHeight") - chatbox.height() - chatbox.scrollTop() < 20);
+        var history_class = is_history ? 'history' : '';
+        this.chatEl().append("<tr class='" + history_class + "'><td class='nick'>" + author + "</td><td class='" + type + "'>" + message + "</td><td class='time'>" + ts + "</td></tr>");
+        if (isEnd) {
+            ScrollDown();
+        }
+    },
+
+    handleCliCommand: function(text) {
+        console.log(text, text[0]);
+        if (!(text[0] === '/' && text.substr(0, 4) !== '/me ')) {
+            return false;
+        }
+
+        if (text === '/quit') {
+            window.location = '/';
+        } if (text === '/help') {
+            this.append("Supported commands:<br/>" +
+                "/quit      - quit to main list<br/>" +
+                "/me TEXT   - say in /me form<br/>" +
+                "/help      - show supported commands",
+                'cli');
+        } else {
+            this.append("Unsupported CLI command. Type '/help' to see known commands", 'cli');
+        }
+        return true;
+    },
+
+    _stringify_timestamp: function(ts) {
+        if (_.isString(ts)) {
+            return ts.substr(11, 8);
+        }
+
+        var d = new Date();
+        if (_.isNumber(ts)) {
+            d.setTime(ts*1000);
+        }
+
+        var s = d.getSeconds();
+        var m = d.getMinutes();
+        s = (s < 10) ? '0' + s : s;
+        m = (m < 10) ? '0' + m : m;
+        return d.getHours().toString() + ':' + m.toString() + ':' + s.toString();
     }
 };
 
@@ -172,32 +257,9 @@ var Out = {};
 In.chat = function (data) {
     if (typeof(data['message']) == 'undefined')
         return false;
-    var chat = $("#chat tbody");
-    var time = '';
-    var mclass = 'msg';
-    var author = '';
-    if (typeof(data['date']) == 'number') {
-        var d = new Date();
-        d.setTime(data['date']*1000);
-        var s = d.getSeconds();
-        var m = d.getMinutes();
-        s = (s < 10) ? '0' + s : s;
-        m = (m < 10) ? '0' + m : m;
-        time = d.getHours().toString() + ':' + m.toString() + ':' + s.toString()
-    }
-    else if (typeof(data['date']) == 'string') {
-        time = data['date'].substr(11, 8);
-    }
-    if (typeof(data['class']) != 'undefined')
-        mclass = data['class'];
-    if (typeof(data['author']) != 'undefined')
-        author = data['author'];
-    var history_class = data['history'] ? 'history' : '';
-    var message = TextReplacer.parse(data['message']);
-    var chatbox = $("#chat");
-    var isEnd = (chatbox.attr("scrollHeight") - chatbox.height() - chatbox.scrollTop() < 20);
-    chat.append("<tr class='" + history_class + "'><td class='nick'>" + author + "</td><td class='" + mclass + "'>" + message + "</td><td class='time'>" + time + "</td></tr>");
-    if (isEnd) ScrollDown();
+
+    Chat.append(data['message'], data['class'], data['author'], data['date'], data['history']);
+
 };
 
 In.claim_list = function (data) {
@@ -250,7 +312,7 @@ In.piece_comment = function (data) {
         if ($('#dprop .loading').length != 0)
             comments_div.html('');
 
-        var msg = data['type'] == 'comment' ? data['message'] : _(data['message']);
+        var msg = data['type'] == 'comment' ? data['message'] : t(data['message']);
         msg = TextReplacer.parse(msg);
         var date = data['date'].replace(/\.\d+$/, '');
         $('#dprop #comments').append('<p class="' + data['type'] + '"><strong>' + data['author'] + '</strong><span class="date">' + date + '</span><br />' + msg + '</p>');
@@ -285,7 +347,7 @@ In.piece_state = function (data) {
 
 In.piece_progress = function(data) {
     var cnts = data['progress'];
-    Progress.update(cnts[0], cnts[1], cnts[2], 400);
+    Progress.update(cnts, 400);
 };
 
 In.refresh_pie_data = function (data) {
@@ -367,6 +429,10 @@ In.youare = function (data) {
     PieHub.push( Out.get_user_list() );
 };
 
+In.after_init = function (data) {
+    selectPieceFromURL();
+};
+
 Out.claim = function (piece_id) {
     if (typeof(piece_id) != 'string' && typeof(piece_id) != 'number') return false;
     return ['claim', {piece_id: piece_id.toString()}];
@@ -438,6 +504,10 @@ Out.vote_claim = function (claim_id, vote) {
 
 Out.whoami = function() {
     return ['whoami', {}];
+};
+
+Out.init_session = function() {
+    return ['init_session', {}];
 };
 
 function is_user_entry_is_empty(entry) {
@@ -555,7 +625,7 @@ function LoadLanguage() {
         $('#ltake').text(ldata[24]);
         $('#lclaim').text(ldata[25]);
         $('#lrefuse').text(ldata[26]);
-        $('#lprogress_bar').text(_("Progress bar:"));
+        $('#lprogress_bar').text(t("Progress bar:"));
         $('#lshow_nicks').text(ldata[28]);
         $('#lshow_owned').text(ldata[29]);
     });
@@ -598,6 +668,20 @@ function SelectPiece(num) {
         selectCtrl.select(pieces[0]);
 }
 
+function selectPieceFromURL() {
+    var hash = window.location.hash;
+    hash = hash.charAt(0) == '#' ? hash.substring(1, hash.length) : hash;
+    if (hash === '') {
+        return;
+    }
+
+    SelectPiece(hash);
+    if (selectedFeature !== null) {
+        olmap.zoomToExtent(selectedFeature.geometry.getBounds());
+        olmap.zoomOut();
+    }
+}
+
 function OpenViaRemote() {
     if (selectedFeature != null)
     {
@@ -606,7 +690,10 @@ function OpenViaRemote() {
         var bounds = selectedFeature.geometry.getBounds().toArray()
         var p1 = (new OpenLayers.LonLat(bounds[0], bounds[1])).transform(from, to);
         var p2 = (new OpenLayers.LonLat(bounds[2], bounds[3])).transform(from, to);
-        $.get("http://127.0.0.1:8111/load_and_zoom", {left: p1.lon, right: p2.lon, top: p2.lat, bottom: p1.lat});
+        if ( !$('#hiddenIframe').length ){
+            $('body').append('<iframe id="hiddenIframe" style="display:hidden" />');
+        }
+        $('#hiddenIframe').attr("src", "http://127.0.0.1:8111/load_and_zoom?left=" + p1.lon + "&right=" + p2.lon + "&top=" + p2.lat + "&bottom=" + p1.lat);
     }
 }
 
@@ -690,8 +777,8 @@ function Debug(data) {
 
 function Enter() {
     PieHub.push( Out.get_chat_history() );
-    PieHub.push( Out.whoami() );
     PieHub.push( Out.piece_progress() );
+    PieHub.push( Out.init_session() );
 }
 
 function Vote(claim_id, vote) {
@@ -705,7 +792,11 @@ function CloseClaim(claim_id) {
 function Send() {
     var text = $("#pac_text").val();
     if (!text.match(/^\s*$/)) {
-        PieHub.push(Out.chat(text));
+        var is_cmd = Chat.handleCliCommand(text);
+
+        if (!is_cmd) {
+            PieHub.push(Out.chat(text));
+        }
         $("#pac_text").val("");
     }
     $("#pac_text").focus();
@@ -838,19 +929,8 @@ $(document).ready(function () {
 
     // Zoom what it will be loaded
     kmllayer.events.register("loadend", this, function() {
-        var hash = window.location.hash;
-        hash = hash.charAt(0) == '#' ? hash.substring(1, hash.length) : hash;
-        if (hash != '') {
-            SelectPiece(hash);
-            if (selectedFeature != null) {
-                olmap.zoomToExtent(selectedFeature.geometry.getBounds());
-                olmap.zoomOut();
-            }
-        }
-        else if (!olmap.getCenter()) {
-            olmap.zoomToExtent(kmllayer.getDataExtent());
-            olmap.zoomOut(); // a bit smaller
-        }
+        olmap.zoomToExtent(kmllayer.getDataExtent());
+        olmap.zoomOut(); // a bit smaller
         updateAllPieceStyles();
     });
 

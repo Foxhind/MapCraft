@@ -78,6 +78,10 @@ color: gray;
 	color: CadetBlue;
 }
 
+#chat .cli {
+	color: Magenta;
+}
+
 #chat .time {
 color: gray;
 font-size: smaller;

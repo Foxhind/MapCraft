@@ -1,4 +1,9 @@
 <?php
+/* This program is free software. It comes without any warranty, to
+ * the extent permitted by applicable law. You can redistribute it
+ * and/or modify it under the terms of the Do What The Fuck You Want
+ * To Public License, Version 2, as published by Sam Hocevar. See
+ * http://sam.zoy.org/wtfpl/COPYING for more details. */
 
 class HubResult {
     public $data = array();
@@ -84,14 +89,14 @@ function split_hub_message($str)
     $decoded = NULL;
 
     // Split and last 'json:' part if there is one
-    $parts = split("!json:", $str, 2);
+    $parts = preg_split("/!json:/", $str, 2);
     if (isset($parts[1])) {
         $str = $parts[0];
         $decoded = json_decode($parts[1], true);
     }
 
     // Split parts separated using '!'
-    $res = split('!', $str);
+    $res = preg_split('/!/', $str);
 
     if(!is_null($decoded)) {
        array_push($res, $decoded);

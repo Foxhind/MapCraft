@@ -1,4 +1,10 @@
 <?php
+/* This program is free software. It comes without any warranty, to
+ * the extent permitted by applicable law. You can redistribute it
+ * and/or modify it under the terms of the Do What The Fuck You Want
+ * To Public License, Version 2, as published by Sam Hocevar. See
+ * http://sam.zoy.org/wtfpl/COPYING for more details. */
+
 function update_kml($pie_id) {
     global $connection;
     $color = array ("800000ff","800040ff","800060ff","800070ff","800080ff","800090ff","8000b0ff","8000d0ff","8000ffff","8000ff00");
