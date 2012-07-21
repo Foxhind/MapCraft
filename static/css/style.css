@@ -290,3 +290,11 @@ float: right;
 margin-right: 1em;
 color: gray;
 }
+
+.link-list {
+	margin: 1.5em 1em;
+}
+.link-type {
+	text-align: right;
+	padding-right: 2em;
+}

@@ -74,6 +74,7 @@ New status:&nbsp;<span id="newstatus"></span>&nbsp;<span id="vcolor">██</spa
 <span id="lrefuse">Are you sure you want to abandon the slice?</span><br />
 </div>
 
+
 <div id="dsettings">
 <table style="width: 100%">
 
@@ -114,12 +115,25 @@ New status:&nbsp;<span id="newstatus"></span>&nbsp;<span id="vcolor">██</spa
 </table>
 </div>
 
+<div id="dinfo" style="width: 100%">
+	<table class="link-list">
+		<tr>
+			<td class="link-type">WMS</td>
+			<td class="link-url" id="wms_link"></td>
+		</tr><tr>
+			<td class="link-type">Log</td>
+			<td class="link-url" id="log_link"></td>
+		</tr>
+	</table>
+</div>
+
 <table id="panel">
 <tr>
 <td><button id="bzoomp">+</button></td>
 <td><button id="bzoomm">&minus;</button></td>
 <td><input type="checkbox" id="bpie" checked /><label for="bpie"></label></td>
 <td><button id="bsettings"></button></td>
+<td><button id="binfo">Info</button></td>
 <td><div id="vis">
 <input type="radio" id="rfull" name="vis" checked /><label for="rfull"> </label>
 <input type="radio" id="rtrans" name="vis" /><label for="rtrans"> </label>

@@ -148,6 +148,33 @@ var Chat = {
     }
 };
 
+var InfoDialog  = {
+    init: function() {
+        $('#dinfo').dialog({
+            autoOpen: false,
+            modal: true,
+            width: 400,
+            height: 170,
+            minWidth: 300,
+            minHeight: 150,
+            resizable: true,
+            position: 'center',
+            buttons: { "Close": function() { $(this).dialog("close");} }
+        });
+
+        var wms_link = 'wms:' + window.location.origin + '/wms/' + PieHub.options.pieid + '?SRS={proj}&WIDTH={width}&height={height}&BBOX={bbox}';
+        var wms_link_short = 'wms:' + window.location.origin + '/wms/' + PieHub.options.pieid + '?SRS=...';
+        var log_link = window.location.origin + '/log/' + PieHub.options.pieid;
+        $("#wms_link").html("<a href='" + wms_link + "' target='_blank'>" + wms_link_short + "</a>");
+        $("#log_link").html("<a href='" + log_link + "' target='_blank'>" + log_link + "</a>");
+    },
+
+    show: function() {
+        $('#dinfo').dialog('open');
+    }
+};
+
+
 function config_get(key, defval) {
     if (typeof(MapCraft) == 'undefined' || typeof(MapCraft.config) == 'undefined') {
         return defval;
@@ -646,6 +673,7 @@ function LoadLanguage() {
         $('#lshow_nicks').text(ldata[28]);
         $('#lshow_owned').text(ldata[29]);
         $('#lchat_show_info').text(ldata[30]);
+        $('#binfo').button("option", "label", ldata[31]);
     });
 }
 
@@ -1079,6 +1107,8 @@ $(document).ready(function () {
     $('#bzoomm').click( function () { olmap.zoomOut(); } );
     $('#bsettings').button( { icons: { primary: 'ui-icon-wrench'} } );
     $('#bsettings').click( function () { $('#dsettings').dialog('open'); } );
+    $('#binfo').button( { icons: { primary: 'ui-icon-info'} } );
+    $('#binfo').click( function () { InfoDialog.show(); } );
     $('#bpie').button( { icons: { primary: 'ui-icon-clock'} } );
     $('#bpie').click( function() { kmllayer.setVisibility($(this).attr("checked")); });
     $('#rfull').button({icons: { primary: 'ui-icon-bullet'}});
@@ -1093,5 +1123,7 @@ $(document).ready(function () {
     $('#pac_text').autocomplete({ source: users, position: { my : "right bottom", at: "right top"} });
     $("#pac_form").submit(Send);
     $("#pac_text").focus();
+
+    InfoDialog.init();
     LoadSettings();
 });
