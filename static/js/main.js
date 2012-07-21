@@ -16,6 +16,7 @@ var claims = [];
 var me;
 var showNicks;
 var showOwned;
+var chatShowInfo;
 var chatScrollPosition = -1;
 
 // ---------------
@@ -71,8 +72,9 @@ var Chat = {
         return $("#chat tbody");
     },
 
-    chatBoxEl: function() {
-        return $("chat");
+    isAtEnd: function() {
+        var chatbox = $("#chat");
+        return chatbox.attr("scrollHeight") - chatbox.height() - chatbox.scrollTop() < 20;
     },
 
     append: function(message, type, author, ts, is_history) {
@@ -84,7 +86,6 @@ var Chat = {
         // Replace all special shortcuts
         message = TextReplacer.parse(message);
 
-
         // Suuport for me
         if (message.substr(0, 4) === '/me ') {
             message = author + message.substr(3);
@@ -92,17 +93,21 @@ var Chat = {
         }
 
         // Append to the end and scroll
-        var chatbox = this.chatBoxEl();
-        var isEnd = (chatbox.attr("scrollHeight") - chatbox.height() - chatbox.scrollTop() < 20);
         var history_class = is_history ? 'history' : '';
-        this.chatEl().append("<tr class='" + history_class + "'><td class='nick'>" + author + "</td><td class='" + type + "'>" + message + "</td><td class='time'>" + ts + "</td></tr>");
-        if (isEnd) {
+        var entry = $("<tr><td class='nick'>" + author + "</td><td class='message'>" + message + "</td><td class='time'>" + ts + "</td></tr>");
+
+        entry.addClass('chat-' + type);
+        if (is_history) entry.addClass('history');
+        if (!chatShowInfo && type === 'info') entry.addClass('hidden');
+
+        var atEnd = this.isAtEnd();
+        this.chatEl().append(entry);
+        if (atEnd) {
             ScrollDown();
         }
     },
 
     handleCliCommand: function(text) {
-        console.log(text, text[0]);
         if (!(text[0] === '/' && text.substr(0, 4) !== '/me ')) {
             return false;
         }
@@ -136,6 +141,10 @@ var Chat = {
         s = (s < 10) ? '0' + s : s;
         m = (m < 10) ? '0' + m : m;
         return d.getHours().toString() + ':' + m.toString() + ':' + s.toString();
+    },
+
+    updateStyle: function() {
+        $(".chat-info").toggleClass('hidden', !chatShowInfo);
     }
 };
 
@@ -575,6 +584,10 @@ function LoadSettings() {
     showOwned = localStorage.show_owned ? true : false;
     $('#sshow_owned').attr('checked', showOwned);
     updateAllPieceStyles();
+
+    chatShowInfo = localStorage.chat_show_info ? true : false;
+    $('#schat_show_info').attr('checked', chatShowInfo);
+    Chat.updateStyle();
 }
 
 function ApplySettings() {
@@ -596,6 +609,10 @@ function ApplySettings() {
     showOwned = $('#sshow_owned').attr('checked') ? true : false;
     localStorage.show_owned = showOwned ? 'show' : '';
     updateAllPieceStyles();
+
+    chatShowInfo = $('#schat_show_info').attr('checked') ? true : false;
+    localStorage.chat_show_info = chatShowInfo ? 'show' : '';
+    Chat.updateStyle();
 }
 
 function LoadLanguage() {
@@ -628,6 +645,7 @@ function LoadLanguage() {
         $('#lprogress_bar').text(t("Progress bar:"));
         $('#lshow_nicks').text(ldata[28]);
         $('#lshow_owned').text(ldata[29]);
+        $('#lchat_show_info').text(ldata[30]);
     });
 }
 
@@ -1012,9 +1030,9 @@ $(document).ready(function () {
     $('#dsettings').dialog({
         autoOpen: false,
         modal: true,
-        width: 0.5*ww,
-        height: 0.5*wh,
-        minWidth: 190,
+        width: 400,
+        height: 350,
+        minWidth: 300,
         minHeight: 280,
         resizable: true,
         position: 'center',

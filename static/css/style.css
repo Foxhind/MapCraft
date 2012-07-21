@@ -70,7 +70,7 @@ vertical-align: top;
 
 }
 
-#chat .history {
+#chat .history .message {
 color: gray;
 }
 
@@ -78,7 +78,7 @@ color: gray;
 	color: CadetBlue;
 }
 
-#chat .cli {
+.chat-cli .message {
 	color: Magenta;
 }
 
@@ -97,19 +97,23 @@ cursor: pointer;
 border-bottom: 1px dotted;
 }
 
-.info {
+.hidden {
+	display: none;
+}
+
+.chat-info .message {
 color: darkgreen;
 }
 
-.info .pseudolink {
+.chat-info .pseudolink {
 border-bottom: 1px dotted #36c96c;
 }
 
-.error {
+.chat-error .message {
 color: #ff6445;
 }
 
-.error .pseudolink {
+.chat-error .pseudolink {
 border-bottom: 1px dotted #ff6445;
 }
 

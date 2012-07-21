@@ -75,7 +75,9 @@ New status:&nbsp;<span id="newstatus"></span>&nbsp;<span id="vcolor">██</spa
 </div>
 
 <div id="dsettings">
-<table>
+<table style="width: 100%">
+
+<th colspan=2><h3>Common</h3></th>
 <tr class="property"><td id="ltheme">Theme:</td><td>
 <select id="sstyle">
 <option value="mapcraft">mapcraft</option>
@@ -92,6 +94,8 @@ New status:&nbsp;<span id="newstatus"></span>&nbsp;<span id="vcolor">██</spa
 <option value="ru">Русский</option>
 </select>
 </td></tr>
+
+<th colspan=2><h3>Cake settings</h3></th>
 <tr class="property"><td><label id="lprogress_bar" for="sprogress_bar">Progress bar:</label></td><td>
 <input type="checkbox" id="sprogress_bar">
 </td></tr>
@@ -101,6 +105,12 @@ New status:&nbsp;<span id="newstatus"></span>&nbsp;<span id="vcolor">██</spa
 <tr class="property"><td><label id="lshow_owned" for="sshow_owned">Show owned slices:</label></td><td>
 <input type="checkbox" id="sshow_owned" checked>
 </td></tr>
+
+<th colspan=2><h3>Chat settings</h3></th>
+<tr class="property">
+	<td><label id="lchat_show_info" for="schat_show_info">Show info messages in chat:</label></td>
+	<td><input type="checkbox" id="schat_show_info" checked></td>
+</tr>
 </table>
 </div>
 
