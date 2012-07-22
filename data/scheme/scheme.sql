@@ -152,7 +152,8 @@ CREATE TABLE pieces (
     owner integer,
     state integer DEFAULT 0 NOT NULL,
     pie integer NOT NULL,
-    coordinates text NOT NULL
+    coordinates text NOT NULL,
+    "index" integer NOT NULL
 );
 
 
