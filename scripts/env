@@ -110,6 +110,7 @@ db-seed() {
 }
 
 db-console() {
+	export PGOPTIONS="-c search_path=mapcraft,public"
 	psql -d ${DATABASE}
 }
 
