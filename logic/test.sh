@@ -22,5 +22,5 @@ echo $cmd | ./main.php -t
 cmd='from!async!1!user1235678!json:["get_cat", {}]'
 echo $cmd | ./main.php -t
 
-cmd='from!async!1!user1235678!json:["piece_state", {"piece_id": 1, "percent": 5}]'
+cmd='from!async!1!user1235678!json:["piece_state", {"piece_index": 1, "percent": 5}]'
 echo $cmd | ./main.php -t

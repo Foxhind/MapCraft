@@ -14,10 +14,10 @@ function update_kml($pie_id) {
         fwrite($kml, "<?xml version=\"1.0\" encoding=\"utf-8\" ?>
         <kml xmlns=\"http://www.opengis.net/kml/2.1\">
         <Document><Folder><name>".$pie_id."</name>");
-        $result = pg_query($connection, 'SELECT pieces.id, users.nick, pieces.state, pieces.coordinates FROM pieces LEFT JOIN users ON users.id = pieces.owner WHERE pieces.pie = '.$pie_id);
+        $result = pg_query($connection, 'SELECT pieces.index, users.nick, pieces.state, pieces.coordinates FROM pieces LEFT JOIN users ON users.id = pieces.owner WHERE pieces.pie = '.$pie_id);
         while ($row = pg_fetch_array($result)) {
             fwrite($kml, "<Placemark>
-        <name>".$row['id']."</name>
+        <name>".$row['index']."</name>
         <description>".$row['state']."</description>
         <owner>".$row['nick']."</owner>
         <Style><LineStyle><color>ff000000</color><width>1</width></LineStyle><PolyStyle><color>".$color[$row['state']]."</color></PolyStyle></Style>

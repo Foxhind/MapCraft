@@ -9,8 +9,9 @@ function handle_claim($type, $from, $data, $res) {
     global $connection;
     $from->need_level("member");
 
-    validate_required($data, 'piece_id');
-    $piece_id = $data['piece_id'];
+    validate_required($data, 'piece_index');
+    $piece_index = $data['piece_index'];
+    $piece_id = _find_piece_id($from, $piece_index);
 
     $result = pg_query($connection, 'SELECT COUNT(*) FROM claims WHERE author = '.$from->user_id().' and piece = '.$piece_id);
     $num = intval(pg_fetch_result($result, 0 ,0));
@@ -25,7 +26,7 @@ function handle_claim($type, $from, $data, $res) {
 
     $msg = array('claim_add', array( 'claim_id' => $claim_id,
                            'vote_balance' => 0,
-                           'piece_id' => $piece_id,
+                           'piece_index' => $piece_index,
                            'owner' => $from->nick() ));
 
     $res->to_pie($from, $msg);
@@ -63,7 +64,7 @@ function handle_vote_claim($type, $from, $data, $res) {
     $vote = intval($data['vote']);
     $textvote = ($vote > 0) ? 'pro' : (($vote < 0) ? 'contra' : 'neutrally');
 
-    $result = pg_query($connection, 'SELECT author, piece, users.nick FROM claims JOIN users ON users.id = author WHERE claims.id = '.$claim_id);
+    $result = pg_query($connection, 'SELECT author, piece, pieces.index, users.nick FROM claims JOIN pieces ON pieces.id = claims.piece JOIN users ON users.id = author WHERE claims.id = '.$claim_id);
     $num = pg_num_rows($result);
     if ($num == 0)
         throw new Exception("Not found such claim.");
@@ -71,7 +72,7 @@ function handle_vote_claim($type, $from, $data, $res) {
     // Protection from self-voting
     if ( intval($claim['author']) == intval($from->user_id()) )
         throw new Exception("Not vote for yourself.");
-    
+
     $result = pg_query($connection, 'SELECT COUNT(*) FROM votes WHERE claim = '.$claim_id.' AND author = '.$from->user_id());
     $num = intval(pg_fetch_result($result, 0, 0));
 
@@ -95,31 +96,23 @@ function handle_vote_claim($type, $from, $data, $res) {
 
         // Updating piece in db
         pg_query($connection, 'UPDATE pieces SET owner = '.$claim['author'].' WHERE id = '.$claim['piece']);
-        $res->to_pie($from, array( 'piece_owner', array('piece_id' => $claim['piece'], 'owner' => $claim['nick']) ));
+        $res->to_pie($from, array( 'piece_owner', array('piece_index' => $claim['index'], 'owner' => $claim['nick']) ));
 
-        // Updating new owner
-        $result = pg_query($connection, 'SELECT id FROM pieces WHERE owner = '.$claim['author']);
-        $piece_ids = pg_fetch_all_columns($result, 0);
-        $res->to_pie($from, array( 'user_update', array('current_nick' => $claim['nick'],
-                                                        'reserved' => $piece_ids) ));
-        // Updating old owner
-        $result = pg_query($connection, 'SELECT id FROM pieces WHERE owner = '.$old_owner['owner']);
-        $piece_ids = pg_fetch_all_columns($result, 0);
-        if ($piece_ids === false) $piece_ids = array();
-        $res->to_pie($from, array( 'user_update', array('current_nick' => $old_owner['nick'],
-                                                        'reserved' => $piece_ids) ));
         // Removing claim
         pg_query($connection, 'DELETE FROM claims WHERE id = '.$claim_id);
         $res->to_pie($from, array( 'claim_remove', array('claim_id' => $claim_id) ));
 
-        $res->to_pie($from, info_msg('Claim by '.$claim['nick'].' for piece #'.$claim['piece'].' is accepted.'));
+        $res->to_pie($from, info_msg('Claim by '.$claim['nick'].' for piece #'.$claim['index'].' is accepted.'));
+
         update_kml($from->pieid);
+        _update_user_reserved($res, $from, $claim['author'], $claim['nick']);
+        _update_user_reserved($res, $from, $old_owner['owner'], $old_owner['nick']);
     }
     else if ($score < -2) {
         pg_query($connection, 'DELETE FROM claims WHERE id = '.$claim_id);
         $msg = array('claim_remove', array('claim_id' => $claim_id));
         $res->to_pie($from, $msg);
-        $res->to_pie($from, error_msg('Claim by '.$claim['nick'].' for piece #'.$claim['piece'].' is dismissed.'));
+        $res->to_pie($from, error_msg('Claim by '.$claim['nick'].' for piece #'.$claim['index'].' is dismissed.'));
     }
     else {
         pg_query($connection, 'UPDATE claims SET score = '.$score.' WHERE id = '.$claim_id);

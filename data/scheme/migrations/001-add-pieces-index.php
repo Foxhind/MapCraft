@@ -1,8 +1,11 @@
 <?php
 
 include ("../../../lib/config.php");
+include ("../../../lib/update_kml.php");
 
-function update_index_for_pieces() {
+chdir('../../../app');  # need for update_kml;
+
+function update_pies() {
 	global $connection;
 
 	$result = pg_query($connection, 'SELECT id FROM pies');
@@ -21,6 +24,8 @@ function update_index_for_pieces() {
 			if (!pg_query_params($connection, 'UPDATE pieces SET index = $1 WHERE id = $2', array($index++, $piece['id']))) 
 				throw new Exception ("Failed to update piece " . $piece['id']);
 		}
+
+		update_kml($pie['id']);
 	}
 }
 
@@ -34,7 +39,7 @@ function apply()
 		throw new Exception("This migration has been already applied");
 
 	# Fill piece indexes with generated values
-	update_index_for_pieces();
+	update_pies();
 
 	# Set NOT is_null
 	if (!pg_query($connection, 'ALTER TABLE pieces ALTER COLUMN index SET NOT NULL'))

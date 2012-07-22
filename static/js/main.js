@@ -344,7 +344,7 @@ In.no_comments = function (data) {
 In.piece_comment = function (data) {
     if (selectedFeature == null)
         return;
-    if (data['piece_id'].toString() == selectedFeature.attributes.name) {
+    if (data['piece_index'].toString() == selectedFeature.attributes.name) {
         var comments_div = $('#dprop #comments');
         if ($('#dprop .loading').length != 0)
             comments_div.html('');
@@ -357,27 +357,27 @@ In.piece_comment = function (data) {
 };
 
 In.piece_owner = function (data) {
-    var pieces = kmllayer.getFeaturesByAttribute('name', data['piece_id']);
+    var pieces = kmllayer.getFeaturesByAttribute('name', data['piece_index']);
     if (pieces.length > 0) {
         var isFreeing = (data['owner'] == '' && typeof(pieces[0].attributes.owner) != 'undefined');
         pieces[0].attributes.owner = isFreeing ? null : data['owner'];
         updatePieceStyle(pieces[0], true);
 
         if (selectedFeature != null)
-            if (data['piece_id'].toString() == selectedFeature.attributes.name)
+            if (data['piece_index'].toString() == selectedFeature.attributes.name)
                 $('#bowner').button("option", "label", (isFreeing ? ldata[12] : data['owner']) );
     }
 }
 
 In.piece_state = function (data) {
-    var pieces = kmllayer.getFeaturesByAttribute('name', data['piece_id']);
+    var pieces = kmllayer.getFeaturesByAttribute('name', data['piece_index']);
     if (pieces.length > 0)
     {
         pieces[0].attributes.description = data['state'];
         updatePieceStyle(pieces[0], true);
     }
     if (selectedFeature != null) {
-        if (data['piece_id'].toString() == selectedFeature.attributes.name)
+        if (data['piece_index'].toString() == selectedFeature.attributes.name)
             $('#bstatus').button("option", "label", data['state'].toString() + '/9');
     }
 };
@@ -470,9 +470,9 @@ In.after_init = function (data) {
     selectPieceFromURL();
 };
 
-Out.claim = function (piece_id) {
-    if (typeof(piece_id) != 'string' && typeof(piece_id) != 'number') return false;
-    return ['claim', {piece_id: piece_id.toString()}];
+Out.claim = function (piece_index) {
+    if (typeof(piece_index) != 'string' && typeof(piece_index) != 'number') return false;
+    return ['claim', {piece_index: piece_index.toString()}];
 };
 
 Out.claim_remove = function (claim_id) {
@@ -489,8 +489,8 @@ Out.get_chat_history = function () {
     return ['get_chat_history', {}];
 };
 
-Out.get_piece_comments = function (piece_id) {
-    return ['get_piece_comments', {piece_id: piece_id}];
+Out.get_piece_comments = function (piece_index) {
+    return ['get_piece_comments', {piece_index: piece_index}];
 };
 
 Out.get_user_list = function () {
@@ -507,26 +507,26 @@ Out.chat = function (msg, pub, target) {
     return cmd;
 };
 
-Out.piece_comment = function (piece_id, comment) {
-    if (typeof(piece_id) != 'string' && typeof(piece_id) != 'number') return false;
+Out.piece_comment = function (piece_index, comment) {
+    if (typeof(piece_index) != 'string' && typeof(piece_index) != 'number') return false;
     if (typeof(comment) != 'string') return false;
-    return ['piece_comment', {piece_id: piece_id.toString(), comment: comment}];
+    return ['piece_comment', {piece_index: piece_index.toString(), comment: comment}];
 };
 
-Out.piece_state = function (piece_id, state) {
-    if (typeof(piece_id) != 'string' && typeof(piece_id) != 'number') return false;
+Out.piece_state = function (piece_index, state) {
+    if (typeof(piece_index) != 'string' && typeof(piece_index) != 'number') return false;
     if (typeof(state) != 'string' && typeof(state) != 'number') return false;
-    return ['piece_state', {piece_id: piece_id.toString(), state: state.toString()}];
+    return ['piece_state', {piece_index: piece_index.toString(), state: state.toString()}];
 };
 
-Out.piece_reserve = function (piece_id) {
-    if (typeof(piece_id) != 'string' && typeof(piece_id) != 'number') return false;
-    return ['piece_reserve', {piece_id: piece_id.toString()}];
+Out.piece_reserve = function (piece_index) {
+    if (typeof(piece_index) != 'string' && typeof(piece_index) != 'number') return false;
+    return ['piece_reserve', {piece_index: piece_index.toString()}];
 };
 
-Out.piece_free = function (piece_id) {
-    if (typeof(piece_id) != 'string' && typeof(piece_id) != 'number') return false;
-    return ['piece_free', {piece_id: piece_id.toString()}];
+Out.piece_free = function (piece_index) {
+    if (typeof(piece_index) != 'string' && typeof(piece_index) != 'number') return false;
+    return ['piece_free', {piece_index: piece_index.toString()}];
 };
 
 Out.piece_progress = function () {
@@ -534,7 +534,7 @@ Out.piece_progress = function () {
 };
 
 Out.vote_claim = function (claim_id, vote) {
-    if (typeof(claim_id) != 'string' && typeof(piece_id) != 'number') return false;
+    if (typeof(claim_id) != 'string' && typeof(piece_index) != 'number') return false;
     if (typeof(vote) != 'string' && typeof(vote) != 'number') return false;
     return ['vote_claim', {claim_id: claim_id.toString(), vote: vote.toString()}];
 };
@@ -779,9 +779,9 @@ function RedrawUsersList() {
         }
         for (i = 0; i < userclaims.length; i++) {
             if (me.nick == users[u]['user_nick'])
-                sclaims += ("<span class='claim ui-state-default'><span class='num'>" + userclaims[i]['piece_id'] + "</span>&nbsp;[" + userclaims[i]['vote_balance'] + "&nbsp;<div title='Снять заявку' class='close'></div>]</span> ");
+                sclaims += ("<span class='claim ui-state-default'><span class='num'>" + userclaims[i]['piece_index'] + "</span>&nbsp;[" + userclaims[i]['vote_balance'] + "&nbsp;<div title='Снять заявку' class='close'></div>]</span> ");
             else
-                sclaims += ("<span class='claim ui-state-default'><span class='num'>" + userclaims[i]['piece_id'] + "</span>&nbsp;[<div title='За' class='up'></div>&nbsp;" + userclaims[i]['vote_balance'] + "&nbsp;<div title='Против' class='down'></div>]</span><br />");
+                sclaims += ("<span class='claim ui-state-default'><span class='num'>" + userclaims[i]['piece_index'] + "</span>&nbsp;[<div title='За' class='up'></div>&nbsp;" + userclaims[i]['vote_balance'] + "&nbsp;<div title='Против' class='down'></div>]</span><br />");
         }
         newhtml += ("<tr><td class='nick'>" + (users[u]['online'] ? "<img src='/img/onl.png'>&nbsp;" : "") + "<span class='nickname'>" + users[u]['user_nick'] + "</span></td><td class='msg'>" + sreserved + "</td><td>" + sclaims + "</td></tr>");
     }
@@ -790,30 +790,30 @@ function RedrawUsersList() {
     $('#pac_text').autocomplete('option', 'source', nicks);
     $('.nickname').click( function() { $('#pac_text').val($('#pac_text').val() + $(this).text() + ': '); $("#pac_text").focus(); } );
     $('.up').click( function() {
-        var piece_id = $(this).parent().find('span.num').text();
+        var piece_index = $(this).parent().find('span.num').text();
         var user_nick = $(this).parent().parent().parent().find('span.nickname').text();
         for (var i = 0; i < claims.length; i++) {
-            if (claims[i]['owner'] == user_nick && claims[i]['piece_id'] == piece_id) {
+            if (claims[i]['owner'] == user_nick && claims[i]['piece_index'] == piece_index) {
                 Vote(claims[i]['claim_id'], 1);
                 break;
             }
         }
         $(this).remove(); } );
     $('.down').click( function() {
-        var piece_id = $(this).parent().find('span.num').text();
+        var piece_index = $(this).parent().find('span.num').text();
         var user_nick = $(this).parent().parent().parent().find('span.nickname').text();
         for (var i = 0; i < claims.length; i++) {
-            if (claims[i]['owner'] == user_nick && claims[i]['piece_id'] == piece_id) {
+            if (claims[i]['owner'] == user_nick && claims[i]['piece_index'] == piece_index) {
                 Vote(claims[i]['claim_id'], -1);
                 break;
             }
         }
         $(this).remove(); } );
     $('.close').click( function() {
-        var piece_id = $(this).parent().find('span.num').text();
+        var piece_index = $(this).parent().find('span.num').text();
         var user_nick = $(this).parent().parent().parent().find('span.nickname').text();
         for (var i = 0; i < claims.length; i++) {
-            if (claims[i]['owner'] == user_nick && claims[i]['piece_id'] == piece_id) {
+            if (claims[i]['owner'] == user_nick && claims[i]['piece_index'] == piece_index) {
                 CloseClaim(claims[i]['claim_id']);
                 break;
             }
