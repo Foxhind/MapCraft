@@ -175,8 +175,14 @@ function _find_piece_id($from, $piece_index) {
     $result = pg_query_params($connection,
                               "SELECT id FROM pieces WHERE pie = $1 AND index = $2",
                               array($from->pieid, $piece_index));
-    if (!$result || pg_num_rows($result) == 0)
-        throw new Exception ('Failed to find piece with index: ' . $piece_index);
+    if (!$result || pg_num_rows($result) == 0) {
+        // TODO: temprorary warning
+        if ($piece_index > 100) {
+            throw new Exception ('Piece index looks too big: ' . $piece_index . ' may be old cake was cached. Try Ctrl-F5');
+        } else {
+            throw new Exception ('Failed to find piece with index: ' . $piece_index);
+        }
+    }
 
     return pg_fetch_result($result, 0, 0);
 }
