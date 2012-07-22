@@ -18,11 +18,8 @@ function update_index_for_pieces() {
 		$result_pieces = pg_query_params($connection, 'SELECT id FROM pieces WHERE pie = $1 ORDER by id', array($pie['id']));
 		echo "    Number of pieces = " . pg_num_rows($result_pieces) . "\n";
 		while ($piece = pg_fetch_array($result_pieces)) {
-			$r = pg_query_params($connection, 'UPDATE pieces SET index = $1 WHERE id = $2', array($index++, $piece['id']));
-			if (!$r) {
-				echo "Failed to update piece " . $piece['id'] . ". Exiting ...\n";
-				exit (1);
-			}
+			if (!pg_query_params($connection, 'UPDATE pieces SET index = $1 WHERE id = $2', array($index++, $piece['id']))) 
+				throw new Exception ("Failed to update piece " . $piece['id']);
 		}
 	}
 }
@@ -33,14 +30,15 @@ function apply()
 	global $connection;
 
 	# Create new column
-	$result = pg_query($connection, 'ALTER TABLE pieces ADD COLUMN index integer');
-	if (!$result) {
-		echo "This migration has been already applied\n";
-		exit(1);
-	}
+	if (!pg_query($connection, 'ALTER TABLE pieces ADD COLUMN index integer'))
+		throw new Exception("This migration has been already applied");
 
 	# Fill piece indexes with generated values
 	update_index_for_pieces();
+
+	# Set NOT is_null
+	if (!pg_query($connection, 'ALTER TABLE pieces ALTER COLUMN index SET NOT NULL'))
+		throw new Exception("Failed to set NOT NULL");
 }
 
 
@@ -56,12 +54,17 @@ function revert()
 #
 # Main
 #
-if (count($argv) > 1 && $argv[1] == '-r') {
-	echo "Reverting ...\n";
-	revert();
-} else {
-	echo "Applying ...\n";
-	apply();
+try {
+	if (count($argv) > 1 && $argv[1] == '-r') {
+		echo "Reverting ...\n";
+		revert();
+	} else {
+		echo "Applying ...\n";
+		apply();
+	}
+} catch (Exception $e) {
+	echo "Error: " . $e->getMessage() . "\n";
+	exit (1);
 }
 
 ?>
