@@ -182,15 +182,15 @@ var InfoDialog  = {
         $('#dinfo').dialog({
             autoOpen: false,
             modal: true,
-            width: 400,
-            height: 170,
-            minWidth: 300,
+            width: 450,
+            height: 400,
+            minWidth: 450,
             minHeight: 150,
             resizable: true,
             position: 'center',
             buttons: { "Close": function() { $(this).dialog("close");} }
         });
-        $('#dinfo-tabs').tabs();
+        // $('#dinfo-tabs').tabs();
 
         var origin = window.location.protocol + '//' + window.location.host;
         var wms_link = 'wms:' + origin + '/wms/' + PieHub.options.pieid + '?SRS={proj}&WIDTH={width}&height={height}&BBOX={bbox}';
@@ -201,7 +201,21 @@ var InfoDialog  = {
     },
 
     update: function(data) {
-        console.log(date);
+        $('#dinfo-name').text(data['name']);
+        $('#dinfo-description').html(data['description']);
+
+        // Fill details
+        $('#dinfo-details').html('');
+        var details = [
+            ['author', data['author']],
+            ['create at', data['created_at']]
+        ];
+        _(details).each(function(pair) {
+            var tr = $('<tr/>');
+            tr.append('<td class="dinfo-detail-prop">' + pair[0] + '</td>)');
+            tr.append('<td class="dinfo-detail-value">' + pair[1] + '</td>)');
+            $('#dinfo-details').append(tr);
+        });
     },
 
     show: function() {
@@ -501,7 +515,7 @@ In.youare = function (data) {
 };
 
 In.update_cake = function (data) {
-    Cake.update(data);
+    InfoDialog.update(data);
 };
 
 In.after_init = function (data) {
