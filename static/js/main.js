@@ -162,9 +162,10 @@ var InfoDialog  = {
             buttons: { "Close": function() { $(this).dialog("close");} }
         });
 
-        var wms_link = 'wms:' + window.location.origin + '/wms/' + PieHub.options.pieid + '?SRS={proj}&WIDTH={width}&height={height}&BBOX={bbox}';
-        var wms_link_short = 'wms:' + window.location.origin + '/wms/' + PieHub.options.pieid + '?SRS=...';
-        var log_link = window.location.origin + '/log/' + PieHub.options.pieid;
+        var origin = window.location.protocol + '//' + window.location.host;
+        var wms_link = 'wms:' + origin + '/wms/' + PieHub.options.pieid + '?SRS={proj}&WIDTH={width}&height={height}&BBOX={bbox}';
+        var wms_link_short = 'wms:' + origin + '/wms/' + PieHub.options.pieid + '?SRS=...';
+        var log_link = origin + '/log/' + PieHub.options.pieid;
         $("#wms_link").html("<a href='" + wms_link + "' target='_blank'>" + wms_link_short + "</a>");
         $("#log_link").html("<a href='" + log_link + "' target='_blank'>" + log_link + "</a>");
     },
