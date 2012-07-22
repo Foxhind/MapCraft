@@ -113,9 +113,10 @@ var Chat = {
             author = '*';
         }
 
+        var authorColor = ownerColor(author);
         // Append to the end and scroll
         var history_class = is_history ? 'history' : '';
-        var entry = $("<tr><td class='nick'>" + author + "</td><td class='message'>" + message + "</td><td class='time'>" + ts + "</td></tr>");
+        var entry = $("<tr><td class='nick' style='color: " + authorColor + "'>" + author + "</td><td class='message'>" + message + "</td><td class='time'>" + ts + "</td></tr>");
 
         entry.addClass('chat-' + type);
         if (is_history) entry.addClass('history');
@@ -1138,7 +1139,7 @@ $(document).ready(function () {
     $('#bremote').button({ disabled: true, icons: { primary: 'ui-icon-signal'}});
     $('#bremote').click(OpenViaRemote);
     $('#bstatus').button({disabled: true});
-    $('#bstatus').click(function() { $('#sstatus').slider('value', selectedFeature.attributes.description); $('#vcolor').css({ color: color[$('#sstatus').slider('value')] }); $('#newstatus').text($('#sstatus').slider('value')); $('#dstatus').dialog('open'); });
+    $('#bstatus').click(function() { $('#sstatus').slider('value', selectedFeature.attributes.description); $('#vcolor').css({ color: stateColors[$('#sstatus').slider('value')] }); $('#newstatus').text($('#sstatus').slider('value')); $('#dstatus').dialog('open'); });
     $('#pac_nick').button({ icons: { primary: 'ui-icon-person'} });
     $('#dchat').dialog( { resize: function(event, ui) { $('#chat').height($(this).height() - 45); $('#chat').width($(this).width() - 30); },
         beforeClose: function(event, ui) {
@@ -1181,7 +1182,7 @@ $(document).ready(function () {
     $('#rnone').button({icons: { primary: 'ui-icon-radio-on'}});
     $('#rnone').change( function() { $("div[id^='d']").dialog("close"); });
     $('#vis').buttonset();
-    $('#sstatus').slider({ min: 0, max: 9, slide: function(event, ui) { $('#vcolor').css({color: color[ui.value]}); $('#newstatus').text(ui.value); } });
+    $('#sstatus').slider({ min: 0, max: 9, slide: function(event, ui) { $('#vcolor').css({color: stateColors[ui.value]}); $('#newstatus').text(ui.value); } });
     $('#bowner').button({ disabled: true, icons: { primary: 'ui-icon-flag'}});
     $('#pac_text').autocomplete({ source: users, position: { my : "right bottom", at: "right top"} });
     $("#pac_form").submit(Send);
