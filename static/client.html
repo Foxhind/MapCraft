@@ -95,14 +95,19 @@ New status:&nbsp;<span id="newstatus"></span>&nbsp;<span id="vcolor">██</spa
 <option value="ru">Русский</option>
 </select>
 </td></tr>
-
-<th colspan=2><h3>Cake settings</h3></th>
 <tr class="property"><td><label id="lprogress_bar" for="sprogress_bar">Progress bar:</label></td><td>
 <input type="checkbox" id="sprogress_bar">
 </td></tr>
-<tr class="property"><td><label id="lshow_nicks" for="sshow_nicks">Show nicks:</label></td><td>
-<input type="checkbox" id="sshow_nicks">
-</td></tr>
+
+<th colspan=2><h3>Cake settings</h3></th>
+<tr class="property">
+	<td><label id="lpiece_label" for="spiece_label">Draw in piece:</label></td>
+	<td><select id="spiece_label">
+		<option value="none" selected>Nothing</option>
+		<option value="owner">Owner</option>
+		<option value="index">Index</option>
+	</select></td>
+</tr>
 <tr class="property"><td><label id="lshow_owned" for="sshow_owned">Show owned slices:</label></td><td>
 <input type="checkbox" id="sshow_owned" checked>
 </td></tr>

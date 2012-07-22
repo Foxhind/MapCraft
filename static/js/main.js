@@ -14,7 +14,7 @@ var supported_langs = ['en', 'ru', 'jp'];
 var users = [];
 var claims = [];
 var me;
-var showNicks;
+var pieceLabel;
 var showOwned;
 var chatShowInfo;
 var chatScrollPosition = -1;
@@ -604,12 +604,13 @@ function LoadSettings() {
     var show_pb = localStorage.progress_bar ? true : false;
     $('#sprogress_bar').attr('checked', show_pb);
     $('#progress_bar').toggle(show_pb);
-    // Show nicks
-    showNicks = localStorage.show_nicks ? true : false;
-    $('#sshow_nicks').attr('checked', showNicks);
     // Show owned
     showOwned = localStorage.show_owned ? true : false;
     $('#sshow_owned').attr('checked', showOwned);
+    if (localStorage.piece_label) {
+        pieceLabel = localStorage.piece_label;
+        $('#spiece_label').val(localStorage.piece_label);
+    }
     updateAllPieceStyles();
 
     chatShowInfo = localStorage.chat_show_info ? true : false;
@@ -631,8 +632,11 @@ function ApplySettings() {
     localStorage.progress_bar = show_pb ? 'show' : '';
     $('#progress_bar').toggle(show_pb);
 
-    showNicks = $('#sshow_nicks').attr('checked') ? true : false;
-    localStorage.show_nicks = showNicks ? 'show' : '';
+    // Piece style
+    if ($('#spiece_label').val() != localStorage.piece_label) {
+        pieceLabel = localStorage.piece_label = $('#spiece_label').val();
+
+    }
     showOwned = $('#sshow_owned').attr('checked') ? true : false;
     localStorage.show_owned = showOwned ? 'show' : '';
     updateAllPieceStyles();
@@ -670,10 +674,10 @@ function LoadLanguage() {
         $('#lclaim').text(ldata[25]);
         $('#lrefuse').text(ldata[26]);
         $('#lprogress_bar').text(t("Progress bar:"));
-        $('#lshow_nicks').text(ldata[28]);
         $('#lshow_owned').text(ldata[29]);
         $('#lchat_show_info').text(ldata[30]);
         $('#binfo').button("option", "label", ldata[31]);
+        $('#lpiece_label').text(ldata[32]);
     });
 }
 
@@ -918,7 +922,14 @@ function onUnselectPiece(e) {
 }
 
 function updatePieceStyle(e, redraw) {
-    e.style.label = e.attributes.owner && showNicks ?  e.attributes.owner : null;
+    if (pieceLabel == 'owner' && e.attributes.owner) {
+        e.style.label = e.attributes.owner;
+    } else if (pieceLabel == 'index') {
+        e.style.label = e.attributes.name;
+    } else {
+        e.style.label = null;
+    }
+
     e.style.fontSize = 11;
     if (!showOwned && e.attributes.owner) e.style.fillColor = "None";
     else e.style.fillColor = color[parseInt(e.attributes.description)];
