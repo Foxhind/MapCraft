@@ -9,12 +9,13 @@ var kmllayer;
 
 var selectedFeature;
 var selectCtrl;
-var color = ["#ff0000","#ff4000","#ff6000","#ff7000","#ff8000","#ff9000","#ffb000","#ffd000","#ffff00","#00ff00"];
+var stateColors = ["#ff0000","#ff4000","#ff6000","#ff7000","#ff8000","#ff9000","#ffb000","#ffd000","#ffff00","#00ff00"];
 var supported_langs = ['en', 'ru', 'jp'];
 var users = [];
 var claims = [];
 var me;
-var pieceLabel;
+var pieceLabel = 'none';
+var pieceColor = 'state';
 var showOwned;
 var chatShowInfo;
 var chatScrollPosition = -1;
@@ -33,6 +34,26 @@ function LoadTransData() {
     for (i in trans) _trans_hash[trans[i]] = trans[++i];
 }
 
+function simpleHash(str) {
+    var hash = 0;
+    if (str.length === 0) return hash;
+    for (i = 0; i < str.length; i++) {
+        char = str.charCodeAt(i);
+        hash = ((hash<<5)-hash)+char;
+        hash = hash & hash; // Convert to 32bit integer
+    }
+    return hash;
+}
+
+function ownerColor(owner) {
+    var hue, sat = 40, light = 40;
+    var hash = Math.abs(simpleHash(owner));
+    hue = hash % 255;
+    sat = sat + Math.round(hash / 255 % 20);
+    light = light + Math.round(hash / 255 / 20 % 20);
+    return 'hsl(' + hue + ', ' + sat + '%, ' + light + '%)';
+}
+
 var Progress = {
     draw: function(width) {
         var w = this.width = width || 200;
@@ -47,7 +68,7 @@ var Progress = {
 
         this.parts = [];
         for (var i = 0; i < 10; i++) {
-            this.parts[i] = p.rect(1, 1, 0, 23).attr(common).attr({fill: color[i]});
+            this.parts[i] = p.rect(1, 1, 0, 23).attr(common).attr({fill: stateColors[i]});
         }
     },
 
@@ -608,9 +629,15 @@ function LoadSettings() {
     // Show owned
     showOwned = localStorage.show_owned ? true : false;
     $('#sshow_owned').attr('checked', showOwned);
+
+    // Piece style
     if (localStorage.piece_label) {
         pieceLabel = localStorage.piece_label;
         $('#spiece_label').val(localStorage.piece_label);
+    }
+    if (localStorage.piece_color) {
+        pieceColor = localStorage.piece_color;
+        $('#spiece_color').val(localStorage.piece_color);
     }
     updateAllPieceStyles();
 
@@ -636,6 +663,10 @@ function ApplySettings() {
     // Piece style
     if ($('#spiece_label').val() != localStorage.piece_label) {
         pieceLabel = localStorage.piece_label = $('#spiece_label').val();
+
+    }
+    if ($('#spiece_color').val() != localStorage.piece_color) {
+        pieceColor = localStorage.piece_color = $('#spiece_color').val();
 
     }
     showOwned = $('#sshow_owned').attr('checked') ? true : false;
@@ -679,6 +710,7 @@ function LoadLanguage() {
         $('#lchat_show_info').text(ldata[30]);
         $('#binfo').button("option", "label", ldata[31]);
         $('#lpiece_label').text(ldata[32]);
+        $('#lpiece_color').text(ldata[33]);
     });
 }
 
@@ -923,18 +955,37 @@ function onUnselectPiece(e) {
 }
 
 function updatePieceStyle(e, redraw) {
-    if (pieceLabel == 'owner' && e.attributes.owner) {
-        e.style.label = e.attributes.owner;
+    var owner = e.attributes.owner;
+    var state = parseInt(e.attributes.description, 10);
+    var index = e.attributes.name;
+
+    // Set label
+    if (pieceLabel == 'owner' && owner) {
+        e.style.label = owner;
     } else if (pieceLabel == 'index') {
-        e.style.label = e.attributes.name;
+        e.style.label = index;
     } else {
         e.style.label = null;
     }
-
     e.style.fontSize = 11;
-    if (!showOwned && e.attributes.owner) e.style.fillColor = "None";
-    else e.style.fillColor = color[parseInt(e.attributes.description)];
 
+    // Set color
+    var fillColor, hue, sat, light;
+    if (!showOwned && owner) {
+        fillColor = "rgba(255,255,255,0)";
+    } else if (pieceColor == 'state') {
+        fillColor = stateColors[state];
+    } else if (pieceColor == 'busy') {
+        hue = state == '9' ? 120 : 60;
+        fillColor = owner ? 'hsl(' + hue + ', 100%, 50%)' : 'hsl(' + hue + ', 70%, 85%)';
+    } else if (pieceColor == 'owner') {
+        fillColor = owner ? ownerColor(owner) : "hsl(0,100%,100%)";
+    } else {
+        fillColor = "rgba(255,255,255,0)";
+    }
+    e.style.fillColor = fillColor;
+
+    // set Opacity and stroke for selected
     var selected = e == selectedFeature;
     e.style.fillOpacity = selected ? "0.8" : "0.5";
     e.style.strokeWidth = selected ? "3" : "1";

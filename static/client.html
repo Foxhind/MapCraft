@@ -103,9 +103,18 @@ New status:&nbsp;<span id="newstatus"></span>&nbsp;<span id="vcolor">██</spa
 <tr class="property">
 	<td><label id="lpiece_label" for="spiece_label">Draw in piece:</label></td>
 	<td><select id="spiece_label">
-		<option value="none" selected>Nothing</option>
-		<option value="owner">Owner</option>
-		<option value="index">Index</option>
+		<option value="none" selected>nothing</option>
+		<option value="owner">owner</option>
+		<option value="index">index</option>
+	</select></td>
+</tr>
+<tr class="property">
+	<td><label id="lpiece_color" for="spiece_color">Colorize piece by:</label></td>
+	<td><select id="spiece_color">
+		<option value="none">none</option>
+		<option value="state" selected>state</option>
+		<option value="busy">busy/free</option>
+		<option value="owner">owner</option>
 	</select></td>
 </tr>
 <tr class="property"><td><label id="lshow_owned" for="sshow_owned">Show owned slices:</label></td><td>
