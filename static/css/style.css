@@ -105,6 +105,10 @@ border-bottom: 1px dotted;
 color: darkgreen;
 }
 
+.info {
+color: darkgreen;
+}
+
 .chat-info .pseudolink {
 border-bottom: 1px dotted #36c96c;
 }
