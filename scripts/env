@@ -16,6 +16,9 @@ Controll daemons (nginx, apache, hub):
    all-start       - start all
    all-stop        - stop all
    all-restart     - restart one by one
+
+Other
+   db-console      - open PSQL console with needed credentials
 "
 exit 1;
 }
@@ -93,6 +96,23 @@ db-seed() {
 	echo "Test data successfully seeded"
 }
 
+db-seed() {
+	# firstly reset all
+	db-reset
+
+	psql -d ${DATABASE} <$SEED >/dev/null
+
+	# Restore saved static files (kml, wms, etc)
+	cp -f ${SEED_DIR}/kml/* ${SRC_ROOT}/static/kml
+	cp -f ${SEED_DIR}/wms/* ${SRC_ROOT}/data/wms
+
+	echo "Test data successfully seeded"
+}
+
+db-console() {
+	psql -d ${DATABASE}
+}
+
 compile-hub() {
 	echo "Compiling and getting all dependencies for hub ..."
 	cd ${SRC_ROOT}/hub
@@ -127,6 +147,9 @@ case "$1" in
 		;;
 	db-seed)
 		db-seed
+		;;
+	db-console)
+		db-console
 		;;
 	gen-configs)
 		gen-configs
