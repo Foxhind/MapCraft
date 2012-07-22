@@ -109,6 +109,9 @@ color: darkgreen;
 color: darkgreen;
 }
 
+.chat-chat.tome .message {
+font-weight: bold;
+}
 .chat-info .pseudolink {
 border-bottom: 1px dotted #36c96c;
 }

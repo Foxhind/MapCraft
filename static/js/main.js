@@ -100,12 +100,18 @@ var Chat = {
 
     append: function(message, type, author, ts, is_history) {
 
-        ts = this._stringify_timestamp(ts);
+        ts = this._stringifyTimestamp(ts);
         if (_.isUndefined(type)) type = 'msg';
         if (_.isUndefined(author)) author = '-';
 
         // Replace all special shortcuts
         message = TextReplacer.parse(message);
+
+        var toMe = false;
+        if (type == 'chat' && !is_history) {
+            var re = new RegExp('\\b' + (me.nick || 'unknown') + '\\b');
+            toMe = re.exec(message);
+        }
 
         // Suuport for me
         if (message.substr(0, 4) === '/me ') {
@@ -121,6 +127,7 @@ var Chat = {
         entry.addClass('chat-' + type);
         if (is_history) entry.addClass('history');
         if (!chatShowInfo && type === 'info') entry.addClass('hidden');
+        if (toMe) entry.addClass('tome');
 
         var atEnd = this.isAtEnd();
         this.chatEl().append(entry);
@@ -148,7 +155,7 @@ var Chat = {
         return true;
     },
 
-    _stringify_timestamp: function(ts) {
+    _stringifyTimestamp: function(ts) {
         if (_.isString(ts)) {
             return ts.substr(11, 8);
         }
