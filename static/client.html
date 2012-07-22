@@ -130,15 +130,28 @@ New status:&nbsp;<span id="newstatus"></span>&nbsp;<span id="vcolor">██</spa
 </div>
 
 <div id="dinfo" style="width: 100%">
-	<table class="link-list">
-		<tr>
-			<td class="link-type">WMS</td>
-			<td class="link-url" id="wms_link"></td>
-		</tr><tr>
-			<td class="link-type">Log</td>
-			<td class="link-url" id="log_link"></td>
-		</tr>
-	</table>
+	<div id="dinfo-tabs">
+		<ul>
+			<li><a href="#dinfo-about">About</a></li>
+			<li><a href="#dinfo-settings">Settings</a></li>
+			<li><a href="#dinfo-details">Details</a></li>
+		</ul>
+		<div id="dinfo-about">
+			<table class="link-list">
+				<tr>
+					<td class="link-type">WMS</td>
+					<td class="link-url" id="wms_link"></td>
+				</tr><tr>
+					<td class="link-type">Log</td>
+					<td class="link-url" id="log_link"></td>
+				</tr>
+			</table>
+		</div>
+		<div id="dinfo-settings">
+		</div>
+		<div id="dinfo-details">
+		</div>
+	</div>
 </div>
 
 <table id="panel">

@@ -190,6 +190,7 @@ var InfoDialog  = {
             position: 'center',
             buttons: { "Close": function() { $(this).dialog("close");} }
         });
+        $('#dinfo-tabs').tabs();
 
         var origin = window.location.protocol + '//' + window.location.host;
         var wms_link = 'wms:' + origin + '/wms/' + PieHub.options.pieid + '?SRS={proj}&WIDTH={width}&height={height}&BBOX={bbox}';
@@ -197,6 +198,10 @@ var InfoDialog  = {
         var log_link = origin + '/log/' + PieHub.options.pieid;
         $("#wms_link").html("<a href='" + wms_link + "' target='_blank'>" + wms_link_short + "</a>");
         $("#log_link").html("<a href='" + log_link + "' target='_blank'>" + log_link + "</a>");
+    },
+
+    update: function(data) {
+        console.log(date);
     },
 
     show: function() {
@@ -493,6 +498,10 @@ In.youare = function (data) {
         $('#pac_nick').unbind('click');
     $("#pac_text").focus();
     PieHub.push( Out.get_user_list() );
+};
+
+In.update_cake = function (data) {
+    Cake.update(data);
 };
 
 In.after_init = function (data) {

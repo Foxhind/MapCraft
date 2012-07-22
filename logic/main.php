@@ -18,6 +18,7 @@ include("../lib/db/sessions.php");
 
 // event handlers
 include("./session.php");
+include("./cake.php");
 include("./chat.php");
 include("./claims.php");
 include("./pieces.php");
