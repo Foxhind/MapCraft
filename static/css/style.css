@@ -298,10 +298,11 @@ margin-right: 1em;
 color: gray;
 }
 
-.link-list {
-	margin: 1.5em 1em;
-}
-.link-type {
-	text-align: right;
-	padding-right: 2em;
-}
+
+#dinfo {padding: 1em;}
+#dinfo h3 {text-align: center;}
+#dinfo h4 {margin-top: 2em;}
+#dinfo table, #dinfo p {margin: 0em 1em;}
+
+.tbl-prop {text-align: right; padding-right: 0.5em; color: gray;}
+

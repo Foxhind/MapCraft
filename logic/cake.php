@@ -29,6 +29,7 @@ function _send_cake_info($res, $from, $to_session) {
 	$info['description'] = $row['description'];
 	$info['created_at'] = $row['start'];
 	$info['author'] = $row['author_nick'];
+	$info['visible'] = $row['visible'];
 
 	$msg = array('update_cake', $info);
 	if ($to_session) {

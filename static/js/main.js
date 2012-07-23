@@ -17,7 +17,7 @@ var me;
 var pieceLabel = 'none';
 var pieceColor = 'state';
 var showOwned;
-var chatShowInfo;
+var chatShowInfo = true;
 var chatScrollPosition = -1;
 
 // ---------------
@@ -201,6 +201,7 @@ var InfoDialog  = {
     },
 
     update: function(data) {
+        console.log(data);
         $('#dinfo-name').text(data['name']);
         $('#dinfo-description').html(data['description']);
 
@@ -208,12 +209,13 @@ var InfoDialog  = {
         $('#dinfo-details').html('');
         var details = [
             ['author', data['author']],
-            ['create at', data['created_at']]
+            ['create at', data['created_at']],
+            ['visibility', data['visible'] ? 'shared' : 'hidden']
         ];
         _(details).each(function(pair) {
             var tr = $('<tr/>');
-            tr.append('<td class="dinfo-detail-prop">' + pair[0] + '</td>)');
-            tr.append('<td class="dinfo-detail-value">' + pair[1] + '</td>)');
+            tr.append('<td class="tbl-prop">' + pair[0] + '</td>)');
+            tr.append('<td class="tbl-value">' + pair[1] + '</td>)');
             $('#dinfo-details').append(tr);
         });
     },
@@ -672,7 +674,7 @@ function LoadSettings() {
     }
     updateAllPieceStyles();
 
-    chatShowInfo = localStorage.chat_show_info ? true : false;
+    chatShowInfo = (localStorage.chat_show_info === '')? false : true;  // true by default
     $('#schat_show_info').attr('checked', chatShowInfo);
     Chat.updateStyle();
 }
