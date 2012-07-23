@@ -194,10 +194,12 @@ var InfoDialog  = {
 
         var origin = window.location.protocol + '//' + window.location.host;
         var wms_link = 'wms:' + origin + '/wms/' + PieHub.options.pieid + '?SRS={proj}&WIDTH={width}&height={height}&BBOX={bbox}';
-        var wms_link_short = 'wms:' + origin + '/wms/' + PieHub.options.pieid + '?SRS=...';
         var log_link = origin + '/log/' + PieHub.options.pieid;
-        $("#wms_link").html("<a href='" + wms_link + "' target='_blank'>" + wms_link_short + "</a>");
-        $("#log_link").html("<a href='" + log_link + "' target='_blank'>" + log_link + "</a>");
+        $("#wms_link").html(this._createLink(wms_link));
+        $("#log_link").html(this._createLink(log_link));
+        $("#wms_action").html(this._createWmsActions(wms_link));
+
+        this.show();
     },
 
     update: function(data) {
@@ -222,7 +224,28 @@ var InfoDialog  = {
 
     show: function() {
         $('#dinfo').dialog('open');
+    },
+
+    //
+    // Helpers
+    //
+    _createLink: function(ref) {
+        var name = ref;
+        if (name.length > 40) {
+            name = name.substr(0,40) + '...';
+        }
+        return "<a href='" + ref + "' target='_blank'>" + name + "</a>";
+    },
+    _createWmsActions: function(wms_ref) {
+        var remote = $('<a href="#">Remote</a>');
+        remote.button();
+        remote.click(function() {
+            var title = 'Mapcraft-cake-' + PieHub.options.pieid;
+            RemoteControlJosm('imagery?title=' + title + '&type=wms&url=' + encodeURIComponent(wms_ref));
+        });
+        return remote;
     }
+
 };
 
 
@@ -804,14 +827,18 @@ function OpenViaRemote() {
     {
         var from = new OpenLayers.Projection("EPSG:900913");
         var to = new OpenLayers.Projection("EPSG:4326");
-        var bounds = selectedFeature.geometry.getBounds().toArray()
+        var bounds = selectedFeature.geometry.getBounds().toArray();
         var p1 = (new OpenLayers.LonLat(bounds[0], bounds[1])).transform(from, to);
         var p2 = (new OpenLayers.LonLat(bounds[2], bounds[3])).transform(from, to);
-        if ( !$('#hiddenIframe').length ){
-            $('body').append('<iframe id="hiddenIframe" style="display:hidden" />');
-        }
-        $('#hiddenIframe').attr("src", "http://127.0.0.1:8111/load_and_zoom?left=" + p1.lon + "&right=" + p2.lon + "&top=" + p2.lat + "&bottom=" + p1.lat);
+        RemoteControlJosm("load_and_zoom?left=" + p1.lon + "&right=" + p2.lon + "&top=" + p2.lat + "&bottom=" + p1.lat);
     }
+}
+
+function RemoteControlJosm(cmd) {
+    if ( !$('#hiddenIframe').length ){
+        $('body').append('<iframe id="hiddenIframe" style="display:hidden" />');
+    }
+    $('#hiddenIframe').attr("src", "http://127.0.0.1:8111/" + cmd);
 }
 
 function SetNick() {
