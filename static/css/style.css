@@ -298,11 +298,15 @@ margin-right: 1em;
 color: gray;
 }
 
+.dialog {padding: 1em !important;}
+.dialog h3 {text-align: center;}
+.dialog h4 {margin-top: 2em;}
+.dialog table {margin: 0.5em 1em;}
+.dialog table tr {height: 1.8em}
+.dialog p {margin: 0.5em 1em;}
 
-#dinfo {padding: 1em;}
-#dinfo h3 {text-align: center;}
-#dinfo h4 {margin-top: 2em;}
-#dinfo table, #dinfo p {margin: 0em 1em;}
+#dsettings td {width: 45%;}
+#dsettings table tr td:first-child {padding-right: 0.5em; color: #555}
 
-.tbl-prop {text-align: right; padding-right: 0.5em; color: gray;}
 
+#dinfo .tbl-prop {text-align: right; padding-right: 0.5em; color: gray;}

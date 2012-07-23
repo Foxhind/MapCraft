@@ -75,10 +75,10 @@ New status:&nbsp;<span id="newstatus"></span>&nbsp;<span id="vcolor">██</spa
 </div>
 
 
-<div id="dsettings">
-<table style="width: 100%">
+<div class="dialog" id="dsettings">
 
-<th colspan=2><h3>Common</h3></th>
+<h4>Common</h4>
+<table style="width: 100%">
 <tr class="property"><td id="ltheme">Theme:</td><td>
 <select id="sstyle">
 <option value="mapcraft">mapcraft</option>
@@ -98,8 +98,10 @@ New status:&nbsp;<span id="newstatus"></span>&nbsp;<span id="vcolor">██</spa
 <tr class="property"><td><label id="lprogress_bar" for="sprogress_bar">Progress bar:</label></td><td>
 <input type="checkbox" id="sprogress_bar">
 </td></tr>
+</table>
 
-<th colspan=2><h3>Cake settings</h3></th>
+<h4>Cake settings</h4>
+<table style="width: 100%">
 <tr class="property">
 	<td><label id="lpiece_label" for="spiece_label">Draw in piece:</label></td>
 	<td><select id="spiece_label">
@@ -120,8 +122,10 @@ New status:&nbsp;<span id="newstatus"></span>&nbsp;<span id="vcolor">██</spa
 <tr class="property"><td><label id="lshow_owned" for="sshow_owned">Show owned slices:</label></td><td>
 <input type="checkbox" id="sshow_owned" checked>
 </td></tr>
+</table>
 
-<th colspan=2><h3>Chat settings</h3></th>
+<h4>Chat settings</h4>
+<table style="width: 100%">
 <tr class="property">
 	<td><label id="lchat_show_info" for="schat_show_info">Show info messages in chat:</label></td>
 	<td><input type="checkbox" id="schat_show_info" checked></td>
@@ -129,7 +133,7 @@ New status:&nbsp;<span id="newstatus"></span>&nbsp;<span id="vcolor">██</spa
 </table>
 </div>
 
-<div id="dinfo" style="width: 100%">
+<div class="dialog" id="dinfo" style="width: 100%">
 	<h3 id='dinfo-name'>Pie name</h3>
 	<h4> Usefull links</h4>
 	<table id="dinfo-links">

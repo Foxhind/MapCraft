@@ -183,7 +183,7 @@ var InfoDialog  = {
             autoOpen: false,
             modal: true,
             width: 450,
-            height: 400,
+            height: 450,
             minWidth: 450,
             minHeight: 150,
             resizable: true,
@@ -744,6 +744,7 @@ function LoadLanguage() {
         $('#binfo').button("option", "label", ldata[31]);
         $('#lpiece_label').text(ldata[32]);
         $('#lpiece_color').text(ldata[33]);
+        $('#dinfo').dialog("option", "title", ldata[34]);
     });
 }
 
@@ -1155,7 +1156,7 @@ $(document).ready(function () {
         autoOpen: false,
         modal: true,
         width: 400,
-        height: 350,
+        height: 450,
         minWidth: 300,
         minHeight: 280,
         resizable: true,
