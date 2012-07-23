@@ -38,7 +38,7 @@ $TEST_MODE = isset($opts['t']);
 $DEBUG_MODE = isset($opts['d']) || getenv('MC_DEBUG');
 
 // Logging
-include("Log.php");
+include("../lib/Log.php");
 $logger = Log::singleton('file', $logic_log_file, "[id=$LOGIC_ID]");
 $logger->notice("Starting new logic server");
 
