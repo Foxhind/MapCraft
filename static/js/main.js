@@ -198,8 +198,6 @@ var InfoDialog  = {
         $("#wms_link").html(this._createLink(wms_link));
         $("#log_link").html(this._createLink(log_link));
         $("#wms_action").html(this._createWmsActions(wms_link));
-
-        this.show();
     },
 
     update: function(data) {
