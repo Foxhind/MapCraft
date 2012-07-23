@@ -660,7 +660,7 @@ function LoadSettings() {
     $('#sprogress_bar').attr('checked', show_pb);
     $('#progress_bar').toggle(show_pb);
     // Show owned
-    showOwned = localStorage.show_owned ? true : false;
+    showOwned = (localStorage.show_owned === '') ? false : true; // true by default
     $('#sshow_owned').attr('checked', showOwned);
 
     // Piece style
