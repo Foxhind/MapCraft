@@ -143,12 +143,15 @@ var Chat = {
 
         if (text === '/quit') {
             window.location = '/';
-        } if (text === '/help') {
+        } else if (text === '/help') {
             this.append("Supported commands:<br/>" +
                 "/quit      - quit to main list<br/>" +
+                "/logout    - logout from the mapcraft<br/>" +
                 "/me TEXT   - say in /me form<br/>" +
                 "/help      - show supported commands",
                 'cli');
+        } else if (text === '/logout') {
+            $.get("/app/auth.php?action=logout");
         } else {
             this.append("Unsupported CLI command. Type '/help' to see known commands", 'cli');
         }
@@ -198,8 +201,8 @@ var InfoDialog  = {
                     click: function() { self.saveModifications(); }
                 },
                 {
-                    id: 'dinfo-cancel',
-                    text: 'Cancel',
+                    id: 'dinfo-reset',
+                    text: 'Reset',
                     click: function() {
                         self.update(self.orig_data);
                     }
@@ -211,7 +214,7 @@ var InfoDialog  = {
             ]
         });
         $('#dinfo-save').hide();
-        $('#dinfo-cancel').hide();
+        $('#dinfo-reset').hide();
         // $('#dinfo-tabs').tabs();
 
         var origin = window.location.protocol + '//' + window.location.host;
@@ -226,7 +229,7 @@ var InfoDialog  = {
         this.orig_data = _.clone(this.data = data);
         this.modified = false;
         $('#dinfo-save').hide();
-        $('#dinfo-cancel').hide();
+        $('#dinfo-reset').hide();
 
         $('#dinfo-name').text(this.data['name']);
         $('#dinfo-description').html(this.data['description']);
@@ -262,7 +265,7 @@ var InfoDialog  = {
         var self = this;
         console.log('modified!');
         $('#dinfo-save').show();
-        $('#dinfo-cancel').show();
+        $('#dinfo-reset').show();
         this.modified = true;
     },
 
