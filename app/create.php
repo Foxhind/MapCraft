@@ -33,13 +33,6 @@ if (!isset($_POST['name'])) {
         <textarea id="description" name="description"></textarea>
     </div></div>
     <div class="row"><div>
-        <!--<label for="raccess">Access to view<br/><small>List of nicks separated by commas; empty field — all.</small></label>-->
-        <input type="hidden" id="raccess" name="raccess" value="" />
-    </div><div>
-        <!--<label for="waccess">Access to modify<br/><small>List of nicks separated by commas; empty field — all.</small></label>-->
-        <input type="hidden" id="waccess" name="waccess" value="" />
-    </div></div>
-    <div class="row"><div>
         <label><input class="btn" type="checkbox" id="hide" name="hide" />Hidden cake<!--<br/><small>This doesn't affect the access!</small>--></label>
     </div></div>
 <?php
@@ -59,6 +52,9 @@ if (!isset($_POST['name'])) {
     exit();
 }
 
+//
+// Adding new cake
+//
 
 // Check captcha
 if (!$skip_captcha && $_SESSION['security_code'] != strtolower($_POST['captcha'])) {
@@ -90,8 +86,6 @@ if (!$result) {
     echo 'The user with id =  '.$user_id.' is not present in the base. Please logout and login back. <br /><a href="javascript:history.back();">Back</a>';
     exit();
 }
-$osm_user = pg_fetch_result($result, 0, "nick");
-
 
 // XML parser body
 $coordinates = array();
@@ -168,47 +162,15 @@ foreach ($coordinates as $c) {
     $result = pg_query($connection, 'INSERT INTO pieces VALUES(DEFAULT, DEFAULT, DEFAULT, '.$pie_id.', \''.$c.'\',' . $index++ . ')');
 }
 
-// Accesses
-$raccess = array();
-$rwaccess = array();
-foreach (explode(',', $_POST['waccess']) as $username) {
-    $username = trim($username);
-    if (!empty($username) and $username != $osm_user)
-        $rwaccess[] = $username;
-}
-foreach (explode(',', $_POST['raccess']) as $username) {
-    $username = trim($username);
-    if (!empty($username) and !in_array($username, $rwaccess) and $username != $osm_user)
-        $raccess[] = $username;
+// Adding access for owner
+if (!pg_query_params($connection,
+                     "INSERT INTO access VALUES ($1, $2, '', 'o')",
+                      array($user_id, $pie_id))) {
+    echo 'Failed to add access for owner. <br /><a href="javascript:history.back();">Back</a>';
+    exit();
 }
 
-// Adding it to table
-foreach ($raccess as $username) {
-    $username = pg_escape_string($username);
-    $result = pg_query($connection, 'SELECT id FROM users WHERE nick=\''.$username.'\'');
-    if (pg_num_rows($result) > 0)
-        $user_id = pg_fetch_result($result, 0 ,0);
-    else
-        $user_id = pg_fetch_result(pg_query($connection, 'INSERT INTO users VALUES(\''.$username.'\', DEFAULT, DEFAULT) RETURNING id'), 0 ,0);
-    $result = pg_query($connection, 'INSERT INTO access VALUES('.$user_id.', '.$pie_id.', \''.$username.'\', \'r\')');
-}
-foreach ($rwaccess as $username) {
-    $username = pg_escape_string($username);
-    $result = pg_query($connection, 'SELECT id FROM users WHERE nick=\''.$username.'\'');
-    if (pg_num_rows($result) > 0)
-        $user_id = pg_fetch_result($result, 0 ,0);
-    else
-        $user_id = pg_fetch_result(pg_query($connection, 'INSERT INTO users VALUES(\''.$username.'\', DEFAULT, DEFAULT) RETURNING id'), 0 ,0);
-    $result = pg_query($connection, 'INSERT INTO access VALUES('.$user_id.', '.$pie_id.', \''.$username.'\', \'rw\')');
-}
-// And owner
-$result = pg_query($connection, 'SELECT id FROM users WHERE nick=\''.$osm_user.'\'');
-if (pg_num_rows($result) > 0)
-    $user_id = pg_fetch_result($result, 0 ,0);
-else
-    $user_id = pg_fetch_result(pg_query($connection, 'INSERT INTO users VALUES(\''.$osm_user.'\', DEFAULT, DEFAULT) RETURNING id'), 0 ,0);
-$result = pg_query($connection, 'INSERT INTO access VALUES('.$user_id.', '.$pie_id.', \''.$osm_user.'\', \'o\')');
-
+// Update map
 update_kml($pie_id);
 create_map($pie_id);
 

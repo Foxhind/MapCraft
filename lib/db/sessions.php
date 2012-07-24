@@ -31,9 +31,33 @@ class Channel {
         $this->_user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : '0';
 
         // role
-        $this->_role = isset($_SESSION['user_id']) ? 'member' : 'anon';
+        $this->_role = $this->_load_role();
 
         session_write_close();
+    }
+
+    function _load_role() {
+        global $connection;
+        global $logger;
+
+        if (!isset($_SESSION['user_id']))
+            return 'anon';
+
+        $result = pg_query_params($connection,
+                                  'SELECT role FROM access WHERE pie = $1 AND user = $2',
+                                  array($this->pieid, $this->_user_id));
+        $role = pg_fetch_result($resul, 0, 0);
+        if ($role == null)
+            return 'member';
+
+        if ($role == 'o')
+            return 'owner';
+
+        if ($role == 'a')
+            return 'admin';
+
+        $logger->err('Unknown role = "' . $role . '"');
+        return 'member';
     }
 
     // returns osm name or anon####
@@ -63,7 +87,7 @@ class Channel {
     function need_level($min_role) {
         $levels = array( "anon" => 0,
                          "member" => 10,
-                         "moderator" => 20,
+                         "admin" => 20,
                          "owner" => 30,
                          "developer" => 40 );
         $cur_role = $this->role();
