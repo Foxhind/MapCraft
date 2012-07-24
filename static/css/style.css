@@ -301,7 +301,7 @@ color: gray;
 .dialog {padding: 1em !important;}
 .dialog h3 {text-align: center;}
 .dialog h4 {margin-top: 2em;}
-.dialog table {margin: 0.5em 1em;}
+.dialog table {margin: 0.5em 1em; width: 100%;}
 .dialog table tr {height: 1.8em}
 .dialog p {margin: 0.5em 1em;}
 
@@ -310,4 +310,5 @@ color: gray;
 
 
 #dinfo .tbl-prop {text-align: right; padding-right: 0.5em; color: gray;}
-#dinfo .tbl-actions {padding-left: 0.5em;}
+#dinfo .tbl-actions {padding-left: 1.5em; width: 70px;}
+#dinfo-cancel {margin-right: 2em;}

@@ -177,19 +177,41 @@ var Chat = {
     }
 };
 
+
 var InfoDialog  = {
     init: function() {
+        var self = this;
+
         $('#dinfo').dialog({
             autoOpen: false,
-            modal: true,
+            modal: false,
             width: 450,
             height: 450,
             minWidth: 450,
             minHeight: 150,
             resizable: true,
             position: 'center',
-            buttons: { "Close": function() { $(this).dialog("close");} }
+            buttons: [
+                {
+                    id: 'dinfo-save',
+                    text: 'Save',
+                    click: function() { self.saveModifications(); }
+                },
+                {
+                    id: 'dinfo-cancel',
+                    text: 'Cancel',
+                    click: function() {
+                        self.update(self.orig_data);
+                    }
+                },
+                {
+                    text: "Close",
+                    click: function() { $(this).dialog("close");}
+                }
+            ]
         });
+        $('#dinfo-save').hide();
+        $('#dinfo-cancel').hide();
         // $('#dinfo-tabs').tabs();
 
         var origin = window.location.protocol + '//' + window.location.host;
@@ -197,31 +219,51 @@ var InfoDialog  = {
         var log_link = origin + '/log/' + PieHub.options.pieid;
         $("#wms_link").html(this._createLink(wms_link));
         $("#log_link").html(this._createLink(log_link));
-        $("#wms_action").html(this._createWmsActions(wms_link));
+        $("#wms_action").html(this._createWmsButtons(wms_link));
     },
 
     update: function(data) {
-        console.log(data);
-        $('#dinfo-name').text(data['name']);
-        $('#dinfo-description').html(data['description']);
+        this.orig_data = _.clone(this.data = data);
+        this.modified = false;
+        $('#dinfo-save').hide();
+        $('#dinfo-cancel').hide();
+
+        $('#dinfo-name').text(this.data['name']);
+        $('#dinfo-description').html(this.data['description']);
 
         // Fill details
         $('#dinfo-details').html('');
         var details = [
-            ['author', data['author']],
-            ['create at', data['created_at']],
-            ['visibility', data['visible'] ? 'shared' : 'hidden']
+            ['author', this.data['author']],
+            ['created at', this.data['created_at']],
+            ['visibility', this.data['visible'] ? 'shared' : 'hidden', this._createHideLink()]
         ];
         _(details).each(function(pair) {
             var tr = $('<tr/>');
             tr.append('<td class="tbl-prop">' + pair[0] + '</td>)');
             tr.append('<td class="tbl-value">' + pair[1] + '</td>)');
+            if (! _.isUndefined(pair[2]))
+                tr.append($('<td class="tbl-actions"/>').append(pair[2]));
+
             $('#dinfo-details').append(tr);
         });
+        //this.show();
     },
 
     show: function() {
         $('#dinfo').dialog('open');
+    },
+
+    saveModifications: function() {
+        PieHub.push(Out.update_cake(this.data));
+    },
+
+    setModified: function() {
+        var self = this;
+        console.log('modified!');
+        $('#dinfo-save').show();
+        $('#dinfo-cancel').show();
+        this.modified = true;
     },
 
     //
@@ -234,7 +276,8 @@ var InfoDialog  = {
         }
         return "<a href='" + ref + "' target='_blank'>" + name + "</a>";
     },
-    _createWmsActions: function(wms_ref) {
+
+    _createWmsButtons: function(wms_ref) {
         var remote = $('<a href="#">Remote</a>');
         remote.button();
         remote.click(function() {
@@ -242,8 +285,19 @@ var InfoDialog  = {
             RemoteControlJosm('imagery?title=' + title + '&type=wms&url=' + encodeURIComponent(wms_ref));
         });
         return remote;
-    }
+    },
 
+    _createHideLink: function() {
+        var self = this;
+
+        return $('<a href="#">' + (self.data['visible'] ? 'hide' : 'share') + '</a>')
+            .click(function(){
+                self.data['visible'] = !self.data['visible'];
+                $(this).text(self.data['visible'] ? 'hide' : 'share');
+                $(this).parent().prev().text(self.data['visible'] ? 'shared' : 'hidden');
+                self.setModified();
+            });
+    }
 };
 
 
@@ -616,6 +670,10 @@ Out.vote_claim = function (claim_id, vote) {
 
 Out.whoami = function() {
     return ['whoami', {}];
+};
+
+Out.update_cake = function(data) {
+    return ['update_cake', {data: data}];
 };
 
 Out.init_session = function() {
