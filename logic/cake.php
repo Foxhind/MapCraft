@@ -6,13 +6,27 @@
  * http://sam.zoy.org/wtfpl/COPYING for more details. */
 
 function handle_update_cake($type, $from, $data, $res) {
-	global $connection;
+    global $connection;
+    global $logger;
 
-	_send_cake_info($res, $from, false);
+    $from->need_level("owner");
+
+    $logger->debug("Start updating the cake " . $from->pieid . " initiated by used " . $from->user_id());
+    $changes = $data['data'];
+
+    // visible = true/false
+    if (array_key_exists('visible', $changes)) {
+        $logger->debug("Updating property 'visible' = " . $changes['visible']);
+        if(!pg_query($connection,
+                            'UPDATE pies SET "visible" = ' . ($changes['visible'] ? 'true' : 'false') . ' WHERE id = ' . $from->pieid))
+            throw new Exception("Failed to update cake settings for prop: visible");
+    }
+
+    _send_cake_info($res, $from, false);
 }
 
 function _send_cake_info($res, $from, $to_session) {
-	global $connection;
+    global $connection;
 
     $result = pg_query($connection,
                        'SELECT *, users.nick as author_nick
@@ -29,7 +43,7 @@ function _send_cake_info($res, $from, $to_session) {
 	$info['description'] = $row['description'];
 	$info['created_at'] = $row['start'];
 	$info['author'] = $row['author_nick'];
-	$info['visible'] = $row['visible'];
+	$info['visible'] = $row['visible'] == 't';
 
 	$msg = array('update_cake', $info);
 	if ($to_session) {

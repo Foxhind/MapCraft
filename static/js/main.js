@@ -275,6 +275,8 @@ var InfoDialog  = {
         $('#dinfo-reset').toggle(me.role == 'owner');
 
         $('#dinfo-name').text(CakeSettings.get('name'));
+        $('#dinfo-pie-actions').html('').append(this._createDeleteLink());
+
         $('#dinfo-description').html(CakeSettings.get('description'));
 
         // Fill details
@@ -282,7 +284,7 @@ var InfoDialog  = {
         var details = [
             ['author', CakeSettings.get('author')],
             ['created at', CakeSettings.get('created_at')],
-            ['visibility', CakeSettings.get('name') ? 'shared' : 'hidden', this._createHideLink()]
+            ['visibility', CakeSettings.get('visible') ? 'shared' : 'hidden', this._createHideLink()]
         ];
         _(details).each(function(pair) {
             var tr = $('<tr/>');
@@ -293,7 +295,7 @@ var InfoDialog  = {
 
             $('#dinfo-details').append(tr);
         });
-        this.show();
+        //this.show();
     },
     show: function() {
         $('#dinfo').dialog('open');
@@ -329,6 +331,15 @@ var InfoDialog  = {
                 CakeSettings.toggle('visible');
                 $(this).text(CakeSettings.get('visible') ? 'hide' : 'share');
                 $(this).parent().prev().text(CakeSettings.get('visible') ? 'shared' : 'hidden');
+            });
+    },
+    _createDeleteLink: function() {
+        var self = this;
+        if (me.role !== 'owner') return '';
+
+        return $('<a href="#">delete</a>')
+            .click(function() {
+                window.open('/delete/' + PieHub.options.pieid, '_blank');
             });
     }
 };
@@ -614,7 +625,6 @@ In.anons_update = function (data) {
 
 In.youare = function (data) {
     me = data;
-    console.log(me.role, me.nick);
     $('#pac_nick').button("option", "label", me.nick);
     $('#pac_nick').button("option", "label", me.nick);
     if (data['role'] == 'anon')
@@ -707,7 +717,6 @@ Out.whoami = function() {
 };
 
 Out.update_cake = function(data) {
-    console.log("update: ", data);
     return ['update_cake', {data: data}];
 };
 
