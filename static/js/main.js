@@ -584,6 +584,7 @@ In.anons_update = function (data) {
 
 In.youare = function (data) {
     me = data;
+    console.log(me.role, me.nick);
     $('#pac_nick').button("option", "label", me.nick);
     $('#pac_nick').button("option", "label", me.nick);
     if (data['role'] == 'anon')

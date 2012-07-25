@@ -44,9 +44,10 @@ class Channel {
             return 'anon';
 
         $result = pg_query_params($connection,
-                                  'SELECT role FROM access WHERE pie = $1 AND user = $2',
+                                  'SELECT role FROM access WHERE "pie" = $1 AND "user" = $2',
                                   array($this->pieid, $this->_user_id));
-        $role = pg_fetch_result($resul, 0, 0);
+        $role = pg_fetch_result($result, 0, 0);
+
         if ($role == null)
             return 'member';
 
