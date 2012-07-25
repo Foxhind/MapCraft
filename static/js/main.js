@@ -181,6 +181,45 @@ var Chat = {
 };
 
 
+var CakeSettings = {
+    orig: {},
+    data: {},
+    modified: {},
+
+    init: function(data) {
+        this.orig = _.clone(this.data = data);
+        this.modified = {};
+
+        // TODO: move to events
+        $('#dinfo-save').button("disable");
+        InfoDialog.update();
+    },
+    reset: function() {
+        this.init(this.orig);
+    },
+    push: function() {
+        PieHub.push(Out.update_cake(this.modified));
+    },
+    set: function(key, value) {
+        this.modified[key] = this.data[key] = value;
+        this.onModify();
+        return this.data[key];
+    },
+    toggle: function(key) {
+        this.modified[key] = this.data[key] = !this.data[key];
+        this.onModify();
+        return this.data[key];
+    },
+    get: function(key) {
+        return this.data[key];
+    },
+    onModify: function() {
+        //TODO: move to events
+        $('#dinfo-save').button("enable");
+    }
+};
+
+
 var InfoDialog  = {
     init: function() {
         var self = this;
@@ -198,25 +237,29 @@ var InfoDialog  = {
                 {
                     id: 'dinfo-save',
                     text: 'Save',
-                    click: function() { self.saveModifications(); }
+                    disabled: 'disabled',
+                    click: function() {
+                        CakeSettings.push();
+                    }
                 },
                 {
                     id: 'dinfo-reset',
                     text: 'Reset',
                     click: function() {
-                        self.update(self.orig_data);
+                        CakeSettings.reset();
+                        self.update();
                     }
                 },
                 {
                     text: "Close",
-                    click: function() { $(this).dialog("close");}
+                    click: function() {
+                        $(this).dialog("close");
+                    }
                 }
             ]
         });
-        $('#dinfo-save').hide();
-        $('#dinfo-reset').hide();
-        // $('#dinfo-tabs').tabs();
 
+        // Init basic links
         var origin = window.location.protocol + '//' + window.location.host;
         var wms_link = 'wms:' + origin + '/wms/' + PieHub.options.pieid + '?SRS={proj}&WIDTH={width}&height={height}&BBOX={bbox}';
         var log_link = origin + '/log/' + PieHub.options.pieid;
@@ -225,21 +268,21 @@ var InfoDialog  = {
         $("#wms_action").html(this._createWmsButtons(wms_link));
     },
 
-    update: function(data) {
-        this.orig_data = _.clone(this.data = data);
-        this.modified = false;
-        $('#dinfo-save').hide();
-        $('#dinfo-reset').hide();
+    update: function() {
 
-        $('#dinfo-name').text(this.data['name']);
-        $('#dinfo-description').html(this.data['description']);
+        // Init buttons Save/Reset for owner
+        $('#dinfo-save').toggle(me.role == 'owner');
+        $('#dinfo-reset').toggle(me.role == 'owner');
+
+        $('#dinfo-name').text(CakeSettings.get('name'));
+        $('#dinfo-description').html(CakeSettings.get('description'));
 
         // Fill details
         $('#dinfo-details').html('');
         var details = [
-            ['author', this.data['author']],
-            ['created at', this.data['created_at']],
-            ['visibility', this.data['visible'] ? 'shared' : 'hidden', this._createHideLink()]
+            ['author', CakeSettings.get('author')],
+            ['created at', CakeSettings.get('created_at')],
+            ['visibility', CakeSettings.get('name') ? 'shared' : 'hidden', this._createHideLink()]
         ];
         _(details).each(function(pair) {
             var tr = $('<tr/>');
@@ -250,23 +293,10 @@ var InfoDialog  = {
 
             $('#dinfo-details').append(tr);
         });
-        //this.show();
+        this.show();
     },
-
     show: function() {
         $('#dinfo').dialog('open');
-    },
-
-    saveModifications: function() {
-        PieHub.push(Out.update_cake(this.data));
-    },
-
-    setModified: function() {
-        var self = this;
-        console.log('modified!');
-        $('#dinfo-save').show();
-        $('#dinfo-reset').show();
-        this.modified = true;
     },
 
     //
@@ -292,13 +322,13 @@ var InfoDialog  = {
 
     _createHideLink: function() {
         var self = this;
+        if (me.role !== 'owner') return '';
 
-        return $('<a href="#">' + (self.data['visible'] ? 'hide' : 'share') + '</a>')
+        return $('<a href="#">' + (CakeSettings.get('visible') ? 'hide' : 'share') + '</a>')
             .click(function(){
-                self.data['visible'] = !self.data['visible'];
-                $(this).text(self.data['visible'] ? 'hide' : 'share');
-                $(this).parent().prev().text(self.data['visible'] ? 'shared' : 'hidden');
-                self.setModified();
+                CakeSettings.toggle('visible');
+                $(this).text(CakeSettings.get('visible') ? 'hide' : 'share');
+                $(this).parent().prev().text(CakeSettings.get('visible') ? 'shared' : 'hidden');
             });
     }
 };
@@ -596,7 +626,7 @@ In.youare = function (data) {
 };
 
 In.update_cake = function (data) {
-    InfoDialog.update(data);
+    CakeSettings.init(data);
 };
 
 In.after_init = function (data) {
@@ -677,6 +707,7 @@ Out.whoami = function() {
 };
 
 Out.update_cake = function(data) {
+    console.log("update: ", data);
     return ['update_cake', {data: data}];
 };
 
