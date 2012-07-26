@@ -308,6 +308,56 @@ var InfoDialog  = {
             ]
         });
 
+        $('#dinfo-name-editor').dialog({
+            title: 'Edit link',
+            autoOpen: false,
+            modal: true,
+            width: 450,
+            height: 140,
+            resizable: false,
+            position: 'center',
+            buttons: [
+                {
+                    text: 'Apply',
+                    click: function() {
+                        CakeSettings.set('name', $(this).find('input').val());
+                        $(this).dialog("close");
+                    }
+                },
+                {
+                    text: "Close",
+                    click: function() {
+                        $(this).dialog("close");
+                    }
+                }
+            ]
+        });
+
+        $('#dinfo-description-editor').dialog({
+            title: 'Edit link',
+            autoOpen: false,
+            modal: true,
+            width: 450,
+            height: 300,
+            resizable: false,
+            position: 'center',
+            buttons: [
+                {
+                    text: 'Apply',
+                    click: function() {
+                        CakeSettings.set('description', $(this).find('textarea').val());
+                        $(this).dialog("close");
+                    }
+                },
+                {
+                    text: "Close",
+                    click: function() {
+                        $(this).dialog("close");
+                    }
+                }
+            ]
+        });
+
         // Init basic links
         var origin = window.location.protocol + '//' + window.location.host;
         var wms_link = 'wms:' + origin + '/wms/' + PieHub.options.pieid + '?SRS={proj}&WIDTH={width}&height={height}&BBOX={bbox}';
@@ -334,6 +384,8 @@ var InfoDialog  = {
             .append(this._createDeletePieBtn());
 
         $('#dinfo-description').html(CakeSettings.get('description'));
+        $('#dinfo-description').append('<br/>').append(this._createEditDescriptionBtn());
+
 
         //
         // Fill links
@@ -420,13 +472,15 @@ var InfoDialog  = {
     _createEditNameBtn: function() {
         var self = this;
         return this._createAdminBtn('edit', function() {
-            console.log("Edit name");
+            $('#dinfo-name-editor input').val(CakeSettings.get('name'));
+            $('#dinfo-name-editor').dialog('open');
         });
     },
     _createEditDescriptionBtn: function() {
         var self = this;
         return this._createAdminBtn('edit', function() {
-            console.log("Edit description");
+            $('#dinfo-description-editor textarea').val(CakeSettings.get('description'));
+            $('#dinfo-description-editor').dialog('open');
         });
 
     },

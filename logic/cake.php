@@ -14,6 +14,17 @@ function handle_update_cake($type, $from, $data, $res) {
     $logger->debug("Start updating the cake " . $from->pieid . " initiated by used " . $from->user_id());
     $changes = $data['data'];
 
+    // name, description
+    foreach (array('name', 'description') as $prop) {
+        if (array_key_exists($prop, $changes)) {
+            $logger->debug("Updating property '" . $prop . "'");
+            if(!pg_query_params($connection,
+                                'UPDATE pies SET "' . $prop . '" = $2  WHERE id = $1',
+                                array($from->pieid, $changes[$prop])))
+                throw new Exception("Failed to update cake settings for prop: " . $prop);
+        }
+    }
+
     // visible = true/false
     if (array_key_exists('visible', $changes)) {
         $logger->debug("Updating property 'visible' = " . $changes['visible']);
