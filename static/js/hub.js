@@ -151,7 +151,13 @@ PieHub = {
             try {
                 this.handle_event(events[i]);
             } catch (err) {
-                console.error("Error while handling event '" + events[i] + '": ', err.message, err);
+                console.error("Error while handling event '" + events[i] + '":');
+                if (err.message)
+                    console.error("Message: " + err.message);
+                if (err.stack) {
+                    console.log('Stacktrace: ');
+                    console.log(err.stack);
+                }
             }
         }
     },

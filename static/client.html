@@ -136,6 +136,8 @@ New status:&nbsp;<span id="newstatus"></span>&nbsp;<span id="vcolor">██</spa
 <div class="dialog" id="dinfo" style="width: 100%">
 	<div id="dinfo-pie-actions">one two</div>
 	<h3 id='dinfo-name'>Pie name</h3>
+	<h4>Description</h4>
+	<p id="dinfo-description">Description here</p>
 	<h4> Usefull links</h4>
 	<table id="dinfo-links">
 		<tr>
@@ -148,17 +150,22 @@ New status:&nbsp;<span id="newstatus"></span>&nbsp;<span id="vcolor">██</spa
 			<td class="tbl-actions"></td>
 		</tr>
 	</table>
-	<h4>Description</h4>
-	<p id="dinfo-description">Description here</p>
 	<h4>Details</h4>
-	<table id="dinfo-details">
+	<table id="dinfo-details"></table>
+</div>
+
+<div class="dialog" id="dinfo-link-editor">
+	<table style="width: 100%">
 		<tr>
-			<td class="tbl-prop">property</td>
-			<td class="tbl-value">value</td>
-			<td class="tbl-actions"></td>
+			<td class="tbl-prop">Name</td>
+			<td class="tbl-value"><input type="text" id="dinfo-link-name"  style='width: 90%'/></td>
+		</tr><tr>
+			<td class="tbl-prop">Reference</td>
+			<td class="tbl-value"><input type="text" id="dinfo-link-ref"  style='width: 90%'/></td>
 		</tr>
 	</table>
 </div>
+
 
 <table id="panel">
 <tr>
@@ -176,6 +183,17 @@ New status:&nbsp;<span id="newstatus"></span>&nbsp;<span id="vcolor">██</spa
 </tr>
 </table>
 
+<!-- !!! Tempaltes !!! -->
+
+<script type="text/template" id="dinfo-row-template">
+  <tr class="user-data">
+  	<td class="tbl-prop"><%= prop %></td>
+  	<td class="tbl-value"><%= value %></td>
+  	<td class="tbl-actions"></td>
+  </tr>
+</script>
+
+<!-- !!! Main scrpt !!! -->
 <script type="text/javascript" src="/js/main.js"></script>
 </body>
 </html>

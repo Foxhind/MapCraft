@@ -13,7 +13,7 @@ var stateColors = ["#ff0000","#ff4000","#ff6000","#ff7000","#ff8000","#ff9000","
 var supported_langs = ['en', 'ru', 'jp'];
 var users = [];
 var claims = [];
-var me;
+var me = { nick: "???", role: "anon" };
 var pieceLabel = 'none';
 var pieceColor = 'state';
 var showOwned;
@@ -187,7 +187,8 @@ var CakeSettings = {
     modified: {},
 
     init: function(data) {
-        this.orig = _.clone(this.data = data);
+        this.data = data;
+        this.orig = JSON.parse(JSON.stringify(this.data));
         this.modified = {};
 
         // TODO: move to events
@@ -200,10 +201,16 @@ var CakeSettings = {
     push: function() {
         PieHub.push(Out.update_cake(this.modified));
     },
+
+    // Setters, getters
     set: function(key, value) {
         this.modified[key] = this.data[key] = value;
         this.onModify();
         return this.data[key];
+    },
+    touch: function(key, value) {
+        this.modified[key] = this.data[key];
+        this.onModify();
     },
     toggle: function(key) {
         this.modified[key] = this.data[key] = !this.data[key];
@@ -213,6 +220,8 @@ var CakeSettings = {
     get: function(key) {
         return this.data[key];
     },
+
+    // Events (like so)
     onModify: function() {
         //TODO: move to events
         $('#dinfo-save').button("enable");
@@ -225,6 +234,7 @@ var InfoDialog  = {
         var self = this;
 
         $('#dinfo').dialog({
+            title: 'Information',
             autoOpen: false,
             modal: false,
             width: 450,
@@ -259,6 +269,45 @@ var InfoDialog  = {
             ]
         });
 
+        $('#dinfo-link-editor').dialog({
+            title: 'Edit link',
+            autoOpen: false,
+            modal: true,
+            width: 450,
+            height: 170,
+            resizable: false,
+            position: 'center',
+            buttons: [
+                {
+                    text: 'Apply',
+                    click: function() {
+                        var action = $('#dinfo-link-editor').data('action');
+                        var index  = $('#dinfo-link-editor').data('index');
+
+                        var link = {
+                            name: $('#dinfo-link-name').val(),
+                            ref: $('#dinfo-link-ref').val()
+                        };
+                        if ( action === 'add') {
+                            CakeSettings.data['links'].push(link);
+                        } else {
+                            CakeSettings.data['links'][index] = link;
+                        }
+                        CakeSettings.touch('links');
+
+                        self.update();
+                        $(this).dialog("close");
+                    }
+                },
+                {
+                    text: "Close",
+                    click: function() {
+                        $(this).dialog("close");
+                    }
+                }
+            ]
+        });
+
         // Init basic links
         var origin = window.location.protocol + '//' + window.location.host;
         var wms_link = 'wms:' + origin + '/wms/' + PieHub.options.pieid + '?SRS={proj}&WIDTH={width}&height={height}&BBOX={bbox}';
@@ -269,32 +318,57 @@ var InfoDialog  = {
     },
 
     update: function() {
+        var self = this;
 
         // Init buttons Save/Reset for owner
         $('#dinfo-save').toggle(me.role == 'owner');
         $('#dinfo-reset').toggle(me.role == 'owner');
 
+        // Cleanup
+        $('#dinfo .user-data').remove();
+
         $('#dinfo-name').text(CakeSettings.get('name'));
-        $('#dinfo-pie-actions').html('').append(this._createDeleteLink());
+        $('#dinfo-pie-actions').html('').append(this._createDeleteBtn());
 
         $('#dinfo-description').html(CakeSettings.get('description'));
 
+        //
+        // Fill links
+        //
+        _(CakeSettings.get('links')).each(function(link, index) {
+            var row = $(_.template($('#dinfo-row-template').html(), {
+                prop: link['name'],
+                value: self._createLink(link['ref'])
+            }));
+            row.find('.tbl-actions')
+                .append(self._createEditLinkBtn(index))
+                .append(' ')
+                .append(self._createDeleteLinkBtn(index));
+            $('#dinfo-links').append(row);
+        });
+
+        // Row with 'add' link for owners
+        if (me.role === 'owner') {
+            var new_link_row = $(_.template($('#dinfo-row-template').html(), {prop: '', value: ''}));
+            new_link_row.find('.tbl-value').append(this._createAddLinkBtn());
+            $('#dinfo-links').append(new_link_row);
+        }
+
+        //
         // Fill details
-        $('#dinfo-details').html('');
+        //
         var details = [
             ['author', CakeSettings.get('author')],
             ['created at', CakeSettings.get('created_at')],
-            ['visibility', CakeSettings.get('visible') ? 'shared' : 'hidden', this._createHideLink()]
+            ['visibility', CakeSettings.get('visible') ? 'shared' : 'hidden', this._createHideBtn()]
         ];
         _(details).each(function(pair) {
-            var tr = $('<tr/>');
-            tr.append('<td class="tbl-prop">' + pair[0] + '</td>)');
-            tr.append('<td class="tbl-value">' + pair[1] + '</td>)');
-            if (! _.isUndefined(pair[2]))
-                tr.append($('<td class="tbl-actions"/>').append(pair[2]));
-
-            $('#dinfo-details').append(tr);
+            var row = $(_.template($('#dinfo-row-template').html(), {prop: pair[0], value: pair[1]}));
+            if (!_.isUndefined(pair[2]))
+                row.find('.tbl-actions').append(pair[2]);
+            $('#dinfo-details').append(row);
         });
+
         //this.show();
     },
     show: function() {
@@ -322,7 +396,7 @@ var InfoDialog  = {
         return remote;
     },
 
-    _createHideLink: function() {
+    _createHideBtn: function() {
         var self = this;
         if (me.role !== 'owner') return '';
 
@@ -333,7 +407,7 @@ var InfoDialog  = {
                 $(this).parent().prev().text(CakeSettings.get('visible') ? 'shared' : 'hidden');
             });
     },
-    _createDeleteLink: function() {
+    _createDeleteBtn: function() {
         var self = this;
         if (me.role !== 'owner') return '';
 
@@ -341,7 +415,51 @@ var InfoDialog  = {
             .click(function() {
                 window.open('/delete/' + PieHub.options.pieid, '_blank');
             });
+    },
+    _createAddLinkBtn: function() {
+        var self = this;
+        if (me.role !== 'owner') return '';
+
+        return $('<a href="#">add</a>').click(function() {
+            self._openLinkEditor('add');
+        });
+    },
+    _createEditLinkBtn: function(index) {
+        var self=this;
+        if (me.role !== 'owner') return '';
+
+        return $('<a href="#">edit</a>').click(function() {
+            self._openLinkEditor('edit', index);
+        });
+    },
+    _createDeleteLinkBtn: function(index) {
+        var self = this;
+        if (me.role !== 'owner') return '';
+
+        return $('<a href="#">delete</a>').click(function() {
+            CakeSettings.data['links'].splice(index, 1);
+            CakeSettings.touch('links');
+            self.update();
+        });
+    },
+    _openLinkEditor: function(action, index) {
+        var self = this;
+        var data;
+
+        if (action === 'add') {
+            data = {name: '', ref: ''};
+        } else {
+            data = CakeSettings.get('links')[index];
+        }
+        $('#dinfo-link-name').val(data['name']);
+        $('#dinfo-link-ref').val(data['ref']);
+        $('#dinfo-link-editor')
+            .data("action", action)
+            .data("index", index);
+
+        $('#dinfo-link-editor').dialog('open');
     }
+
 };
 
 
@@ -632,10 +750,12 @@ In.youare = function (data) {
     else
         $('#pac_nick').unbind('click');
     $("#pac_text").focus();
+
+    InfoDialog.update();
     PieHub.push( Out.get_user_list() );
 };
 
-In.update_cake = function (data) {
+In.cake_info = function (data) {
     CakeSettings.init(data);
 };
 
