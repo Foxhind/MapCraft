@@ -225,6 +225,7 @@ var CakeSettings = {
     onModify: function() {
         //TODO: move to events
         $('#dinfo-save').button("enable");
+        InfoDialog.update();
     }
 };
 
@@ -257,7 +258,6 @@ var InfoDialog  = {
                     text: 'Reset',
                     click: function() {
                         CakeSettings.reset();
-                        self.update();
                     }
                 },
                 {
@@ -295,7 +295,7 @@ var InfoDialog  = {
                         }
                         CakeSettings.touch('links');
 
-                        self.update();
+                        //self.update();
                         $(this).dialog("close");
                     }
                 },
@@ -328,7 +328,10 @@ var InfoDialog  = {
         $('#dinfo .user-data').remove();
 
         $('#dinfo-name').text(CakeSettings.get('name'));
-        $('#dinfo-pie-actions').html('').append(this._createDeleteBtn());
+        $('#dinfo-pie-actions').html('')
+            .append(this._createEditNameBtn())
+            .append(' ')
+            .append(this._createDeletePieBtn());
 
         $('#dinfo-description').html(CakeSettings.get('description'));
 
@@ -369,7 +372,7 @@ var InfoDialog  = {
             $('#dinfo-details').append(row);
         });
 
-        //this.show();
+        this.show();
     },
     show: function() {
         $('#dinfo').dialog('open');
@@ -385,7 +388,10 @@ var InfoDialog  = {
         }
         return "<a href='" + ref + "' target='_blank'>" + name + "</a>";
     },
-
+    _createAdminBtn: function(text, cb) {
+        if (me.role !== 'owner') return '';
+        return $('<a class="admin" href="#">' + text + '</a>').click(cb);
+    },
     _createWmsButtons: function(wms_ref) {
         var remote = $('<a href="#">Remote</a>');
         remote.button();
@@ -396,52 +402,56 @@ var InfoDialog  = {
         return remote;
     },
 
+    //
+    // Admin buttons
+    //
     _createHideBtn: function() {
         var self = this;
-        if (me.role !== 'owner') return '';
-
-        return $('<a href="#">' + (CakeSettings.get('visible') ? 'hide' : 'share') + '</a>')
-            .click(function(){
-                CakeSettings.toggle('visible');
-                $(this).text(CakeSettings.get('visible') ? 'hide' : 'share');
-                $(this).parent().prev().text(CakeSettings.get('visible') ? 'shared' : 'hidden');
-            });
+        return this._createAdminBtn(CakeSettings.get('visible') ? 'hide' : 'share', function() {
+            CakeSettings.toggle('visible');
+        });
     },
-    _createDeleteBtn: function() {
+    _createDeletePieBtn: function() {
         var self = this;
-        if (me.role !== 'owner') return '';
+        return this._createAdminBtn('delete', function() {
+            window.open('/delete/' + PieHub.options.pieid, '_blank');
+        });
+    },
+    _createEditNameBtn: function() {
+        var self = this;
+        return this._createAdminBtn('edit', function() {
+            console.log("Edit name");
+        });
+    },
+    _createEditDescriptionBtn: function() {
+        var self = this;
+        return this._createAdminBtn('edit', function() {
+            console.log("Edit description");
+        });
 
-        return $('<a href="#">delete</a>')
-            .click(function() {
-                window.open('/delete/' + PieHub.options.pieid, '_blank');
-            });
     },
     _createAddLinkBtn: function() {
         var self = this;
-        if (me.role !== 'owner') return '';
-
-        return $('<a href="#">add</a>').click(function() {
+        return this._createAdminBtn('add', function() {
             self._openLinkEditor('add');
         });
     },
     _createEditLinkBtn: function(index) {
         var self=this;
-        if (me.role !== 'owner') return '';
-
-        return $('<a href="#">edit</a>').click(function() {
+        return this._createAdminBtn('edit', function() {
             self._openLinkEditor('edit', index);
         });
     },
     _createDeleteLinkBtn: function(index) {
         var self = this;
-        if (me.role !== 'owner') return '';
-
-        return $('<a href="#">delete</a>').click(function() {
+        return this._createAdminBtn('delete', function() {
             CakeSettings.data['links'].splice(index, 1);
             CakeSettings.touch('links');
-            self.update();
         });
     },
+
+
+    // Open Link Editor dialog TODO: move to separate obj
     _openLinkEditor: function(action, index) {
         var self = this;
         var data;
@@ -459,7 +469,6 @@ var InfoDialog  = {
 
         $('#dinfo-link-editor').dialog('open');
     }
-
 };
 
 
