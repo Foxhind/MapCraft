@@ -424,7 +424,7 @@ var InfoDialog  = {
             $('#dinfo-details').append(row);
         });
 
-        this.show();
+        //this.show();
     },
     show: function() {
         $('#dinfo').dialog('open');
