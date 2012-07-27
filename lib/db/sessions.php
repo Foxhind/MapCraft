@@ -85,7 +85,8 @@ class Channel {
         return $this->_user_id;
     }
 
-    function need_level($min_role) {
+    // return true if we have needed access level
+    function has_level($min_role) {
         $levels = array( "anon" => 0,
                          "member" => 10,
                          "admin" => 20,
@@ -93,10 +94,16 @@ class Channel {
                          "developer" => 40 );
         $cur_role = $this->role();
         if ($levels[$min_role] <= $levels[$cur_role]) {
-            return;
+            return true;
         }
+        return false;
+    }
 
-        // Ok, we have no rights, do checks
+    // dies, if we have not needed access level
+    function need_level($min_role) {
+        if ($this->has_level($min_role))
+            return;
+
         if ($min_role == "member") {
             throw new Exception("Please, <a href='/app/auth.php' target='_blank'>log in</a> to access this feature");
         }

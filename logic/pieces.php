@@ -120,7 +120,7 @@ function handle_piece_state($type, $from, $data, $res)
         throw new Exception("This slice doesn't exist.");
 
     $owner = pg_fetch_result($result, 0 ,0);
-    if ($owner !== $from->user_id())
+    if ($owner !== $from->user_id() && !$from->has_level('admin'))
         throw new Exception("This is not your slice");
 
     $result = pg_query($connection, 'UPDATE pieces SET state = '.$state.' WHERE id = '.$piece_id);
