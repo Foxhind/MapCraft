@@ -422,8 +422,8 @@ var InfoDialog  = {
         var origin = window.location.protocol + '//' + window.location.host;
         var wms_link = 'wms:' + origin + '/wms/' + PieHub.options.pieid + '?SRS={proj}&WIDTH={width}&height={height}&BBOX={bbox}';
         var log_link = origin + '/log/' + PieHub.options.pieid;
-        $("#wms_link").html(this._createLink(wms_link));
-        $("#log_link").html(this._createLink(log_link));
+        $("#wms_link").html(this._createLink(wms_link, "WMS layer for editors"));
+        $("#log_link").html(this._createLink(log_link, "Cake chat log"));
         $("#wms_action").html(this._createWmsButtons(wms_link));
     },
 
@@ -451,9 +451,10 @@ var InfoDialog  = {
         // Fill links
         //
         _(CakeSettings.get('links')).each(function(link, index) {
+            var proto = self._detectLinkProto(link['ref']);
             var row = $(_.template($('#dinfo-row-template').html(), {
-                prop: link['name'],
-                value: self._createLink(link['ref'])
+                prop: proto,
+                value: self._createLink(link['ref'], link['name'])
             }));
             row.find('.tbl-actions')
                 .append(self._createEditLinkBtn(index))
@@ -493,12 +494,24 @@ var InfoDialog  = {
     //
     // Helpers
     //
-    _createLink: function(ref) {
-        var name = ref;
-        if (name.length > 40) {
-            name = name.substr(0,40) + '...';
+    _createLink: function(ref, name) {
+        if (_.isUndefined(name)) {
+            name = name || ref;
+            if (name.length > 40) {
+                name = name.substr(0,40) + '...';
+            }
         }
         return "<a href='" + ref + "' target='_blank'>" + name + "</a>";
+    },
+    _detectLinkProto: function(ref) {
+        var delim_index = ref.indexOf(':');
+        if (delim_index > 0) {
+            var proto = ref.substr(0, delim_index);
+            if (['wms', 'http', 'https', 'irc', 'tms'].indexOf(proto) > -1)
+                return proto;
+            return '?';
+        }
+        return '?';
     },
     _createOwnerBtn: function(text, cb) {
         if (!me.hasRole('owner')) return '';
