@@ -7,6 +7,23 @@
 
     // TODO: Move to handle_user_join?
 function handle_get_user_list($type, $from, $data, $res) {
+    _update_users_claims($res, $from, false);
+    _update_anons_to_pie($res, $from);
+}
+
+
+/* ------------------
+ * Helpers
+ * ------------------
+*/
+
+function _get_user_info($user_id) {
+    global $connection;
+    $result = pg_query($connection, 'SELECT * FROM users WHERE id = ' . $user_id);
+    return pg_fetch_assoc($result, 0);
+}
+
+function _update_users_claims($res, $from, $to_all) {
     global $connection;
 
     $user_list = array('user_list', array());
@@ -58,21 +75,15 @@ function handle_get_user_list($type, $from, $data, $res) {
                                 'online' => $attrs['online']);
     }
 
-    $res->to_sender($user_list);
-    $res->to_sender($claim_list);
-    _update_anons_to_pie($res, $from);
-}
 
+    if ($to_all) {
+        $res->to_pie($from, $user_list);
+        $res->to_pie($from, $claim_list);
+    } else {
+        $res->to_sender($user_list);
+        $res->to_sender($claim_list);
+    }
 
-/* ------------------
- * Helpers
- * ------------------
-*/
-
-function _get_user_info($user_id) {
-    global $connection;
-    $result = pg_query($connection, 'SELECT * FROM users WHERE id = ' . $user_id);
-    return pg_fetch_assoc($result, 0);
 }
 
 ?>

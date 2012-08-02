@@ -313,4 +313,15 @@ color: gray;
 #dinfo .tbl-actions {padding-left: 1.5em; width: 70px;}
 #dinfo-reset {margin-right: 2em;}
 #dinfo-pie-actions {float: right;}
-#dinfo a.admin {color: brown;}
+#dinfo a.owner {color: brown;}
+
+#dadmin-mass-apply { width: 80px; float: right; margin: 0em 2em; padding: 0.4em;}
+#dadmin-mass-slider {margin: 1.2em 150px 1em 1em;}
+#dadmin-free-buttons {margin: 1em auto; text-align: center;}
+#dadmin-free-buttons button {margin: 0em 1em; padding: 0.4em 1em;}
+#dadmin-range-help {font-weight: bold;}
+
+#dialog-body {padding: 1em;}
+
+button.admin-active {background: bisque; border-color: gold;}
+.admin-confirm .ui-dialog-buttonpane {background: bisque !important;}

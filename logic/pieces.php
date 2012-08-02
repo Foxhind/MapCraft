@@ -78,19 +78,27 @@ function handle_piece_free($type, $from, $data, $res)
 
     $piece_index = $data['piece_index'];
     $piece_id = _find_piece_id($from, $piece_index);
+    $admin_mode = $data['admin_mode'] && $from->has_level('admin');
 
     $result = pg_query($connection, 'SELECT owner FROM pieces WHERE id = '.$piece_id);
     if (pg_num_rows($result) == 0)
         throw new Exception("This slice doesn't exist.");
-    if (pg_field_is_null($result, 0, 0)) {
+    if (pg_field_is_null($result, 0, 0))
         throw new Exception("This slice isn't owned by you.");
-    }
-    else {
-        $owner = pg_fetch_result($result, 0 ,0);
-        if ($owner !== $from->user_id())
-            throw new Exception("This is not your slice");
+
+    $owner_id = pg_fetch_result($result, 0 ,0);
+    if ($owner_id !== $from->user_id() && !$admin_mode)
+        throw new Exception("This is not your slice");
+
+    $owner_nick = $from->nick();
+    if ($owner_id !== $from->user_id()) {
+        $result = pg_query($connection, 'SELECT nick FROM users WHERE id = ' . $owner_id);
+        $owner_nick = pg_fetch_result($result, 0, "nick");
     }
 
+    //
+    // Actually free
+    //
     $result = pg_query($connection, 'UPDATE pieces SET owner = NULL WHERE id = '.$piece_id);
 
     //TODO: format piece info hash
@@ -100,7 +108,7 @@ function handle_piece_free($type, $from, $data, $res)
                     "owner" => "" );
     $res->to_pie($from, array('piece_owner', $pinfo));
 
-    _update_user_reserved($res, $from, $from->user_id(), $from->nick());
+    _update_user_reserved($res, $from, $owner_id, $owner_nick);
     $res->to_pie($from, info_msg("%s has freed slice #%s.", $from->nick(), $piece_index));
     _add_piece_info_log($res, $from, $piece_index, $piece_id, "Slice has been freed");
 }
@@ -115,12 +123,14 @@ function handle_piece_state($type, $from, $data, $res)
     $piece_id = _find_piece_id($from, $piece_index);
     $state = $data['state'];
 
+    $admin_mode = $data['admin_mode'] && $from->has_level('admin');
+
     $result = pg_query($connection, 'SELECT owner FROM pieces WHERE id = '.$piece_id);
     if (pg_num_rows($result) == 0)
         throw new Exception("This slice doesn't exist.");
 
     $owner = pg_fetch_result($result, 0 ,0);
-    if ($owner !== $from->user_id() && !$from->has_level('admin'))
+    if ($owner !== $from->user_id() && !$admin_mode)
         throw new Exception("This is not your slice");
 
     $result = pg_query($connection, 'UPDATE pieces SET state = '.$state.' WHERE id = '.$piece_id);
@@ -134,6 +144,60 @@ function handle_piece_state($type, $from, $data, $res)
     $res->to_pie($from, info_msg("%s has set state for #%s to %s/9", $from->nick(), $piece_index, $state));
     _update_piece_progress($res, $from);
     _add_piece_info_log($res, $from, $piece_index, $piece_id, "New state: " . $state . "/9");
+}
+
+function handle_piece_mass_state($type, $from, $data, $res) {
+    global $connection;
+    global $logger;
+
+    $from->need_level('admin');
+    $actions = $data['actions'];
+
+    $res->to_pie($from, info_msg("Mass slices update: change state to " . $state));
+
+    foreach ($actions as $action) {
+        foreach ($action['indexes'] as $piece_index) {
+            $piece_id = _find_piece_id($from, $piece_index);
+            $logger->debug('UPDATE pieces SET state = '. $action['state'] .' WHERE id = ' . $piece_id);
+            if (!pg_query($connection, 'UPDATE pieces SET state = '. $action['state'] .' WHERE id = ' . $piece_id))
+                throw new Exception("Failed to update state for piece #" . $piece_index);
+
+            $res->to_pie($from, array('piece_state', array( "piece_index" => $piece_index, "state" => $action['state'] )));
+            $res->to_pie($from, info_msg("%s has set state for #%s to %s/9", $from->nick(), $piece_index, $action['state']));
+            _add_piece_info_log($res, $from, $piece_index, $piece_id, "New state: " . $action['state'] . "/9");
+        }
+    }
+    _update_piece_progress($res, $from);
+    update_kml($from->pieid);
+
+}
+
+function handle_piece_mass_free($type, $from, $data, $res) {
+    global $connection;
+
+    $from->need_level('admin');
+
+    $indexes = $data['indexes'];
+    $owners = array();
+
+    $res->to_pie($from, info_msg("Mass slices update: free slices"));
+
+    foreach ($indexes as $piece_index) {
+        $piece_id = _find_piece_id($from, $piece_index);
+
+        if(!pg_query($connection, 'UPDATE pieces SET owner = NULL WHERE id = '.$piece_id))
+            throw new Exception("Failed to free piece #" . $piece_index);
+
+        if(!pg_query($connection, 'DELETE FROM claims WHERE piece = '.$piece_id))
+            throw new Exception("Failed to remove claim for piece #" . $piece_index);
+
+        $res->to_pie($from, array('piece_owner', array( "piece_index" => $piece_index, "owner" => "" )));
+        $res->to_pie($from, info_msg("%s has freed slice #%s", $from->nick(), $piece_index));
+        _add_piece_info_log($res, $from, $piece_index, $piece_id, "Slice has been freed");
+    }
+
+    update_kml($from->pieid);
+    _update_users_claims($res, $from, true);
 }
 
 function handle_piece_comment($type, $from, $data, $res)
@@ -227,4 +291,5 @@ function _update_user_reserved($res, $from, $user_id, $nick) {
     $res->to_pie($from, array( 'user_update', array('current_nick' => $nick,
                                                     'reserved' => $piece_indexes) ));
 }
+
 ?>

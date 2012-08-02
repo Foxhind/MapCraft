@@ -135,6 +135,31 @@ New status:&nbsp;<span id="newstatus"></span>&nbsp;<span id="vcolor">██</spa
 </table>
 </div>
 
+<div class="dialog" id="dadmin" style="width: 100%">
+	<h4>Admin mode</h4>
+	<p>
+		In this mode you will be able to free or change progress state for any slice even reserved by others.
+	</p>
+	<div id="dadmin-free-buttons">
+		<button id="dadmin-am-toggle">Turn on Admin Mode</button>
+	</div>
+	<h4>Mass progress change</h4>
+	<p>
+		All slices with status out of range [<span id='dadmin-range-help'>0 - 9</span>]
+		will be updated to have status equal to nearest border.
+	</p>
+	<button id="dadmin-mass-apply">Apply</button>
+	<div id='dadmin-mass-slider'></div>
+	<h4>Mass free</h4>
+	<p>
+		This tool can be used to free all currently reserved slices.
+	</p>
+	<div id="dadmin-free-buttons">
+		<button id="dadmin-free-completed">Free completed</button>
+		<button id="dadmin-free-all">Free all</button>
+	</div>
+</div>
+
 <div class="dialog" id="dinfo" style="width: 100%">
 	<div id="dinfo-pie-actions"></div>
 	<h3 id='dinfo-name'>Pie name</h3>
@@ -193,6 +218,7 @@ New status:&nbsp;<span id="newstatus"></span>&nbsp;<span id="vcolor">██</spa
 <td><input type="checkbox" id="bpie" checked /><label for="bpie"></label></td>
 <td><button id="bsettings"></button></td>
 <td><button id="binfo">Info</button></td>
+<td><button id="badmin" style="display: none">Admin</button></td>
 <td><div id="vis">
 <input type="radio" id="rfull" name="vis" checked /><label for="rfull"> </label>
 <input type="radio" id="rtrans" name="vis" /><label for="rtrans"> </label>
@@ -201,6 +227,8 @@ New status:&nbsp;<span id="newstatus"></span>&nbsp;<span id="vcolor">██</spa
 <td><div id="progress_bar"></div></td>
 </tr>
 </table>
+
+<div id="dialog-body"></div>
 
 <!-- !!! Tempaltes !!! -->
 

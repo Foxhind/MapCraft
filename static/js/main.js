@@ -13,12 +13,45 @@ var stateColors = ["#ff0000","#ff4000","#ff6000","#ff7000","#ff8000","#ff9000","
 var supported_langs = ['en', 'ru', 'jp'];
 var users = [];
 var claims = [];
-var me = { nick: "???", role: "anon" };
 var pieceLabel = 'none';
 var pieceColor = 'state';
 var showOwned;
 var chatShowInfo = true;
 var chatScrollPosition = -1;
+
+var me = {
+    nick: "???",
+    role: "anon",
+    adminMode: false,
+
+    update: function(data) {
+        this.nick = data['nick'];
+        this.role = data['role'];
+        this.adminMode = false;
+    },
+    hasRole: function(minRole) {
+        var levels = {
+            anon:       0,
+            member:    10,
+            admin:     20,
+            owner:     30,
+            developer: 40
+        };
+        return levels[minRole] <= levels[this.role];
+    },
+    inAdminMode: function() {
+        return this.hasRole('admin') && this.adminMode;
+    },
+    toggleAdminMode: function() {
+        this.adminMode = !this.adminMode;
+
+        // TODO: move to events
+        $('#badmin').toggleClass('admin-active', this.adminMode);
+        $('#dadmin-am-toggle').toggleClass('admin-active', this.adminMode);
+        $('#dadmin-am-toggle').text(this.adminMode ? 'Turn off Admin Mode' : 'Turn on Admin Mode');
+    }
+};
+
 
 // ---------------
 // Translations
@@ -52,6 +85,34 @@ function ownerColor(owner) {
     sat = sat + Math.round(hash / 255 % 20);
     light = light + Math.round(hash / 255 / 20 % 20);
     return 'hsl(' + hue + ', ' + sat + '%, ' + light + '%)';
+}
+
+function AdminConfirm(text, confirm_cb) {
+    $('#dialog-body')
+        .html('<div id="exclamation"></div>')
+        .append('<span>' + text + '</span>')
+        .dialog({
+            autoOpen: true,
+            resizable: false,
+            modal: true,
+            dialogClass: 'admin-confirm',
+            //height: 150,
+            title: "Confirm admin action",
+
+            buttons: [
+                {
+                    text: 'Proceed',
+                    click: function() {
+                        confirm_cb();
+                        $(this).dialog('close');
+                    }
+                },{
+                    text: 'Cancel',
+                    click: function() {
+                        $(this).dialog('close');
+                    }
+                }
+            ]});
 }
 
 var Progress = {
@@ -193,7 +254,7 @@ var CakeSettings = {
 
         // TODO: move to events
         $('#dinfo-save').button("disable");
-        InfoDialog.update();
+        InfoDialog.redraw();
     },
     reset: function() {
         this.init(this.orig);
@@ -225,7 +286,7 @@ var CakeSettings = {
     onModify: function() {
         //TODO: move to events
         $('#dinfo-save').button("enable");
-        InfoDialog.update();
+        InfoDialog.redraw();
     }
 };
 
@@ -295,7 +356,6 @@ var InfoDialog  = {
                         }
                         CakeSettings.touch('links');
 
-                        //self.update();
                         $(this).dialog("close");
                     }
                 },
@@ -367,12 +427,12 @@ var InfoDialog  = {
         $("#wms_action").html(this._createWmsButtons(wms_link));
     },
 
-    update: function() {
+    redraw: function() {
         var self = this;
 
         // Init buttons Save/Reset for owner
-        $('#dinfo-save').toggle(me.role == 'owner');
-        $('#dinfo-reset').toggle(me.role == 'owner');
+        $('#dinfo-save').toggle(me.hasRole('owner'));
+        $('#dinfo-reset').toggle(me.hasRole('owner'));
 
         // Cleanup
         $('#dinfo .user-data').remove();
@@ -403,7 +463,7 @@ var InfoDialog  = {
         });
 
         // Row with 'add' link for owners
-        if (me.role === 'owner') {
+        if (me.hasRole('owner')) {
             var new_link_row = $(_.template($('#dinfo-row-template').html(), {prop: '', value: ''}));
             new_link_row.find('.tbl-value').append(this._createAddLinkBtn());
             $('#dinfo-links').append(new_link_row);
@@ -440,9 +500,9 @@ var InfoDialog  = {
         }
         return "<a href='" + ref + "' target='_blank'>" + name + "</a>";
     },
-    _createAdminBtn: function(text, cb) {
-        if (me.role !== 'owner') return '';
-        return $('<a class="admin" href="#">' + text + '</a>').click(cb);
+    _createOwnerBtn: function(text, cb) {
+        if (!me.hasRole('owner')) return '';
+        return $('<a class="owner" href="#">' + text + '</a>').click(cb);
     },
     _createWmsButtons: function(wms_ref) {
         var remote = $('<a href="#">Remote</a>');
@@ -459,26 +519,26 @@ var InfoDialog  = {
     //
     _createHideBtn: function() {
         var self = this;
-        return this._createAdminBtn(CakeSettings.get('visible') ? 'hide' : 'share', function() {
+        return this._createOwnerBtn(CakeSettings.get('visible') ? 'hide' : 'share', function() {
             CakeSettings.toggle('visible');
         });
     },
     _createDeletePieBtn: function() {
         var self = this;
-        return this._createAdminBtn('delete', function() {
+        return this._createOwnerBtn('delete', function() {
             window.open('/delete/' + PieHub.options.pieid, '_blank');
         });
     },
     _createEditNameBtn: function() {
         var self = this;
-        return this._createAdminBtn('edit', function() {
+        return this._createOwnerBtn('edit', function() {
             $('#dinfo-name-editor input').val(CakeSettings.get('name'));
             $('#dinfo-name-editor').dialog('open');
         });
     },
     _createEditDescriptionBtn: function() {
         var self = this;
-        return this._createAdminBtn('edit', function() {
+        return this._createOwnerBtn('edit', function() {
             $('#dinfo-description-editor textarea').val(CakeSettings.get('description'));
             $('#dinfo-description-editor').dialog('open');
         });
@@ -486,19 +546,19 @@ var InfoDialog  = {
     },
     _createAddLinkBtn: function() {
         var self = this;
-        return this._createAdminBtn('add', function() {
+        return this._createOwnerBtn('add', function() {
             self._openLinkEditor('add');
         });
     },
     _createEditLinkBtn: function(index) {
         var self=this;
-        return this._createAdminBtn('edit', function() {
+        return this._createOwnerBtn('edit', function() {
             self._openLinkEditor('edit', index);
         });
     },
     _createDeleteLinkBtn: function(index) {
         var self = this;
-        return this._createAdminBtn('delete', function() {
+        return this._createOwnerBtn('delete', function() {
             CakeSettings.data['links'].splice(index, 1);
             CakeSettings.touch('links');
         });
@@ -522,6 +582,116 @@ var InfoDialog  = {
             .data("index", index);
 
         $('#dinfo-link-editor').dialog('open');
+    }
+};
+
+
+
+
+var AdminDialog  = {
+    init: function() {
+        var self = this;
+
+        $('#dadmin').dialog({
+            title: 'Administration tools',
+            autoOpen: false,
+            modal: false,
+            width: 450,
+            height: 450,
+            minWidth : 300,
+            minHeight: 150,
+            resizable: true,
+            position: 'center',
+            buttons: [
+               {
+                    text: "Close",
+                    click: function() {
+                        $(this).dialog("close");
+                    }
+                }
+            ]
+        });
+        $('#dadmin-mass-slider').slider({
+            min: 0,
+            max: 9,
+            values: [0, 9],
+            slide: function(e, ui) {
+                if (ui.values[1] < ui.values[0]) return false;
+                var range = ui.values[0] + ' - ' + ui.values[1];
+                $('#dadmin-range-help').text(range);
+            }
+        });
+        $('#dadmin-am-toggle').click(function() { me.toggleAdminMode(); });
+        $('#dadmin-mass-apply').click(function() { self.applyMassStatusChange(); });
+        $('#dadmin-free-all').click(function() { self.freePieces('all'); });
+        $('#dadmin-free-completed').click(function() { self.freePieces('completed'); });
+
+        //this.show();
+    },
+
+    show: function() {
+        $('#dadmin').dialog('open');
+    },
+
+    applyMassStatusChange: function() {
+        var $slider = $('#dadmin-mass-slider');
+        var range = [$slider.slider('values', 0), $slider.slider('values', 1)];
+        var raise = [];
+        var lower = [];
+        _(kmllayer.features).each(function (feature) {
+            var state = parseInt(feature.attributes.description, 10);
+            var index = parseInt(feature.attributes.name, 10);
+            if (state < range[0]) {
+                raise.push(index);
+            } else if (state > range[1]) {
+                lower.push(index);
+            }
+        });
+
+        if (raise.length + lower.length === 0) {
+            alert('Nothing should be changed');
+            return;
+        }
+
+        var msg = 'This modification will do:<br/>';
+        if (raise.length)
+            msg = msg + '- raise status to ' + range[0] + ' for ' + raise.length + ' slice(s)<br/>';
+        if (lower.length)
+            msg = msg + '- lower status to ' + range[1] + ' for ' + lower.length + ' slice(s)<br/>';
+        msg = msg + '<br/>Are you sure? Note that this is <strong>unrevertable</strong> change!';
+
+        AdminConfirm(msg, function() {
+            var actions = [];
+            actions.push({ state: range[0], indexes: raise });
+            actions.push({ state: range[1], indexes: lower });
+            PieHub.push( Out.piece_mass_state(actions) );
+        });
+     },
+
+    freePieces: function(condition) {
+        var indexes = [];
+        _(kmllayer.features).each(function (feature) {
+            var index = parseInt(feature.attributes.name, 10);
+            var state = parseInt(feature.attributes.description, 10);
+            if (_.isUndefined(feature.attributes.owner) || feature.attributes.owner === null)
+                return;
+            if (condition === 'completed' && state != 9)
+                return;
+
+            indexes.push(index);
+        });
+
+        if (indexes.length === 0) {
+            alert('Nothing should be changed');
+            return;
+        }
+
+        var msg = 'This modification will free ' + indexes.length + ' slice(s)<br/>';
+        msg = msg + '<br/>Are you sure? Note that this is <strong>unrevertable</strong> change!';
+        AdminConfirm(msg, function() {
+            PieHub.push( Out.piece_mass_free(indexes) );
+        });
+
     }
 };
 
@@ -640,6 +810,10 @@ var TextReplacer = {
 
 var In = {};
 var Out = {};
+
+In.dump = function(data) {
+    console.log(data);
+};
 
 In.chat = function (data) {
     if (typeof(data['message']) == 'undefined')
@@ -805,7 +979,7 @@ In.anons_update = function (data) {
 };
 
 In.youare = function (data) {
-    me = data;
+    me.update(data);
     $('#pac_nick').button("option", "label", me.nick);
     $('#pac_nick').button("option", "label", me.nick);
     if (data['role'] == 'anon')
@@ -814,7 +988,8 @@ In.youare = function (data) {
         $('#pac_nick').unbind('click');
     $("#pac_text").focus();
 
-    InfoDialog.update();
+    InfoDialog.redraw();
+    $('#badmin').toggle(me.hasRole('admin'));
     PieHub.push( Out.get_user_list() );
 };
 
@@ -872,8 +1047,17 @@ Out.piece_comment = function (piece_index, comment) {
 Out.piece_state = function (piece_index, state) {
     if (typeof(piece_index) != 'string' && typeof(piece_index) != 'number') return false;
     if (typeof(state) != 'string' && typeof(state) != 'number') return false;
-    return ['piece_state', {piece_index: piece_index.toString(), state: state.toString()}];
+    return ['piece_state', {
+        piece_index: piece_index.toString(),
+        state: state.toString(),
+        admin_mode: me.inAdminMode()
+    }];
 };
+
+Out.piece_mass_state = function (actions) {
+    return ['piece_mass_state', {actions: actions}];
+};
+
 
 Out.piece_reserve = function (piece_index) {
     if (typeof(piece_index) != 'string' && typeof(piece_index) != 'number') return false;
@@ -882,8 +1066,16 @@ Out.piece_reserve = function (piece_index) {
 
 Out.piece_free = function (piece_index) {
     if (typeof(piece_index) != 'string' && typeof(piece_index) != 'number') return false;
-    return ['piece_free', {piece_index: piece_index.toString()}];
+    return ['piece_free', {
+        piece_index: piece_index.toString(),
+        admin_mode: me.inAdminMode()
+    }];
 };
+
+Out.piece_mass_free = function (indexes) {
+    return ['piece_mass_free', {indexes: indexes}];
+};
+
 
 Out.piece_progress = function () {
     return ['piece_progress', {}];
@@ -1051,6 +1243,7 @@ function LoadLanguage() {
         $('#lpiece_label').text(ldata[32]);
         $('#lpiece_color').text(ldata[33]);
         $('#dinfo').dialog("option", "title", ldata[34]);
+        $('#badmin').button("option", "label", ldata[35]);
     });
 }
 
@@ -1270,7 +1463,22 @@ function onSelectPiece(e) {
     window.location.hash = e.attributes.name;
     $("#comments").html("<div class='loading'></div>");
     $('#bowner').button("enable");
-    $('#bowner').click( function() { $(e.attributes.owner ? (e.attributes.owner == me.nick ? '#drefuse' : '#dclaim') : '#dtake').dialog('open'); });
+    $('#bowner').click( function() {
+        if(!e.attributes.owner) {
+            $('#dtake').dialog('open');
+        }
+        else if (e.attributes.owner == me.nick) {
+            $('#drefuse').dialog('open');
+        }
+        else if (me.inAdminMode()) {
+            var msg = "Do you really want to free slice owned by '" + e.attributes.owner + "'?";
+            AdminConfirm(msg , function() {
+                RefusePiece();
+            });
+        } else {
+            $('#dclaim').dialog('open');
+        }
+    });
     $('#bowner').button("option", "label", e.attributes.owner ? e.attributes.owner : ldata[12]);
     $('#bowner').button("option", "icons", { primary: (e.attributes.owner ? (e.attributes.owner == me.nick ? 'ui-icon-closethick' : 'ui-icon-circle-check') : 'ui-icon-flag')});
     $("#dprop").dialog("option", "title", ldata[6] + ": " + e.attributes.name);
@@ -1424,7 +1632,20 @@ $(document).ready(function () {
         resizable: false,
         draggable: false,
         position: 'center',
-        buttons: { "OK": function() { SetStatus(); $(this).dialog("close"); }, "Cancel": function() { $(this).dialog("close"); } }
+        buttons: {
+            "OK": function() {
+                if (me.inAdminMode()) {
+                    var msg = "Are you sure you want to update state for slice owned by '" + selectedFeature.attributes.owner + "'?";
+                    AdminConfirm(msg, function(){
+                        SetStatus();
+                    });
+                } else {
+                    SetStatus();
+                }
+                $(this).dialog("close");
+            },
+            "Cancel": function() { $(this).dialog("close"); }
+        }
     });
     $('#dtake').dialog({
         autoOpen: false,
@@ -1516,6 +1737,8 @@ $(document).ready(function () {
     $('#bsettings').click( function () { $('#dsettings').dialog('open'); } );
     $('#binfo').button( { icons: { primary: 'ui-icon-info'} } );
     $('#binfo').click( function () { InfoDialog.show(); } );
+    $('#badmin').button( { icons: { primary: 'ui-icon-info'} } );
+    $('#badmin').click( function () { AdminDialog.show(); } );
     $('#bpie').button( { icons: { primary: 'ui-icon-clock'} } );
     $('#bpie').click( function() { kmllayer.setVisibility($(this).attr("checked")); });
     $('#rfull').button({icons: { primary: 'ui-icon-bullet'}});
@@ -1532,5 +1755,6 @@ $(document).ready(function () {
     $("#pac_text").focus();
 
     InfoDialog.init();
+    AdminDialog.init();
     LoadSettings();
 });
