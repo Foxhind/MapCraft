@@ -20,7 +20,7 @@ if (!preg_match('/^\w+$/', $page)) {
 <title>MapCraft — massively mapping management tool</title>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <link rel="stylesheet" href="/css/site.css" type="text/css" media="screen, projection" />
-<script type="text/javascript" src="http://code.jquery.com/jquery-1.5.1.min.js"></script>
+<script type="text/javascript" src="/js/jquery-1.5.1.min.js"></script>
 <?php echo '<script type="text/javascript" src="/js/app_' . $page . '.js"></script>'; ?>
 </head>
 
