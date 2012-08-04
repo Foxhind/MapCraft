@@ -81,6 +81,10 @@ function _send_cake_info($res, $from, $to_session) {
 	$info['visible'] = $row['visible'] == 't';
     $info['links'] = $settings['links'] ?: array();
 
+    $result = pg_query($connection,
+                       'SELECT count(pieces.id) as pieces_count FROM pieces WHERE pie = ' . $from->pieid);
+    $info['pieces_count'] = pg_fetch_result($result, 0, "pieces_count");
+
 	$msg = array('cake_info', $info);
 	if ($to_session) {
 		$res->to_session($from, $msg);

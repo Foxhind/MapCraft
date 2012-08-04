@@ -32,7 +32,7 @@ ${NGINX_CONF_MODS}
 		server_name  mapcraft-dev.local;
 
 		rewrite ^/pie/[0-9]+/?$                 /client.html last;
-		rewrite ^/(log|edit|delete)/([0-9]+)/?$  /app/$1.php?id=$2 last;
+		rewrite ^/(log|edit|delete|export|update)/([0-9]+)/?$  /app/$1.php?id=$2 last;
 		rewrite ^/(list|map|create)$            /app/index.php?page=$1 last;
 		rewrite ^/oauth_callback.php$           /app/oauth_callback.php last;
 

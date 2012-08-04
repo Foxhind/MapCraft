@@ -456,7 +456,7 @@ var InfoDialog  = {
                 prop: proto,
                 value: self._createLink(link['ref'], link['name'])
             }));
-            row.find('.tbl-actions')
+            row.find('.tbl-atcions')
                 .append(self._createEditLinkBtn(index))
                 .append(' ')
                 .append(self._createDeleteLinkBtn(index));
@@ -476,7 +476,8 @@ var InfoDialog  = {
         var details = [
             ['author', CakeSettings.get('author')],
             ['created at', CakeSettings.get('created_at')],
-            ['visibility', CakeSettings.get('visible') ? 'shared' : 'hidden', this._createHideBtn()]
+            ['visibility', CakeSettings.get('visible') ? 'shared' : 'hidden', this._createHideBtn()],
+            ['cake', CakeSettings.get('pieces_count') + " piece(s)", this._exportBtn()]
         ];
         _(details).each(function(pair) {
             var row = $(_.template($('#dinfo-row-template').html(), {prop: pair[0], value: pair[1]}));
@@ -577,7 +578,6 @@ var InfoDialog  = {
         });
     },
 
-
     // Open Link Editor dialog TODO: move to separate obj
     _openLinkEditor: function(action, index) {
         var self = this;
@@ -595,6 +595,10 @@ var InfoDialog  = {
             .data("index", index);
 
         $('#dinfo-link-editor').dialog('open');
+    },
+
+    _exportBtn: function() {
+        return '<a href="/export/' + PieHub.options.pieid + '" target="_blank">export</a>';
     }
 };
 
