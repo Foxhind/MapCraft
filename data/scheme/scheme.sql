@@ -216,7 +216,8 @@ CREATE TABLE pies (
     description text,
     visible boolean DEFAULT true NOT NULL,
     jcenter character varying(255),
-    anons integer DEFAULT 0 NOT NULL
+    anons integer DEFAULT 0 NOT NULL,
+    settings text DEFAULT '{}'::text NOT NULL
 );
 
 

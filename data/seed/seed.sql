@@ -59,7 +59,7 @@ SELECT pg_catalog.setval('susers', 3, true);
 
 COPY users (nick, id, color) FROM stdin;
 user	1	000000
-mapper	2	000000
+mapper	3	000000
 \.
 
 
@@ -67,10 +67,10 @@ mapper	2	000000
 -- Data for Name: pies; Type: TABLE DATA; Schema: mapcraft; Owner: develcrafter
 --
 
-COPY pies (id, name, author, start, ends, description, visible, jcenter, anons) FROM stdin;
-3	Ship	1	2012-03-22 00:07:07.505097	\N	A cake as picture	t	[38.048775042092,44.572253839467]	0
-1	London	1	2012-03-22 00:06:07.763561	\N	Demo cake for London	t	[-0.10282659723696,51.501263833152]	0
-2	Moscow	1	2012-03-22 00:06:30.092281	\N	Demo cake for Moscow	t	[37.63983722589,55.758854714487]	0
+COPY pies (id, name, author, start, ends, description, visible, jcenter, anons, settings) FROM stdin;
+3	Ship	1	2012-03-22 00:07:07.505097	\N	A cake as picture	t	[38.048775042092,44.572253839467]	0	{}
+1	London	1	2012-03-22 00:06:07.763561	\N	Demo cake for London	t	[-0.10282659723696,51.501263833152]	0	{}
+2	Moscow	1	2012-03-22 00:06:30.092281	\N	Demo cake for Moscow	t	[37.63983722589,55.758854714487]	0	{}
 \.
 
 
