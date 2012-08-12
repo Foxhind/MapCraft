@@ -59,8 +59,7 @@ SELECT pg_catalog.setval('susers', 3, true);
 
 COPY users (nick, id, color) FROM stdin;
 user	1	000000
-	2	000000
-mapper	3	000000
+mapper	2	000000
 \.
 
 
@@ -80,9 +79,9 @@ COPY pies (id, name, author, start, ends, description, visible, jcenter, anons) 
 --
 
 COPY access ("user", pie, nick, role) FROM stdin;
-2	1		o
-2	2		o
-2	3		o
+1	1		o
+1	2		o
+1	3		o
 \.
 
 
