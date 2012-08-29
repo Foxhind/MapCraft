@@ -477,7 +477,7 @@ var InfoDialog  = {
             ['author', CakeSettings.get('author')],
             ['created at', CakeSettings.get('created_at')],
             ['visibility', CakeSettings.get('visible') ? 'shared' : 'hidden', this._createHideBtn()],
-            ['cake', CakeSettings.get('pieces_count') + " piece(s)", this._exportBtn()]
+            ['cake', CakeSettings.get('pieces_count') + " piece(s) " + this._exportBtn(), this._updateCakeBtn()]
         ];
         _(details).each(function(pair) {
             var row = $(_.template($('#dinfo-row-template').html(), {prop: pair[0], value: pair[1]}));
@@ -599,6 +599,12 @@ var InfoDialog  = {
 
     _exportBtn: function() {
         return '<a href="/export/' + PieHub.options.pieid + '" target="_blank">export</a>';
+    },
+
+    _updateCakeBtn: function() {
+        return this._createOwnerBtn('update', function() {
+            window.open('/update/' + PieHub.options.pieid, '_blank');
+        });
     }
 };
 

@@ -58,6 +58,10 @@ function handle_update_cake($type, $from, $data, $res) {
     _send_cake_info($res, $from, false);
 }
 
+function handle_pie_act_send_refresh_pie_data($type, $from, $data, $res) {
+    $res->to_pie($from, array('refresh_pie_data', array()));
+}
+
 function _send_cake_info($res, $from, $to_session) {
     global $connection;
     global $logger;

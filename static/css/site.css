@@ -221,3 +221,24 @@ table.list tr:first-child {
 .list_toggle.closed {
 	background: url(/img/expand.png);
 }
+
+
+ol.instructions { margin-left: 2em; }
+ol.instructions li { margin: 0.5em; color: gray; font-size: 2em;}
+ol.instructions p  { color: black; font-size: 0.5em;}
+
+em.important {color: black;}
+
+form.inline input { display: inline; width: auto;}
+input.btn {padding: 0.3em 1em;}
+
+div.error {background: darkred; color: white; padding: 1em;}
+
+ul.changes-list    { margin: 1em 0 2em 2em; }
+ul.changes-list li { margin: 0.3em 0; list-style-type: circle; }
+
+ul.changes-list .create {color: darkgreen;}
+ul.changes-list .delete {color: darkred;}
+ul.changes-list .modify {color: darkorange;}
+
+.small {font-size: small; color: gray;}
