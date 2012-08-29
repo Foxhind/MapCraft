@@ -6,10 +6,21 @@ ini_set('session.cookie_lifetime', 7776000);
 session_set_cookie_params(7776000);
 session_start();
 
-if (empty($_SESSION['osm_user']) || empty($_REQUEST['id'])) {
+$id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+
+if (empty($_SESSION['osm_user']) || !$id) {
     header('Location: /');
     exit();
 }
+
+$result = pg_query("SELECT author FROM pies WHERE id = $id");
+$owner_id = pg_fetch_result($result, 0, "author");
+$user_id = $_SESSION['user_id'];
+if (!isset($user_id) || $owner_id != $user_id) {
+    echo "Only author of this cake can delete it.";
+    exit();
+}
+
 
 if (!empty($_POST['ok'])) {
     $id = intval($_REQUEST['id']);
