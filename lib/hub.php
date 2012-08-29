@@ -167,6 +167,12 @@ function process_hub_message($str, $res) {
         $from = $channels->find($pieid, $sesid);
         dispatch('session_act_' . $action, 'async', $from, array(), $res);
         break;
+    case 'pie_action':
+        list($pieid, $action) = $args;
+
+        $from = $channels->find($pieid, 'none');
+        dispatch('pie_act_' . $action, 'async', $from, array(), $res);
+        break;
     case 'pie_exit':
         list($pieid) = $args;
 
