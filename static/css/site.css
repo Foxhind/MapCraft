@@ -241,4 +241,7 @@ ul.changes-list .create {color: darkgreen;}
 ul.changes-list .delete {color: darkred;}
 ul.changes-list .modify {color: darkorange;}
 
+ul.validation-errors-list    { margin: 1em 0 2em 2em; }
+ul.validation-errors-list li { margin: 0.3em 0; list-style-type: circle; color: darkred;}
+
 .small {font-size: small; color: gray;}

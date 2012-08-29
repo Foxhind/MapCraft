@@ -125,7 +125,7 @@ if (count($errors)) {
     <p>
         Following errors are found in your modification:
     </p>
-    <ul class="changes-list">
+    <ul class="validation-errors-list">
 <?php
     foreach($errors as $error) {
         echo "<li><p>" . $error . "</p></li>\n";

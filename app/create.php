@@ -3,6 +3,7 @@
 
 require '../lib/update_kml.php';
 require '../lib/create_map.php';
+require '../lib/db/pie_geometry.php';
 
 //
 // Deny guests
@@ -87,86 +88,85 @@ if (!$result) {
     exit();
 }
 
-// XML parser body
-$coordinates = array();
-$nodes = array();
-$currentway = null;
-$bbox = null;
-function saxStartElement($parser, $name, $attrs)
-{
-    global $currentway, $nodes, $bbox;
-    switch($name)
-    {
-        case 'node':
-            $lon = floatval($attrs['lon']);
-            $lat = floatval($attrs['lat']);
-            if ($bbox == null)
-                $bbox = array($lon, $lat, $lon, $lat);
-            else {
-                if ($lon < $bbox[0]) $bbox[0] = $lon;
-                if ($lon > $bbox[2]) $bbox[2] = $lon;
-                if ($lat < $bbox[1]) $bbox[1] = $lat;
-                if ($lat > $bbox[3]) $bbox[3] = $lat;
-            }
-            $nodes[$attrs['id']] = $attrs['lon'].','.$attrs['lat'];
-            break;
-        case 'way':
-            $currentway = array();
-            break;
-        case 'nd':
-            if ($currentway !== null)
-                $currentway[] = $nodes[$attrs['ref']];
-            break;
-        case 'tag':
-            $currentway = null;
-            break;
-    };
+
+//
+// Load and validate passed osm file
+//
+try {
+    $new = new PieGeometry();
+    $empty = new PieGeometry();
+    $steps = array();
+
+    $new->import_from_osm($_FILES['file']['tmp_name']);
+    $steps = $empty->get_create_steps($new);
+    $errors = $empty->validate_update_steps($steps);
+} catch (Exception $e) {
+?>
+    <div class="error"><?= $e->getMessage() ?></div>
+    <p class="small">
+        If you are sure there is no error from your side, fill bug at
+        <a href="https://github.com/Foxhind/MapCraft/issues?state=open" target="_blank">github.com/Foxhind/MapCraft/issues</a>
+        and attach your osm file.
+    </p>
+    <p>
+        Failed to create a cake. <br /><a href="javascript:history.back();">Back</a>
+    </p>
+<?php
+    exit();
 }
 
-function saxEndElement($parser, $name)
-{
-    global $coordinates, $currentway;
-    if ($name == 'way' and $currentway != null) {
-        if ($currentway[0] == $currentway[count($currentway)-1])
-            $coordinates[] = implode(' ', $currentway);
-        $currentway = null;
+if (count($errors)) {
+?>
+    <p>
+        Following errors are found in your osm file:
+    </p>
+    <ul class="validation-errors-list">
+<?php
+    foreach($errors as $error) {
+        echo "<li><p>" . $error . "</p></li>\n";
     }
+?>
+    </ul>
+    <p>
+        Failed to create a cake. <br /><a href="javascript:history.back();">Back</a>
+    </p>
+<?php
+    exit;
 }
 
-$parser = xml_parser_create();
-xml_set_element_handler($parser,'saxStartElement','saxEndElement');
-xml_parser_set_option($parser,XML_OPTION_CASE_FOLDING, false);
 
-$data = file_get_contents($_FILES['file']['tmp_name']);
-if (!xml_parse($parser, $data)) {
-    echo 'XML error: '.xml_error_string(xml_get_error_code($parser)).' at line '.xml_get_current_line_number($parser);
-    echo '<br /><a href="javascript:history.back();">Back</a>';
-    exit();
-}
 
-xml_parser_free($parser);
-
-if (count($coordinates) < 2) {
-    echo 'Slices count must be over one.<br /><a href="javascript:history.back();">Back</a>';
-    exit();
-}
-
-// Adding pie
-$bboxcenter = json_encode( array(($bbox[0]+$bbox[2])/2, ($bbox[1]+$bbox[3])/2) );
-$result = pg_query($connection, 'INSERT INTO pies VALUES(DEFAULT, \''.pg_escape_string($_POST['name']).'\', '.pg_escape_string($user_id).', DEFAULT, NULL, \''.pg_escape_string(htmlspecialchars($_POST['description'])).'\', '.(isset($_POST['hide']) ? 'false' : 'true').', \''.$bboxcenter.'\', DEFAULT) RETURNING id');
+//
+// Actually creating process
+//
+$result = pg_query_params($connection, 'INSERT INTO pies (name, author, description, visible) VALUES ($1, $2, $3, $4) RETURNING id',
+                          array($_POST['name'], $user_id, htmlspecialchars($_POST['description']), isset($_POST['hide']) ? '0' : '1'));
 $pie_id = pg_fetch_result($result, 0, 0);
-
-// Adding pieces
-$index = 1;
-foreach ($coordinates as $c) {
-    $result = pg_query($connection, 'INSERT INTO pieces VALUES(DEFAULT, DEFAULT, DEFAULT, '.$pie_id.', \''.$c.'\',' . $index++ . ')');
-}
 
 // Adding access for owner
 if (!pg_query_params($connection,
                      "INSERT INTO access VALUES ($1, $2, '', 'o')",
                       array($user_id, $pie_id))) {
     echo 'Failed to add access for owner. <br /><a href="javascript:history.back();">Back</a>';
+    exit();
+}
+
+try {
+    $current = new PieGeometry();
+    $current->load_from_db($pie_id);
+    $current->apply_steps($steps, $user_id);
+} catch (Exception $e) {
+?>
+    <div class="error"><?= $e->getMessage() ?></div>
+    <p class="small">
+        If you are sure there is no error from your side, fill bug at
+        <a href="https://github.com/Foxhind/MapCraft/issues?state=open" target="_blank">github.com/Foxhind/MapCraft/issues</a>
+        and attach your osm file.
+    </p>
+    <p>
+        Failed to create a file. <br /><a href="javascript:history.back();">Back</a>
+    </p>
+<?php
     exit();
 }
 

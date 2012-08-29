@@ -8,8 +8,8 @@
 // Session + Pie infos for this user
 class PieGeometry {
     public $id;
-    public $slices;
-    public $nodes;
+    public $slices = array();
+    public $nodes = array();
 
     /*
      * -------------------  Loading ---------------------
@@ -250,7 +250,7 @@ class PieGeometry {
         $index_usage = $this->_calculate_used_indexes($steps);
         foreach ($index_usage as $index => $count) {
             if ($count > 1)
-                $errors[] = sprintf("Index %d will be used %d times, but it should be unique", $index, $count);
+                $errors[] = sprintf("%d slices will have Index %d, but index should be unique", $count, $index);
         }
 
         return $errors;
@@ -302,6 +302,33 @@ class PieGeometry {
 
         // Reload all data
         $this->load_from_db($this->id);
+        $center = $this->get_center();
+        pg_query_params('UPDATE pies SET jcenter = $2 WHERE id = $1',
+                        array($this->id, json_encode(array($center['lon'], $center['lat']))));
+    }
+
+    function get_boundingbox() {
+        $left = $right = $top = $bottom = NULL;
+        foreach ($this->nodes as $node) {
+            if (empty($left)   || $left   > $node['lon']) $left   = $node['lon'];
+            if (empty($right)  || $right  < $node['lon']) $right  = $node['lon'];
+            if (empty($top)    || $top    > $node['lat']) $top    = $node['lat'];
+            if (empty($bottom) || $bottom < $node['lat']) $bottom = $node['lat'];
+        }
+        return array(
+            'left'   => $left,
+            'top'    => $top,
+            'right'  => $right,
+            'bottom' => $bottom
+        );
+    }
+
+    function get_center() {
+        $bbox = $this->get_boundingbox();
+        return array(
+            'lon' => ($bbox['left'] + $bbox['right']) / 2,
+            'lat' => ($bbox['top'] + $bbox['bottom']) / 2
+        );
     }
 
     /*
