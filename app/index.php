@@ -25,7 +25,7 @@ if (!preg_match('/^\w+$/', $page)) {
 </head>
 
 <body>
-<header>MapCraft&nbsp;<sup>beta</sup></header>
+<header><img width="124" height="100" src="/img/logo.png"><br>MapCraft</header>
 <div id="panel"><nav><ul>
 <?php
 echo '<li class="c1'.($_GET['page']=='map'?' current':'').'"><a href="/map">Map</a></li>';
