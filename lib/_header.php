@@ -7,7 +7,7 @@
 </head>
 
 <body>
-<header>MapCraft&nbsp;<sup>beta</sup></header>
+<header><img width="124" height="100" src="/img/logo.png"><br>MapCraft</header>
 <div id="panel"><nav><ul>
 <li class="c1"><a href="/map">Map</a></li>
 <li class="c2"><a href="/list">List</a></li>
