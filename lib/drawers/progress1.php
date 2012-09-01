@@ -34,8 +34,8 @@ function draw_svg($pie_id, $base_name, $args) {
 	global $svg_template;
 	global $bg_schemes;
 
-	$bar_start = 59.4;
-	$bar_end = 383.9;
+	$bar_start = 48;
+	$bar_end = 312.4;
 	$bar_len = $bar_end - $bar_start;
 
 	$svg_output = $output_dir . $base_name . '.svg';
@@ -96,7 +96,7 @@ function convert_to_png($svg_input, $base_name) {
 	global $output_dir;
 
 	$png_output = $output_dir . $base_name . '.png';
-	exec("convert $svg_input $png_output");
+	exec("convert  -background none $svg_input $png_output");
 
 	return $png_output;
 }
