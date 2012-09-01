@@ -55,5 +55,15 @@ ${NGINX_CONF_MODS}
 			proxy_buffering off;
 			proxy_read_timeout 3600;
 		}
+
+		location /banner/ {
+			root ${SRC_ROOT}/static;
+			try_files $uri @refresher;
+		}
+
+		location @refresher {
+			rewrite ^/banner/(.*)$                 /app/refresher.php/?q=$1 last;
+			proxy_pass http://127.0.0.1:${HTTPD_PORT};
+		}
 	}
 }

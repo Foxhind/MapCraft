@@ -5,6 +5,8 @@
  * To Public License, Version 2, as published by Sam Hocevar. See
  * http://sam.zoy.org/wtfpl/COPYING for more details. */
 
+$banners_dir = dirname(__FILE__) . '/../static/banner/';
+
 function update_kml($pie_id) {
     global $connection;
     $color = array ("800000ff","800040ff","800060ff","800070ff","800080ff","800090ff","8000b0ff","8000d0ff","8000ffff","8000ff00");
@@ -27,5 +29,9 @@ function update_kml($pie_id) {
         fwrite($kml, "</Folder></Document></kml>");
         fclose($kml);
     }
+
+    // Clear banners
+    global $banners_dir;
+    exec("rm " . $banners_dir . $pie_id . '-*');
 }
 ?>
