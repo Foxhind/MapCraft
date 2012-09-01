@@ -252,6 +252,8 @@ var CakeSettings = {
         this.orig = JSON.parse(JSON.stringify(this.data));
         this.modified = {};
 
+        window.document.title = data['name'] + ' - MapCraft Dev';
+
         // TODO: move to events
         $('#dinfo-save').button("disable");
         InfoDialog.redraw();
