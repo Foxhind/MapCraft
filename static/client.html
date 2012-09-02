@@ -59,8 +59,10 @@
 </div>
 <div id="dstatus" title="Status changing">
 <div id="question"></div>
-New status:&nbsp;<span id="newstatus"></span>&nbsp;<span id="vcolor">██</span><br />
-<div id="sstatus"></div>
+	New status:&nbsp;<span id="newstatus"></span>&nbsp;
+	<span id="vcolor">██</span>&nbsp;
+	<span class='comment' id='statuscomment'></span><br />
+	<div id="sstatus"></div>
 </div>
 
 <div id="dtake" title="Taking">
@@ -179,11 +181,15 @@ New status:&nbsp;<span id="newstatus"></span>&nbsp;<span id="vcolor">██</spa
 			<td class="tbl-actions"></td>
 		</tr>
 	</table>
+
+	<h4>Status descriptions</h4>
+	<table id="dinfo-statuses"></table>
+
 	<h4>Details</h4>
 	<table id="dinfo-details"></table>
 </div>
 
-<div class="dialog" id="dinfo-link-editor">
+<div class="dialog enter-submit" id="dinfo-link-editor">
 	<table style="width: 100%">
 		<tr>
 			<td class="tbl-prop">Name</td>
@@ -195,7 +201,7 @@ New status:&nbsp;<span id="newstatus"></span>&nbsp;<span id="vcolor">██</spa
 	</table>
 </div>
 
-<div class="dialog" id="dinfo-name-editor">
+<div class="dialog enter-submit" id="dinfo-name-editor">
 	<table style="width: 100%">
 		<tr>
 			<td class="tbl-prop">Name</td>
@@ -209,6 +215,14 @@ New status:&nbsp;<span id="newstatus"></span>&nbsp;<span id="vcolor">██</spa
 	<textarea style='width: 98%; height: 90%'></textarea>
 </div>
 
+<div class="dialog enter-submit" id="dinfo-status-editor">
+	<table style="width: 100%">
+		<tr>
+			<td class="tbl-prop">Name</td>
+			<td class="tbl-value"><input type="text" style='width: 90%'/></td>
+		</tr>
+	</table>
+</div>
 
 
 <table id="panel">

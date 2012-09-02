@@ -343,6 +343,46 @@ var InfoDialog  = {
             buttons: [
                 {
                     text: 'Apply',
+                    'class': 'apply-button',
+                    click: function() {
+                        var action = $('#dinfo-link-editor').data('action');
+                        var index  = $('#dinfo-link-editor').data('index');
+
+                        var link = {
+                            name: $('#dinfo-link-name').val(),
+                            ref: $('#dinfo-link-ref').val()
+                        };
+                        if ( action === 'add') {
+                            CakeSettings.data['links'].push(link);
+                        } else {
+                            CakeSettings.data['links'][index] = link;
+                        }
+                        CakeSettings.touch('links');
+
+                        $(this).dialog("close");
+                    }
+                },
+                {
+                    text: "Close",
+                    click: function() {
+                        $(this).dialog("close");
+                    }
+                }
+            ]
+        });
+
+        $('#dinfo-status-editor').dialog({
+            title: 'Edit link',
+            autoOpen: false,
+            modal: true,
+            width: 450,
+            height: 170,
+            resizable: false,
+            position: 'center',
+            buttons: [
+                {
+                    text: 'Apply',
+                    'class': 'apply-button',
                     click: function() {
                         var action = $('#dinfo-link-editor').data('action');
                         var index  = $('#dinfo-link-editor').data('index');
@@ -381,6 +421,7 @@ var InfoDialog  = {
             buttons: [
                 {
                     text: 'Apply',
+                    'class': 'apply-button',
                     click: function() {
                         CakeSettings.set('name', $(this).find('input').val());
                         $(this).dialog("close");
@@ -406,6 +447,7 @@ var InfoDialog  = {
             buttons: [
                 {
                     text: 'Apply',
+                    'class': 'apply-button',
                     click: function() {
                         CakeSettings.set('description', $(this).find('textarea').val());
                         $(this).dialog("close");
@@ -420,6 +462,33 @@ var InfoDialog  = {
             ]
         });
 
+        $('#dinfo-status-editor').dialog({
+            title: 'Edit status',
+            autoOpen: false,
+            modal: true,
+            width: 450,
+            height: 140,
+            resizable: false,
+            position: 'center',
+            buttons: [
+                {
+                    text: 'Apply',
+                    'class': 'apply-button',
+                    click: function() {
+                        var index = $('#dinfo-status-editor').data('index');
+                        CakeSettings.data['statuses'][index] = $(this).find('input').val();
+                        CakeSettings.touch('statuses');
+                        $(this).dialog("close");
+                    }
+                },
+                {
+                    text: "Close",
+                    click: function() {
+                        $(this).dialog("close");
+                    }
+                }
+            ]
+        });
         // Init basic links
         var origin = window.location.protocol + '//' + window.location.host;
         var wms_link = 'wms:' + origin + '/wms/' + PieHub.options.pieid + '?SRS={proj}&WIDTH={width}&height={height}&BBOX={bbox}';
@@ -465,6 +534,20 @@ var InfoDialog  = {
             $('#dinfo-links').append(row);
         });
 
+        //
+        // Fill statuses
+        //
+        _(CakeSettings.get('statuses')).each(function(status, index) {
+            if (status === '') {
+                if (!me.hasRole('owner')) return;
+                status = '<span class="placeholder">hidden</span>';
+            }
+
+            var row = $(_.template($('#dinfo-row-template').html(), {prop: index + '/9', value: status }));
+            row.find('.tbl-actions').append(self._createEditStatusBtn(index));
+            $('#dinfo-statuses').append(row);
+        });
+
         // Row with 'add' link for owners
         if (me.hasRole('owner')) {
             var new_link_row = $(_.template($('#dinfo-row-template').html(), {prop: '', value: ''}));
@@ -479,7 +562,7 @@ var InfoDialog  = {
             ['author', CakeSettings.get('author')],
             ['created at', CakeSettings.get('created_at')],
             ['visibility', CakeSettings.get('visible') ? 'shared' : 'hidden', this._createHideBtn()],
-            ['cake', CakeSettings.get('pieces_count') + " piece(s) " + this._exportBtn(), this._updateCakeBtn()]
+            ['cake', CakeSettings.get('pieces_count') + " slices " + this._exportBtn(), this._updateCakeBtn()]
         ];
         _(details).each(function(pair) {
             var row = $(_.template($('#dinfo-row-template').html(), {prop: pair[0], value: pair[1]}));
@@ -577,6 +660,15 @@ var InfoDialog  = {
         return this._createOwnerBtn('delete', function() {
             CakeSettings.data['links'].splice(index, 1);
             CakeSettings.touch('links');
+        });
+    },
+    _createEditStatusBtn: function(index) {
+        var self = this;
+        return this._createOwnerBtn('edit', function() {
+            var self = this;
+            $('#dinfo-status-editor input').val(CakeSettings.get('statuses')[index]);
+            $('#dinfo-status-editor').data("index", index);
+            $('#dinfo-status-editor').dialog('open');
         });
     },
 
@@ -1620,6 +1712,12 @@ $(document).ready(function () {
         updateAllPieceStyles();
     });
 
+    $('.enter-submit').live("keyup", function(e) {
+        if (e.keyCode === 13) {
+            $(this).parent().find('.apply-button').click();
+        }
+    });
+
     var ww = $(window).width();
     var wh = $(window).height();
     $('#dchat').dialog({
@@ -1728,7 +1826,13 @@ $(document).ready(function () {
     $('#bremote').button({ disabled: true, icons: { primary: 'ui-icon-signal'}});
     $('#bremote').click(OpenViaRemote);
     $('#bstatus').button({disabled: true});
-    $('#bstatus').click(function() { $('#sstatus').slider('value', selectedFeature.attributes.description); $('#vcolor').css({ color: stateColors[$('#sstatus').slider('value')] }); $('#newstatus').text($('#sstatus').slider('value')); $('#dstatus').dialog('open'); });
+    $('#bstatus').click(function() {
+        $('#sstatus').slider('value', selectedFeature.attributes.description);
+        $('#vcolor').css({ color: stateColors[$('#sstatus').slider('value')] });
+        $('#newstatus').text($('#sstatus').slider('value'));
+        $('#statuscomment').text(CakeSettings.data['statuses'][$('#sstatus').slider('value')]);
+        $('#dstatus').dialog('open');
+    });
     $('#pac_nick').button({ icons: { primary: 'ui-icon-person'} });
     $('#dchat').dialog( { resize: function(event, ui) { $('#chat').height($(this).height() - 45); $('#chat').width($(this).width() - 30); },
         beforeClose: function(event, ui) {
@@ -1773,7 +1877,15 @@ $(document).ready(function () {
     $('#rnone').button({icons: { primary: 'ui-icon-radio-on'}});
     $('#rnone').change( function() { $("div[id^='d']").dialog("close"); });
     $('#vis').buttonset();
-    $('#sstatus').slider({ min: 0, max: 9, slide: function(event, ui) { $('#vcolor').css({color: stateColors[ui.value]}); $('#newstatus').text(ui.value); } });
+    $('#sstatus').slider({
+        min: 0,
+        max: 9,
+        slide: function(event, ui) {
+            $('#vcolor').css({color: stateColors[ui.value]});
+            $('#newstatus').text(ui.value);
+            $('#statuscomment').text(CakeSettings.data['statuses'][ui.value]);
+        }
+    });
     $('#bowner').button({ disabled: true, icons: { primary: 'ui-icon-flag'}});
     $('#pac_text').autocomplete({ source: users, position: { my : "right bottom", at: "right top"} });
     $("#pac_form").submit(Send);

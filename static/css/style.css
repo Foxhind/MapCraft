@@ -308,12 +308,13 @@ color: gray;
 #dsettings td {width: 45%;}
 #dsettings table tr td:first-child {padding-right: 0.5em; color: #555}
 
-
 #dinfo .tbl-prop {text-align: right; padding-right: 0.5em; color: gray;}
 #dinfo .tbl-actions {padding-left: 1.5em; width: 70px;}
 #dinfo-reset {margin-right: 2em;}
 #dinfo-pie-actions {float: right;}
 #dinfo a.owner {color: brown;}
+
+span.placeholder {color: gray;}
 
 #dadmin-mass-apply { width: 80px; float: right; margin: 0em 2em; padding: 0.4em;}
 #dadmin-mass-slider {margin: 1.2em 150px 1em 1em;}

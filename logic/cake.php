@@ -49,6 +49,11 @@ function handle_update_cake($type, $from, $data, $res) {
         $settings['links'] = $changes['links'];
     }
 
+    // Update with new data
+    if (array_key_exists('statuses', $changes)) {
+        $settings['statuses'] = $changes['statuses'];
+    }
+
     // Save new JSON
     if(! pg_query_params($connection,
                          'UPDATE pies SET settings = $1 where id = $2',
@@ -84,6 +89,7 @@ function _send_cake_info($res, $from, $to_session) {
 	$info['author'] = $row['author_nick'];
 	$info['visible'] = $row['visible'] == 't';
     $info['links'] = $settings['links'] ?: array();
+    $info['statuses'] = $settings['statuses'] ?: array('', '', '', '', '', '', '', '', '', 'all done');
 
     $result = pg_query($connection,
                        'SELECT count(pieces.id) as pieces_count FROM pieces WHERE pie = ' . $from->pieid);
