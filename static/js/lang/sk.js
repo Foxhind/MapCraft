@@ -6,11 +6,11 @@ var ldata = [
 "Chat",
 "Používatelia",
 "Vlastnosti",
-"Nastavenia
+"Nastavenia",
 "Zmeniť meno",
 "Zmeniť stav",
 "Remote",
-"Cake",
+"Koláč",
 "Žiadný",
 "Prídať",
 "Nové meno:",
