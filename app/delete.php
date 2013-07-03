@@ -44,7 +44,7 @@ elseif (!empty($_POST['cancel'])) {
 <!doctype html>
 <html>
 <head>
-<title>MapCraft — massively mapping management tool for OpenStreetMap for OpenStreetMap</title>
+<title>MapCraft — massively mapping management tool for OpenStreetMap</title>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <link rel="stylesheet" href="/css/site.css" type="text/css" media="screen, projection">
 </head>
