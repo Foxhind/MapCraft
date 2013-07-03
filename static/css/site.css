@@ -245,3 +245,14 @@ ul.validation-errors-list    { margin: 1em 0 2em 2em; }
 ul.validation-errors-list li { margin: 0.3em 0; list-style-type: circle; color: darkred;}
 
 .small {font-size: small; color: gray;}
+
+#call_to_action {
+    font-size: 150%;
+    display: block;
+    margin: 0.1em;
+    text-align: center;
+}
+
+#call_to_action:after  {
+    content: "...";
+}
