@@ -55,6 +55,7 @@ elseif (!empty($_POST['cancel'])) {
 <li class="c1"><a href="/map">Map</a></li>
 <li class="c2"><a href="/list">List</a></li>
 <li class="c3"><a href="/create">New cake</a></li>
+<li class="c4"><a href="http://wiki.openstreetmap.org/wiki/MapCraft" target="_blank">Help</a></li>
 </ul></nav></div>
 <div id="login">
 <?php
