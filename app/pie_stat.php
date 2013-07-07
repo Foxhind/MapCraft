@@ -20,10 +20,7 @@ $pie = pg_fetch_assoc($result);
 $res['name'] = $pie['name'];
 $res['description'] = $pie['description'];
 
-$result = pg_query($connection, 'SELECT timestamp FROM mapcraft.pieces as p, mapcraft.pieces_comments as c WHERE c.piece = p.id and type = \'info\' and p.pie = ' . $pie_id . ' ORDER by timestamp desc LIMIT 1');
-
-$ts = pg_fetch_result($result, 0, 0);
-$res['updated'] = $ts == null ?  $pie['start'] : $ts;
+$res['updated'] = $pie["updated"] || $pie["start"];
 
 echo json_encode($res);
 ?>

@@ -212,6 +212,7 @@ CREATE TABLE pies (
     name character varying(255) NOT NULL,
     author integer NOT NULL,
     start timestamp without time zone DEFAULT (now())::timestamp without time zone NOT NULL,
+    updated timestamp  without time zone DEFAULT (now())::timestamp without time zone,
     ends timestamp without time zone,
     description text,
     visible boolean DEFAULT true NOT NULL,
