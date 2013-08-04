@@ -69,6 +69,7 @@ function handle_piece_reserve($type, $from, $data, $res)
     _update_user_reserved($res, $from, $from->user_id(), $from->nick());
     $res->to_pie($from, info_msg("%s has reserved slice #%s.", $from->nick(), $piece_index));
     _add_piece_info_log($res, $from, $piece_index, $piece_id, "Slice has been reserved");
+    _update_pie_timestamp($from, $connection);    
 }
 
 function handle_piece_free($type, $from, $data, $res)
@@ -111,6 +112,7 @@ function handle_piece_free($type, $from, $data, $res)
     _update_user_reserved($res, $from, $owner_id, $owner_nick);
     $res->to_pie($from, info_msg("%s has freed slice #%s.", $from->nick(), $piece_index));
     _add_piece_info_log($res, $from, $piece_index, $piece_id, "Slice has been freed");
+    _update_pie_timestamp($from, $connection);
 }
 
 function handle_piece_state($type, $from, $data, $res)
@@ -144,6 +146,7 @@ function handle_piece_state($type, $from, $data, $res)
     $res->to_pie($from, info_msg("%s has set state for #%s to %s/9", $from->nick(), $piece_index, $state));
     _update_piece_progress($res, $from);
     _add_piece_info_log($res, $from, $piece_index, $piece_id, "New state: " . $state . "/9");
+    _update_pie_timestamp($from, $connection);    
 }
 
 function handle_piece_mass_state($type, $from, $data, $res) {
@@ -169,7 +172,7 @@ function handle_piece_mass_state($type, $from, $data, $res) {
     }
     _update_piece_progress($res, $from);
     update_kml($from->pieid);
-
+    _update_pie_timestamp($from, $connection);
 }
 
 function handle_piece_mass_free($type, $from, $data, $res) {
@@ -198,6 +201,7 @@ function handle_piece_mass_free($type, $from, $data, $res) {
 
     update_kml($from->pieid);
     _update_users_claims($res, $from, true);
+    _update_pie_timestamp($from, $connection);
 }
 
 function handle_piece_comment($type, $from, $data, $res)
@@ -222,6 +226,8 @@ function handle_piece_comment($type, $from, $data, $res)
         'type' => 'comment',
         'date' => $timestamp
     )) );
+
+    _update_pie_timestamp($from, $connection);
 }
 
 function handle_piece_progress($type, $from, $data, $res)
@@ -232,7 +238,9 @@ function handle_piece_progress($type, $from, $data, $res)
 // -------------------------
 // Helpers
 // -------------------------
-
+function _update_pie_timestamp($from, $connection) {
+    pg_query($connection, "UPDATE pies SET updated = NOW() WHERE pies.id = " . $from->pieid);
+}
 function _find_piece_id($from, $piece_index) {
     global $connection;
 
