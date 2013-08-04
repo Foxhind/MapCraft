@@ -9,16 +9,16 @@ $start = ($pagenum - 1) * $piespp;
 if ($start > $piescount or $start < 0)
     header('Location: /list');
 
-$result = pg_query($connection, 'SELECT pies.id, pies.name, pies.description, users.nick, pies.start, pies.ends, count(pieces.id) AS num, sum(pieces.state) / (count(pieces.id) * 9.0) * 100 AS state FROM pies INNER JOIN pieces ON pies.id = pieces.pie JOIN users ON pies.author=users.id WHERE pies.visible = true GROUP BY pies.id, pies.name, pies.description, users.nick, pies.start, pies.ends ORDER BY pies.start DESC LIMIT '.$piespp.' OFFSET '.$start);
+$result = pg_query($connection, 'SELECT pies.id, pies.name, pies.description, users.nick, pies.start, pies.updated, pies.ends, count(pieces.id) AS num, sum(pieces.state) / (count(pieces.id) * 9.0) * 100 AS state FROM pies INNER JOIN pieces ON pies.id = pieces.pie JOIN users ON pies.author=users.id WHERE pies.visible = true GROUP BY pies.id, pies.name, pies.description, users.nick, pies.start, pies.ends ORDER BY pies.updated DESC LIMIT '.$piespp.' OFFSET '.$start);
 
 if (pg_num_rows($result) > 0) {
 
     echo '<table class="list">';
-    echo '<tr><th>Name</th><th>Slices</th><th>Progress</th><th>Author</th><th>Created</th><th>&nbsp;</th></tr>';
+    echo '<tr><th>Name</th><th>Slices</th><th>Progress</th><th>Author</th><th>Updated</th><th>&nbsp;</th></tr>';
     while ($row = pg_fetch_array($result)) {
         $state = round(floatval($row['state']));
         $wms_link = 'wms:http://'.$_SERVER['HTTP_HOST'].'/wms/'.$row['id'].'?SRS={proj}&WIDTH={width}&height={height}&BBOX={bbox}';
-        $created = preg_replace('/\.\d+$/', '', $row['start']);
+        $updated = preg_replace('/\.\d+$/', '', $row['updated']);
         $id = $row['id'];
         $pie_link = '/pie/' . $id;
         // Base line
@@ -27,7 +27,7 @@ if (pg_num_rows($result) > 0) {
         echo '<td>'.$row['num'].'</td>';
         echo '<td><meter value="'.$state.'" min="0" max="100" low="33" high="67">'.$state.'&nbsp;%</meter></td>';
         echo '<td><a href="http://www.openstreetmap.org/user/'.$row['nick'].'" target="_blank">'.$row['nick'].'</a></td>';
-        echo '<td>'.$created.'</td>';
+        echo '<td>'.$updated.'</td>';
         echo '<td>'.(isset($_SESSION['osm_user']) && $row['nick'] === $_SESSION['osm_user'] ? '<a href="/delete/'.$id.'">Delete</a>' : '').'</td>';
         echo '</tr>';
         // Descr

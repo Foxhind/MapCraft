@@ -1336,6 +1336,7 @@ function LoadLanguage() {
         $('#dnick').dialog("option", "title", ldata[8]);
         $('#dstatus').dialog("option", "title", ldata[9]);
         $('#bremote').button("option", "label", ldata[10]);
+        $('#bpotlatch').button("option", "label", "OSM");
         $('#bsettings').button("option", "label", ldata[7]);
         $('#bpie').button("option", "label", ldata[11]);
         $('#bowner').button("option", "label", ldata[12]);
@@ -1415,7 +1416,10 @@ function selectPieceFromURL() {
     }
 }
 
-function OpenViaRemote() {
+function OpenViaRemote(method) {
+    if (method === null) {
+        method = 'josm';
+    }
     if (selectedFeature != null)
     {
         var from = new OpenLayers.Projection("EPSG:900913");
@@ -1423,7 +1427,13 @@ function OpenViaRemote() {
         var bounds = selectedFeature.geometry.getBounds().toArray();
         var p1 = (new OpenLayers.LonLat(bounds[0], bounds[1])).transform(from, to);
         var p2 = (new OpenLayers.LonLat(bounds[2], bounds[3])).transform(from, to);
-        RemoteControlJosm("load_and_zoom?left=" + p1.lon + "&right=" + p2.lon + "&top=" + p2.lat + "&bottom=" + p1.lat);
+
+        if (method === 'josm') {
+            RemoteControlJosm("load_and_zoom?left=" + p1.lon + "&right=" + p2.lon + "&top=" + p2.lat + "&bottom=" + p1.lat);
+        }
+        if (method === 'potlatch2') {
+            RemoteControlPotlatch('http://www.openstreetmap.org/?lat=' + ((p1.lat + p2.lat) /2)+'&lon=' + ((p1.lon + p2.lon)/2) + '&zoom=19&layers=M');
+        }
     }
 }
 
@@ -1433,6 +1443,11 @@ function RemoteControlJosm(cmd) {
     }
     $('#hiddenIframe').attr("src", "http://127.0.0.1:8111/" + cmd);
 }
+
+function RemoteControlPotlatch(cmd) {
+    window.open(cmd, "_blank");
+}
+
 
 function SetNick() {
     var newnick = $("#newnick").val().substr(0, 64);
@@ -1603,8 +1618,11 @@ function onSelectPiece(e) {
     $('#bstatus').button("option", "label", e.attributes.description + '/9');
     $('#bstatus').button("enable");
     $('#bremote').button("enable");
+    $('#bpotlatch').button("enable");
     $('#bcomment').button("enable");
     GetComments();
+
+
 }
 
 function onUnselectPiece(e) {
@@ -1824,7 +1842,13 @@ $(document).ready(function () {
     $('#bcomment').button({ disabled: true });
     $('#bcomment').click(PostComment);
     $('#bremote').button({ disabled: true, icons: { primary: 'ui-icon-signal'}});
-    $('#bremote').click(OpenViaRemote);
+    $('#bpotlatch').button({ disabled: true });
+    $('#bremote').click(function() {
+        OpenViaRemote('josm')
+    });
+    $('#bpotlatch').click(function() {
+        OpenViaRemote('potlatch2')
+    });
     $('#bstatus').button({disabled: true});
     $('#bstatus').click(function() {
         $('#sstatus').slider('value', selectedFeature.attributes.description);
