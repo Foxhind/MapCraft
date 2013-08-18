@@ -515,7 +515,7 @@ var InfoDialog  = {
             .append(this._createDeletePieBtn());
 
         $('#dinfo-description').html(CakeSettings.get('description'));
-        $('#dchat-topic').html(CakeSettings.get('description'));
+        $('#dchat-topic').html(CakeSettings.get('description').substring(0, 100));
         $('#dinfo-description').append('<br/>').append(this._createEditDescriptionBtn());
 
 
