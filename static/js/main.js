@@ -974,8 +974,8 @@ In.piece_comment = function (data) {
 
         var msg = data['type'] == 'comment' ? data['message'] : t(data['message']);
         msg = TextReplacer.parse(msg);
-        var date = data['date'].replace(/\.\d+$/, '');
-        $('#dprop #comments').append('<p class="' + data['type'] + '"><strong>' + data['author'] + '</strong><span class="date">' + date + '</span><br />' + msg + '</p>');
+
+        $('#dprop #comments').append('<p class="' + data['type'] + '"><strong>' + data['author'] + '</strong><time class="date" datetime="' + moment(data['date']).format("YYYY-MM-DDTHH:MM:SSZ") + '" title="' +moment(data['date']).format("YYYY-MM-DD HH:MM:SS Z")+'">' + moment(data['date']).format("HH:MM:SS") + '</time><br />' + msg + '</p>');
     }
 };
 
