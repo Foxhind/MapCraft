@@ -161,7 +161,6 @@ var Chat = {
 
     append: function(message, type, author, ts, is_history) {
 
-        ts = this._stringifyTimestamp(ts);
         if (_.isUndefined(type)) type = 'msg';
         if (_.isUndefined(author)) author = '-';
 
@@ -183,7 +182,7 @@ var Chat = {
         var authorColor = ownerColor(author);
         // Append to the end and scroll
         var history_class = is_history ? 'history' : '';
-        var entry = $("<tr><td class='nick' style='color: " + authorColor + "'>" + author + "</td><td class='message'>" + message + "</td><td class='time'>" + ts + "</td></tr>");
+        var entry = $("<tr><td class='nick' style='color: " + authorColor + "'>" + author + "</td><td class='message'>" + message + "</td><td class='time'><time datetime='" + moment(ts).format("YYYY-MM-DDTHH:mm:ssZ") + "' title='" + moment(ts).format("YYYY-MM-DD HH:mm:ss Z") + "'>" + moment(ts).format("HH:mm:ss") + "</time></td></tr>");
 
         entry.addClass('chat-' + type);
         if (is_history) entry.addClass('history');
@@ -217,23 +216,6 @@ var Chat = {
             this.append("Unsupported CLI command. Type '/help' to see known commands", 'cli');
         }
         return true;
-    },
-
-    _stringifyTimestamp: function(ts) {
-        if (_.isString(ts)) {
-            return ts.substr(11, 8);
-        }
-
-        var d = new Date();
-        if (_.isNumber(ts)) {
-            d.setTime(ts*1000);
-        }
-
-        var s = d.getSeconds();
-        var m = d.getMinutes();
-        s = (s < 10) ? '0' + s : s;
-        m = (m < 10) ? '0' + m : m;
-        return d.getHours().toString() + ':' + m.toString() + ':' + s.toString();
     },
 
     updateStyle: function() {
