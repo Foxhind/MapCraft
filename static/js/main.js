@@ -515,6 +515,7 @@ var InfoDialog  = {
             .append(this._createDeletePieBtn());
 
         $('#dinfo-description').html(CakeSettings.get('description'));
+        $('#dchat-topic').html(CakeSettings.get('description'));
         $('#dinfo-description').append('<br/>').append(this._createEditDescriptionBtn());
 
 
@@ -1890,6 +1891,7 @@ $(document).ready(function () {
     $('#bsettings').click( function () { $('#dsettings').dialog('open'); } );
     $('#binfo').button( { icons: { primary: 'ui-icon-info'} } );
     $('#binfo').click( function () { InfoDialog.show(); } );
+    $('#dchat-info').click( function () { InfoDialog.show(); return false; } );
     $('#badmin').button( { icons: { primary: 'ui-icon-info'} } );
     $('#badmin').click( function () { AdminDialog.show(); } );
     $('#bpie').button( { icons: { primary: 'ui-icon-clock'} } );
