@@ -52,7 +52,7 @@ if (!isset($_POST['step']) || $_POST['step'] == 'first') {
         </p></li>
         <li><p>
             Run validation: <input class="btn" type="submit" value="Validate" /><br/>
-            You will be asked to review changes and confirm dangeours moments if any.
+            You will be asked to review changes and confirm dangerous moments if any.
         </p></li>
     </ol>
     </form>
