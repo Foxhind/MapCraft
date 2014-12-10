@@ -1,0 +1,32 @@
+var ldata = [
+"Si",
+"No",
+"OK",
+"Cancelar",
+"Chat",
+"Usuarios",
+"Propiedades",
+"Ajustes",
+"Cambiando nick",
+"Cambiando estado",
+"Remoto",
+"Pastel",
+"Ninguno",
+"Añadir",
+"Nuevo nombre de usuario:",
+"Propietario:",
+"Progreso:",
+"Comentarios:",
+"Nombre",
+"Rebanadas",
+"Reclamos",
+"Tema:",
+"Idioma:",
+"Su comentario",
+"¿Está seguro que deseas tomar esta rebanada?",
+"Esta rebanada ya tiene dueño! ¿Poner a votación que deseas la transferencia?",
+"¿Estás seguro que deseas abandonar la rebanada?"
+"Bienvenido a nuestro chat, %s!"
+"Mostrar nicks:",
+"Mostrar los propietarios de las rebanadas:"
+];
