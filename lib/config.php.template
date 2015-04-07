@@ -13,7 +13,7 @@ $db   = '${DATABASE}';
 $auth_type = '${AUTH_TYPE}';     // osm | fake
 $hub_full_url = 'http://127.0.0.1:${HUB_PORT}/hub';
 
-$skip_captcha = false;         // true - to skip any captchas. Usefull for developing
+$skip_captcha = false;         // true - to skip any captchas. Useful for developing
 
 $logic_log_file = '${LOGIC_LOG_FILE}';
 
