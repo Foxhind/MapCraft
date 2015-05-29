@@ -39,6 +39,7 @@ WEB
     "wms_srs"   "EPSG:4326 EPSG:3857"
     "wms_feature_info_mime_type" "text/html"
     "wms_abstract"      "Pie"
+    "wms_enable_request" "*"
   END
 END
 
