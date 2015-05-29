@@ -10,7 +10,7 @@ var kmllayer;
 var selectedFeature;
 var selectCtrl;
 var stateColors = ["#ff0000","#ff4000","#ff6000","#ff7000","#ff8000","#ff9000","#ffb000","#ffd000","#ffff00","#00ff00"];
-var supported_langs = ['en', 'fr', 'it', 'jp', 'ru', 'sk'];
+var supported_langs = ['de', 'en', 'es', 'fr', 'it', 'jp', 'pl', 'ru', 'sk', 'uk'];
 var users = [];
 var claims = [];
 var pieceLabel = 'none';

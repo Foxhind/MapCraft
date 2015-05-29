@@ -25,8 +25,8 @@ var ldata = [
 "Su comentario",
 "¿Está seguro que deseas tomar esta rebanada?",
 "Esta rebanada ya tiene dueño! ¿Poner a votación que deseas la transferencia?",
-"¿Estás seguro que deseas abandonar la rebanada?"
-"Bienvenido a nuestro chat, %s!"
+"¿Estás seguro que deseas abandonar la rebanada?",
+"Bienvenido a nuestro chat, %s!",
 "Mostrar nicks:",
 "Mostrar los propietarios de las rebanadas:"
 ];
