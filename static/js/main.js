@@ -491,9 +491,9 @@ var InfoDialog  = {
         });
         // Init basic links
         var origin = window.location.protocol + '//' + window.location.host;
-        var wms_link = 'wms:' + origin + '/wms/' + PieHub.options.pieid + '?SRS={proj}&WIDTH={width}&height={height}&BBOX={bbox}';
+        var wms_link = origin + '/wms/' + PieHub.options.pieid + '?SRS={proj}&WIDTH={width}&height={height}&BBOX={bbox}';
         var log_link = origin + '/log/' + PieHub.options.pieid;
-        $("#wms_link").html(this._createLink(wms_link, "WMS layer for editors"));
+        $("#wms_link").html(this._createLink('wms:' + wms_link, "WMS layer for editors"));
         $("#log_link").html(this._createLink(log_link, "Cake chat log"));
         $("#wms_action").html(this._createWmsButtons(wms_link));
     },
