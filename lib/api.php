@@ -30,7 +30,7 @@ function _gen_new_msg_id()
 }
 function _gen_new_msg_date()
 {
-    return time();
+    return date(DATE_W3C);
 }
 
 function _generic_msg($type, $args)
