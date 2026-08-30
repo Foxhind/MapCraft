@@ -11,6 +11,7 @@ if (!$client_id || !$redirect_uri) {
     die('OSM OAuth 2 client_id or redirect_uri is not configured.');
 }
 
+session_start();
 $state = bin2hex(random_bytes(16));
 $_SESSION['osm_oauth_state'] = $state;
 $_SESSION['osm_oauth_redirect_uri'] = $redirect_uri;
