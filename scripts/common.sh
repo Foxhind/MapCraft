@@ -53,6 +53,11 @@ export DB_HOST=localhost
 # Auth
 export AUTH_TYPE="fake"
 
+# OpenStreetMap OAuth 2 values are supplied by the environment when generating config.php.
+export OSM_OAUTH_CLIENT_ID="${OSM_OAUTH_CLIENT_ID:-}"
+export OSM_OAUTH_CLIENT_SECRET="${OSM_OAUTH_CLIENT_SECRET:-}"
+export OSM_OAUTH_REDIRECT_URI="${OSM_OAUTH_REDIRECT_URI:-}"
+
 # Configs
 export HUB_CONFIG=$TMP_DIR/hub.config
 export PHP_CONFIG=$TMP_DIR/php.ini

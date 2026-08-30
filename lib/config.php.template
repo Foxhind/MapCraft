@@ -13,6 +13,12 @@ $db   = '${DATABASE}';
 $auth_type = '${AUTH_TYPE}';     // osm | fake
 $hub_full_url = 'http://127.0.0.1:${HUB_PORT}/hub';
 
+// Configure these in the local, untracked config.php after registering an OSM OAuth 2 app.
+$osm_oauth_client_id = '${OSM_OAUTH_CLIENT_ID}';
+$osm_oauth_client_secret = '${OSM_OAUTH_CLIENT_SECRET}';
+$osm_oauth_redirect_uri = '${OSM_OAUTH_REDIRECT_URI}';
+$osm_oauth_scope = 'openid read_prefs';
+
 $skip_captcha = false;         // true - to skip any captchas. Useful for developing
 
 $logic_log_file = '${LOGIC_LOG_FILE}';
