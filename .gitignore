@@ -1,6 +1,24 @@
 # Config files:
-
 static/js/config.js
 lib/config.php
+.env
+
+# Logs and tmp
 /tmp
 /logs
+*.log
+
+# OS / editor
+.DS_Store
+**/.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Temp / caches
+tmp/
+temp/
+.cache/
+*.tmp
+*.temp
