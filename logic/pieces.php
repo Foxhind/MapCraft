@@ -16,7 +16,7 @@ function handle_get_piece_comments($type, $from, $data, $res)
     $result = pg_query($connection, 'SELECT users.nick, text, type, timestamp FROM pieces_comments JOIN users ON users.id = author WHERE piece = '.$piece_id.' ORDER BY timestamp DESC LIMIT 100');
 
     if (pg_num_rows($result) == 0) {
-        $res->to_sender( array('no_comments', array()) );
+        $res->to_sender( array('no_comments', array('piece_index' => $piece_index)) );
     }
     else {
         $rows = array();

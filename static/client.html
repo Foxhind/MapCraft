@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MapCraft</title>
     <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v3.28.1/mapbox-gl.css" type="text/css">
-    <link rel="stylesheet" href="/css/style.css?v=23" type="text/css" media="screen, projection">
+    <link rel="stylesheet" href="/css/style.css?v=24" type="text/css" media="screen, projection">
     <script type="text/javascript" src="https://api.mapbox.com/mapbox-gl-js/v3.28.1/mapbox-gl.js"></script>
     <script type="text/javascript" src="/js/jquery-1.5.1.min.js"></script>
     <script type="text/javascript" src="/js/raphael-min.js"></script>
@@ -37,7 +37,10 @@
         <div id="comments" class="sector-history__entries"><p class="sector-history__empty">История появится после выбора сектора.</p></div>
         <button id="show-full-history" class="sector-history__show-more" type="button" hidden>Показать всю историю</button>
     </section>
-    <footer class="connection-status"><span class="connection-status__indicator"></span><span id="connection-label" class="connection-status__label">Подключено</span><button id="reconnect" class="connection-status__retry" type="button" hidden>Повторить</button></footer>
+    <form id="sector-comment-form" class="sector-comment">
+        <textarea id="comment_text" class="sector-comment__input" rows="2" maxlength="1024" placeholder="Выберите сектор, чтобы добавить комментарий" disabled></textarea>
+        <button id="send-sector-comment" class="sector-comment__submit" type="submit" disabled>Добавить комментарий</button>
+    </form>
 </aside>
 
 <main id="map-area" class="map-workspace">
@@ -74,6 +77,6 @@
 </main>
 
 <div id="dialog-body" class="native-dialog" hidden role="dialog" aria-modal="true"></div>
-<script type="text/javascript" src="/js/main.js?v=20"></script>
+<script type="text/javascript" src="/js/main.js?v=21"></script>
 </body>
 </html>

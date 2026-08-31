@@ -45,6 +45,7 @@ var chatShowInfo = true;
 var chatScrollPosition = -1;
 let selectedProgress = null;
 let sectorHistory = [];
+let sectorHistoryLoading = false;
 let chatUnread = 0;
 
 var me = {
@@ -175,6 +176,49 @@ function sectorHistoryEvent(type, text, author, date) {
     renderSectorHistory();
 }
 
+function finishSectorHistoryLoading() {
+    if (!sectorHistoryLoading) {
+        return;
+    }
+
+    sectorHistoryLoading = false;
+    renderSectorCard();
+}
+
+function renderSectorCommentForm() {
+    var canComment = Boolean(selectedFeature) && me.hasRole('member');
+    var $input = $('#comment_text');
+    var $submit = $('#send-sector-comment');
+
+    if (canComment) {
+        $input
+            .removeAttr('disabled')
+            .attr('placeholder', 'Добавить комментарий к сектору ' + selectedFeature.attributes.name);
+        $submit.removeAttr('disabled');
+        return;
+    }
+
+    $input
+        .attr('disabled', 'disabled')
+        .attr('placeholder', selectedFeature ? 'Войдите, чтобы добавить комментарий' : 'Выберите сектор, чтобы добавить комментарий');
+    $submit.attr('disabled', 'disabled');
+}
+
+function getSelectedClaim() {
+    if (!selectedFeature || !me.nick) {
+        return null;
+    }
+
+    for (var i = 0; i < claims.length; i++) {
+        if (claims[i]['owner'] === me.nick
+            && claims[i]['piece_index'].toString() === selectedFeature.attributes.name) {
+            return claims[i];
+        }
+    }
+
+    return null;
+}
+
 function renderSectorHistory() {
     const $comments = $('#comments');
 
@@ -215,6 +259,8 @@ function renderSectorHistory() {
 function renderSectorCard(message, isError) {
     const $card = $('#sector-card');
 
+    renderSectorCommentForm();
+
     if (!selectedFeature) {
         $card.addClass('sector-card_empty').html('<p class="sector-card__empty-state">Выберите сектор на карте или найдите его по номеру.</p>');
         return;
@@ -224,7 +270,11 @@ function renderSectorCard(message, isError) {
     const state = parseInt(attrs.description, 10) || 0;
     const owner = attrs.owner || '';
     const ownedByMe = owner && me && owner === me.nick;
-    const primary = !owner ? 'Зарезервировать' : (ownedByMe ? (state === 8 ? 'Завершить этап' : 'Сохранить готовность') : 'Подать заявку');
+    const selectedClaim = owner && !ownedByMe ? getSelectedClaim() : null;
+    const canEditProgress = ownedByMe;
+    const primary = !owner
+        ? 'Зарезервировать'
+        : (ownedByMe ? (state === 8 ? 'Завершить этап' : 'Сохранить готовность') : (selectedClaim ? 'Снять заявку' : 'Подать заявку'));
 
     if (selectedProgress === null) {
         selectedProgress = state;
@@ -232,8 +282,10 @@ function renderSectorCard(message, isError) {
 
     const progressButtons = stateColors.map((color, progress) => {
         const selectedClass = progress === selectedProgress ? ' progress-selector__option_selected' : '';
+        const disabledClass = canEditProgress ? '' : ' progress-selector__option_disabled';
+        const disabledAttributes = canEditProgress ? '' : ' disabled tabindex="-1" aria-disabled="true"';
         const checkedState = progress === selectedProgress ? 'true' : 'false';
-        return `<button class="progress-selector__option${selectedClass}" type="button" data-progress="${progress}" aria-label="Готовность ${progress} из 9" aria-checked="${checkedState}" style="background-color:${color}">${progress}</button>`;
+        return `<button class="progress-selector__option${selectedClass}${disabledClass}" type="button" data-progress="${progress}" aria-label="Готовность ${progress} из 9" aria-checked="${checkedState}" style="background-color:${color}"${disabledAttributes}>${progress}</button>`;
     }).join('');
     const releaseAction = ownedByMe ? '<button type="button" id="sector-release"><svg class="sector-card__action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8c.8-3.1 3.1-5 7-5s6.2 1.9 7 5M4 4v4h4"/></svg>Освободить</button>' : '';
     const saveStateClass = isError ? ' sector-card__save-state_error' : '';
@@ -1263,7 +1315,7 @@ function resolveMapboxSectorFeature(mapFeature) {
 
 function initializeMapbox(pieId) {
     if (typeof mapboxgl === 'undefined') {
-        $('#connection-label').text('Не удалось загрузить карту');
+        $('#mapbox-map').attr('aria-label', 'Не удалось загрузить карту');
         return;
     }
 
@@ -1484,11 +1536,13 @@ In.chat = function (data) {
 In.claim_list = function (data) {
     claims = data;
     RedrawUsersList();
+    renderSectorCard();
 };
 
 In.claim_add = function (data) {
     claims.push(data);
     RedrawUsersList();
+    renderSectorCard();
 };
 
 In.claim_remove = function (data) {
@@ -1499,6 +1553,7 @@ In.claim_remove = function (data) {
         }
     }
     RedrawUsersList();
+    renderSectorCard();
 };
 
 In.claim_update = function (data) {
@@ -1511,6 +1566,7 @@ In.claim_update = function (data) {
         }
     }
     RedrawUsersList();
+    renderSectorCard();
 };
 
 In.javascript = function (data) {
@@ -1518,11 +1574,18 @@ In.javascript = function (data) {
 };
 
 In.no_comments = function (data) {
-    if (selectedFeature == null)
+    if (selectedFeature == null) {
         return;
+    }
+
+    if (data['piece_index'] && data['piece_index'].toString() != selectedFeature.attributes.name) {
+        return;
+    }
+
     sectorHistory = [];
+    finishSectorHistoryLoading();
     renderSectorHistory();
-}
+};
 
 In.piece_comment = function (data) {
     if (selectedFeature == null)
@@ -1536,6 +1599,7 @@ In.piece_comment = function (data) {
         msg = TextReplacer.parse(msg);
         var date = data['date'].replace(/\.\d+$/, '');
         sectorHistoryEvent(data['type'] === 'comment' ? 'comment' : 'state', msg, data['author'], date);
+        finishSectorHistoryLoading();
     }
 };
 
@@ -2051,7 +2115,7 @@ function Send() {
 }
 
 function SetStatus() {
-    if (selectedFeature == null || selectedProgress === null) {
+    if (selectedFeature == null || selectedProgress === null || selectedFeature.attributes.owner !== me.nick) {
         return;
     }
 
@@ -2078,6 +2142,10 @@ function TakePiece() {
 }
 
 function ClaimPiece() {
+    if (!selectedFeature || !selectedFeature.attributes.owner || getSelectedClaim()) {
+        return;
+    }
+
     PieHub.push( Out.claim(selectedFeature.attributes.name) );
 }
 
@@ -2090,8 +2158,15 @@ function GetComments() {
 }
 
 function PostComment() {
-    PieHub.push(Out.piece_comment(selectedFeature.attributes.name, $("#comment_text").val()));
-    $("#comment_text").val("");
+    var $comment = $('#comment_text');
+    var text = $comment.val();
+
+    if (!selectedFeature || !me.hasRole('member') || !text || text.match(/^\s*$/)) {
+        return false;
+    }
+
+    PieHub.push(Out.piece_comment(selectedFeature.attributes.name, text));
+    $comment.val('').focus();
     return false;
 }
 
@@ -2099,6 +2174,7 @@ function onSelectPiece(e) {
     selectedFeature = e;
     selectedProgress = parseInt(e.attributes.description, 10) || 0;
     sectorHistory = [];
+    sectorHistoryLoading = true;
     updatePieceStyle(e, true);
     window.location.hash = e.attributes.name;
     $('#comments').html('<div class="sector-history__loading"></div>');
@@ -2110,6 +2186,7 @@ function onUnselectPiece(e) {
     selectedFeature = null;
     selectedProgress = null;
     sectorHistory = [];
+    sectorHistoryLoading = false;
     updatePieceStyle(e, true);
     window.location.hash = '';
     renderSectorCard();
@@ -2518,9 +2595,6 @@ $(document).ready(function () {
         });
         PieHub.poll();
         Enter();
-    } else {
-        $('#connection-label').text('Откройте карту проекта');
-        $('#reconnect').attr('hidden', 'hidden');
     }
 
     initializeMapbox(pieId);
@@ -2557,6 +2631,10 @@ $(document).ready(function () {
         }
     });
     $('#sector-card').delegate('[data-progress]', 'click', function() {
+        if (!selectedFeature || selectedFeature.attributes.owner !== me.nick) {
+            return;
+        }
+
         selectedProgress = parseInt($(this).attr('data-progress'), 10);
         renderSectorCard('Готовность изменена. Сохраните, чтобы применить.');
     }).delegate('#sector-primary', 'click', function() {
@@ -2569,7 +2647,13 @@ $(document).ready(function () {
         } else if (selectedFeature.attributes.owner === me.nick) {
             SetStatus();
         } else {
-            ClaimPiece();
+            var claim = getSelectedClaim();
+
+            if (claim) {
+                CloseClaim(claim['claim_id']);
+            } else {
+                ClaimPiece();
+            }
         }
     }).delegate('#sector-release', 'click', () => {
         if (selectedFeature && window.confirm('Освободить этот сектор?')) {
@@ -2580,6 +2664,7 @@ $(document).ready(function () {
     }).delegate('#sector-osm', 'click', () => {
         OpenViaRemote('potlatch2');
     });
+    $('#sector-comment-form').submit(PostComment);
     $('#show-full-history').click(function() {
         $(this).data('expanded', !$(this).data('expanded'));
         renderSectorHistory();
@@ -2648,9 +2733,6 @@ $(document).ready(function () {
         }
 
         kmllayer.redraw();
-    });
-    $('#reconnect').click(() => {
-        PieHub.poll();
     });
     $(window).resize(() => {
         if (mapboxMap) {
