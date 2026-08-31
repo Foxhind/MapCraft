@@ -9,7 +9,7 @@ var kmllayer;
 
 var selectedFeature;
 var selectCtrl;
-var stateColors = ["#ff0000","#ff4000","#ff6000","#ff7000","#ff8000","#ff9000","#ffb000","#ffd000","#ffff00","#00ff00"];
+const stateColors = ['#d94b4b', '#e75a45', '#ef7045', '#f38c45', '#f4aa49', '#f3c956', '#dfd55b', '#b9cf62', '#72b764', '#4ba85c'];
 var supported_langs = ['de', 'en', 'es', 'fr', 'it', 'jp', 'pl', 'ru', 'sk', 'uk'];
 var users = [];
 var claims = [];
@@ -18,6 +18,9 @@ var pieceColor = 'state';
 var showOwned;
 var chatShowInfo = true;
 var chatScrollPosition = -1;
+let selectedProgress = null;
+let sectorHistory = [];
+let chatUnread = 0;
 
 var me = {
     nick: "???",
@@ -85,6 +88,105 @@ function ownerColor(owner) {
     sat = sat + Math.round(hash / 255 % 20);
     light = light + Math.round(hash / 255 / 20 % 20);
     return 'hsl(' + hue + ', ' + sat + '%, ' + light + '%)';
+}
+
+function escapeHtml(value) {
+    return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function sectorStage(state) {
+    state = parseInt(state, 10);
+    if (state === 0) return 'Не начат';
+    if (state < 6) return 'В работе';
+    if (state < 9) return 'На проверке';
+    return 'Готов';
+}
+
+function sectorHistoryEvent(type, text, author, date) {
+    sectorHistory.unshift({ type, text, author: author || '', date: date || '' });
+    renderSectorHistory();
+}
+
+function renderSectorHistory() {
+    const $comments = $('#comments');
+
+    if (!selectedFeature) {
+        $comments.html('<p class="sector-history__empty">История появится после выбора сектора.</p>');
+        return;
+    }
+
+    if (!sectorHistory.length) {
+        $comments.html('<p class="sector-history__empty">Для этого сектора пока нет истории.</p>');
+        return;
+    }
+
+    const expanded = $('#show-full-history').data('expanded');
+    const entries = expanded ? sectorHistory : sectorHistory.slice(0, 5);
+    let html = '';
+
+    for (const event of entries) {
+        const meta = `${escapeHtml(event.author)}${event.author && event.date ? ' · ' : ''}${escapeHtml(event.date)}`;
+
+        if (event.type === 'comment') {
+            html += `<div class="sector-history__comment"><div class="sector-history__meta">${meta}</div><div>${event.text}</div></div>`;
+        } else {
+            html += `<div class="sector-history__event sector-history__event_type_${escapeHtml(event.type)}"><span class="sector-history__marker"></span><div>${event.text}</div><div class="sector-history__meta">${meta}</div></div>`;
+        }
+    }
+
+    $comments.html(html);
+    $('#show-full-history').toggle(entries.length < sectorHistory.length || expanded);
+}
+
+function renderSectorCard(message, isError) {
+    const $card = $('#sector-card');
+
+    if (!selectedFeature) {
+        $card.addClass('sector-card_empty').html('<p class="sector-card__empty-state">Выберите сектор на карте или найдите его по номеру.</p>');
+        return;
+    }
+
+    const attrs = selectedFeature.attributes;
+    const state = parseInt(attrs.description, 10) || 0;
+    const owner = attrs.owner || '';
+    const ownedByMe = owner && me && owner === me.nick;
+    const primary = !owner ? 'Зарезервировать' : (ownedByMe ? 'Сохранить готовность' : 'Подать заявку');
+
+    if (selectedProgress === null) {
+        selectedProgress = state;
+    }
+
+    const progressButtons = stateColors.map((color, progress) => {
+        const selectedClass = progress === selectedProgress ? ' progress-selector__option_selected' : '';
+        const checkedState = progress === selectedProgress ? 'true' : 'false';
+        return `<button class="progress-selector__option${selectedClass}" type="button" data-progress="${progress}" aria-label="Готовность ${progress} из 9" aria-checked="${checkedState}" style="background-color:${color}">${progress}</button>`;
+    }).join('');
+    const releaseAction = ownedByMe ? '<button type="button" id="sector-release">Освободить</button>' : '';
+    const saveStateClass = isError ? ' sector-card__save-state_error' : '';
+    const saveStateMessage = escapeHtml(message || 'Данные синхронизированы');
+    const html = `
+        <div class="sector-card__header"><h2>Сектор ${escapeHtml(attrs.name)}</h2><span class="sector-card__stage">${sectorStage(state)}</span></div>
+        <p class="sector-card__owner">Владелец: <strong>${owner ? escapeHtml(owner) : 'Свободен'}</strong></p>
+        <p class="sector-card__ready">Готовность <strong>${selectedProgress}/9</strong></p>
+        <div class="progress-selector" role="radiogroup" aria-label="Готовность сектора">${progressButtons}</div>
+        <div class="sector-card__actions">
+            <button type="button" class="sector-card__primary-action" id="sector-primary">${primary}</button>
+            ${releaseAction}
+            <button type="button" id="sector-josm">Открыть в JOSM</button>
+            <button type="button" id="sector-osm">Открыть в OSM</button>
+        </div>
+        <div class="sector-card__save-state${saveStateClass}">${saveStateMessage}</div>`;
+
+    $card.removeClass('sector-card_empty').html(html);
+}
+
+function updateUnread() {
+    $('#chat-unread').text(chatUnread).toggle(chatUnread > 0);
 }
 
 function AdminConfirm(text, confirm_cb) {
@@ -183,12 +285,14 @@ var Chat = {
         var authorColor = ownerColor(author);
         // Append to the end and scroll
         var history_class = is_history ? 'history' : '';
-        var entry = $("<tr><td class='nick' style='color: " + authorColor + "'>" + author + "</td><td class='message'>" + message + "</td><td class='time'>" + ts + "</td></tr>");
+        var entry = $("<tr><td class='nick project-chat__author' style='color: " + authorColor + "'>" + author + "</td><td class='message project-chat__text'>" + message + "</td><td class='time project-chat__time'>" + ts + "</td></tr>");
 
         entry.addClass('chat-' + type);
-        if (is_history) entry.addClass('history');
-        if (!chatShowInfo && type === 'info') entry.addClass('hidden');
-        if (toMe) entry.addClass('tome');
+        entry.addClass('project-chat__message');
+        entry.addClass('project-chat__message_type_' + type);
+        if (is_history) entry.addClass('history project-chat__message_history');
+        if (!chatShowInfo && type === 'info') entry.addClass('hidden project-chat__message_hidden');
+        if (toMe) entry.addClass('tome project-chat__message_to-me');
 
         var atEnd = this.isAtEnd();
         this.chatEl().append(entry);
@@ -238,6 +342,7 @@ var Chat = {
 
     updateStyle: function() {
         $(".chat-info").toggleClass('hidden', !chatShowInfo);
+        $(".project-chat__message_type_info").toggleClass('project-chat__message_hidden', !chatShowInfo);
     }
 };
 
@@ -253,10 +358,7 @@ var CakeSettings = {
         this.modified = {};
 
         window.document.title = data['name'] + ' - MapCraft Dev';
-
-        // TODO: move to events
-        $('#dinfo-save').button("disable");
-        InfoDialog.redraw();
+        $('#project-title').text(data['name']);
     },
     reset: function() {
         this.init(this.orig);
@@ -286,9 +388,6 @@ var CakeSettings = {
 
     // Events (like so)
     onModify: function() {
-        //TODO: move to events
-        $('#dinfo-save').button("enable");
-        InfoDialog.redraw();
     }
 };
 
@@ -937,6 +1036,10 @@ In.chat = function (data) {
         return false;
 
     Chat.append(data['message'], data['class'], data['author'], data['date'], data['history']);
+    if ($('#dchat').hasClass('project-chat_collapsed') && !data['history']) {
+        chatUnread++;
+        updateUnread();
+    }
 
 };
 
@@ -979,21 +1082,22 @@ In.javascript = function (data) {
 In.no_comments = function (data) {
     if (selectedFeature == null)
         return;
-    $('#dprop #comments').html('');
+    sectorHistory = [];
+    renderSectorHistory();
 }
 
 In.piece_comment = function (data) {
     if (selectedFeature == null)
         return;
     if (data['piece_index'].toString() == selectedFeature.attributes.name) {
-        var comments_div = $('#dprop #comments');
-        if ($('#dprop .loading').length != 0)
+        var comments_div = $('#comments');
+        if ($('.sector-history__loading', comments_div).length != 0)
             comments_div.html('');
 
         var msg = data['type'] == 'comment' ? data['message'] : t(data['message']);
         msg = TextReplacer.parse(msg);
         var date = data['date'].replace(/\.\d+$/, '');
-        $('#dprop #comments').append('<p class="' + data['type'] + '"><strong>' + data['author'] + '</strong><span class="date">' + date + '</span><br />' + msg + '</p>');
+        sectorHistoryEvent(data['type'] === 'comment' ? 'comment' : 'state', msg, data['author'], date);
     }
 };
 
@@ -1004,9 +1108,10 @@ In.piece_owner = function (data) {
         pieces[0].attributes.owner = isFreeing ? null : data['owner'];
         updatePieceStyle(pieces[0], true);
 
-        if (selectedFeature != null)
-            if (data['piece_index'].toString() == selectedFeature.attributes.name)
-                $('#bowner').button("option", "label", (isFreeing ? ldata[12] : data['owner']) );
+        if (selectedFeature != null && data['piece_index'].toString() == selectedFeature.attributes.name) {
+            sectorHistoryEvent(isFreeing ? 'free' : 'reserve', isFreeing ? 'Сектор освобождён' : 'Сектор зарезервирован', data['owner']);
+            renderSectorCard('Данные синхронизированы');
+        }
     }
 }
 
@@ -1017,15 +1122,15 @@ In.piece_state = function (data) {
         pieces[0].attributes.description = data['state'];
         updatePieceStyle(pieces[0], true);
     }
-    if (selectedFeature != null) {
-        if (data['piece_index'].toString() == selectedFeature.attributes.name)
-            $('#bstatus').button("option", "label", data['state'].toString() + '/9');
+    if (selectedFeature != null && data['piece_index'].toString() == selectedFeature.attributes.name) {
+        selectedProgress = parseInt(data['state'], 10);
+        sectorHistoryEvent('state', 'Готовность изменена: ' + data['state'] + '/9');
+        renderSectorCard('Готовность обновлена');
     }
 };
 
 In.piece_progress = function(data) {
-    var cnts = data['progress'];
-    Progress.update(cnts, 400);
+    // The redesigned map does not show the legacy aggregate progress widget.
 };
 
 In.refresh_pie_data = function (data) {
@@ -1097,16 +1202,14 @@ In.anons_update = function (data) {
 
 In.youare = function (data) {
     me.update(data);
-    $('#pac_nick').button("option", "label", me.nick);
-    $('#pac_nick').button("option", "label", me.nick);
+    $('#pac_nick').text(me.nick.charAt(0).toUpperCase()).attr('title', me.nick);
     if (data['role'] == 'anon')
         $('#pac_nick').click(function() { window.open('/app/auth.php'); } );
     else
         $('#pac_nick').unbind('click');
     $("#pac_text").focus();
 
-    InfoDialog.redraw();
-    $('#badmin').toggle(me.hasRole('admin'));
+    renderSectorCard();
     PieHub.push( Out.get_user_list() );
 };
 
@@ -1329,39 +1432,8 @@ function ApplySettings() {
 function LoadLanguage() {
     $.get("/js/lang/" + $('#slang').val() + ".js", {}, function() {
         LoadTransData();
-        $('#dchat').dialog("option", "title", ldata[4]);
-        $('#duserlist').dialog("option", "title", ldata[5]);
-        $('#dprop').dialog("option", "title", ldata[6]);
-        $('#dsettings').dialog("option", "title", ldata[7]);
-        $('#dnick').dialog("option", "title", ldata[8]);
-        $('#dstatus').dialog("option", "title", ldata[9]);
-        $('#bremote').button("option", "label", ldata[10]);
-        $('#bpotlatch').button("option", "label", "OSM");
-        $('#bsettings').button("option", "label", ldata[7]);
-        $('#bpie').button("option", "label", ldata[11]);
-        $('#bowner').button("option", "label", ldata[12]);
-        $('#bcomment').button("option", "label", ldata[13]);
-        $('#lnick').text(ldata[14]);
-        $('#lowner').text(ldata[15]);
-        $('#lreadiness').text(ldata[16]);
-        $('#lcomments').text(ldata[17]);
-        $('#lname').text(ldata[18]);
-        $('#lpieces').text(ldata[19]);
-        $('#lclaims').text(ldata[20]);
-        $('#ltheme').text(ldata[21]);
-        $('#llang').text(ldata[22]);
-        $('#comment_text').attr('placeholder', ldata[23]);
-        $('#ltake').text(ldata[24]);
-        $('#lclaim').text(ldata[25]);
-        $('#lrefuse').text(ldata[26]);
-        $('#lprogress_bar').text(t("Progress bar:"));
-        $('#lshow_owned').text(ldata[29]);
-        $('#lchat_show_info').text(ldata[30]);
-        $('#binfo').button("option", "label", ldata[31]);
-        $('#lpiece_label').text(ldata[32]);
-        $('#lpiece_color').text(ldata[33]);
-        $('#dinfo').dialog("option", "title", ldata[34]);
-        $('#badmin').button("option", "label", ldata[35]);
+        $('#pac_text').attr('placeholder', ldata[23] || 'Написать сообщение…');
+        renderSectorCard();
     });
 }
 
@@ -1472,7 +1544,7 @@ function RedrawUsersList() {
         var sreserved = "";
         var sclaims = "";
         for (var i = 0; i < users[u]['reserved'].length; i++)
-            sreserved += ("<span class='num'>" + users[u]['reserved'][i] + "</span> ");
+            sreserved += ("<span class='num project-chat__sector-link'>" + users[u]['reserved'][i] + "</span> ");
         var userclaims = [];
         for (i = 0; i < claims.length; i++) {
             if (claims[i]['owner'] == users[u]['user_nick'])
@@ -1480,15 +1552,14 @@ function RedrawUsersList() {
         }
         for (i = 0; i < userclaims.length; i++) {
             if (me.nick == users[u]['user_nick'])
-                sclaims += ("<span class='claim ui-state-default'><span class='num'>" + userclaims[i]['piece_index'] + "</span>&nbsp;[" + userclaims[i]['vote_balance'] + "&nbsp;<div title='Снять заявку' class='close'></div>]</span> ");
+                sclaims += ("<span class='claim ui-state-default project-chat__claim'><span class='num project-chat__sector-link'>" + userclaims[i]['piece_index'] + "</span>&nbsp;[" + userclaims[i]['vote_balance'] + "&nbsp;<div title='Снять заявку' class='close'></div>]</span> ");
             else
-                sclaims += ("<span class='claim ui-state-default'><span class='num'>" + userclaims[i]['piece_index'] + "</span>&nbsp;[<div title='За' class='up'></div>&nbsp;" + userclaims[i]['vote_balance'] + "&nbsp;<div title='Против' class='down'></div>]</span><br />");
+                sclaims += ("<span class='claim ui-state-default project-chat__claim'><span class='num project-chat__sector-link'>" + userclaims[i]['piece_index'] + "</span>&nbsp;[<div title='За' class='up'></div>&nbsp;" + userclaims[i]['vote_balance'] + "&nbsp;<div title='Против' class='down'></div>]</span><br />");
         }
-        newhtml += ("<tr><td class='nick'>" + (users[u]['online'] ? "<img src='/img/onl.png'>&nbsp;" : "") + "<span class='nickname'>" + users[u]['user_nick'] + "</span></td><td class='msg'>" + sreserved + "</td><td>" + sclaims + "</td></tr>");
+        newhtml += ("<tr><td class='nick project-chat__member-name'>" + (users[u]['online'] ? "<img src='/img/onl.png'>&nbsp;" : "") + "<span class='nickname'>" + users[u]['user_nick'] + "</span></td><td class='msg project-chat__member-sectors'>" + sreserved + "</td><td>" + sclaims + "</td></tr>");
     }
     newhtml += "</table>";
     $('#userlist-table').html(newhtml);
-    $('#pac_text').autocomplete('option', 'source', nicks);
     $('.nickname').click( function() { $('#pac_text').val($('#pac_text').val() + $(this).text() + ': '); $("#pac_text").focus(); } );
     $('.up').click( function() {
         var piece_index = $(this).parent().find('span.num').text();
@@ -1555,8 +1626,19 @@ function Send() {
     return false;
 }
 
-function SetStatus(e) {
-    PieHub.push( Out.piece_state(selectedFeature.attributes.name, $('#sstatus').slider('value')) );
+function SetStatus() {
+    if (selectedFeature == null || selectedProgress === null) {
+        return;
+    }
+
+    const serverState = parseInt(selectedFeature.attributes.description, 10) || 0;
+
+    if ((selectedProgress < serverState || selectedProgress === 9) && !window.confirm('Подтвердите изменение готовности сектора до ' + selectedProgress + '/9.')) {
+        return;
+    }
+
+    PieHub.push(Out.piece_state(selectedFeature.attributes.name, selectedProgress));
+    renderSectorCard('Сохраняем…');
 }
 
 function ScrollDown(to) {
@@ -1591,54 +1673,23 @@ function PostComment() {
 
 function onSelectPiece(e) {
     selectedFeature = e;
+    selectedProgress = parseInt(e.attributes.description, 10) || 0;
+    sectorHistory = [];
     updatePieceStyle(e, true);
     window.location.hash = e.attributes.name;
-    $("#comments").html("<div class='loading'></div>");
-    $('#bowner').button("enable");
-    $('#bowner').click( function() {
-        if(!e.attributes.owner) {
-            $('#dtake').dialog('open');
-        }
-        else if (e.attributes.owner == me.nick) {
-            $('#drefuse').dialog('open');
-        }
-        else if (me.inAdminMode()) {
-            var msg = "Do you really want to free slice owned by '" + e.attributes.owner + "'?";
-            AdminConfirm(msg , function() {
-                RefusePiece();
-            });
-        } else {
-            $('#dclaim').dialog('open');
-        }
-    });
-    $('#bowner').button("option", "label", e.attributes.owner ? e.attributes.owner : ldata[12]);
-    $('#bowner').button("option", "icons", { primary: (e.attributes.owner ? (e.attributes.owner == me.nick ? 'ui-icon-closethick' : 'ui-icon-circle-check') : 'ui-icon-flag')});
-    $("#dprop").dialog("option", "title", ldata[6] + ": " + e.attributes.name);
-    $("#dprop").dialog("open");
-    $('#bstatus').button("option", "label", e.attributes.description + '/9');
-    $('#bstatus').button("enable");
-    $('#bremote').button("enable");
-    $('#bpotlatch').button("enable");
-    $('#bcomment').button("enable");
+    $('#comments').html('<div class="sector-history__loading"></div>');
+    renderSectorCard('Загружаем историю…');
     GetComments();
-
-
 }
 
 function onUnselectPiece(e) {
     selectedFeature = null;
+    selectedProgress = null;
+    sectorHistory = [];
     updatePieceStyle(e, true);
     window.location.hash = '';
-    $('#bowner').button("option", "label", ldata[12]);
-    $('#bowner').button("option", "icons", {primary: 'ui-icon-flag'});
-    $('#bowner').unbind('click');
-    $('#bstatus').button("option", "label", '0/9');
-    $('#dprop').dialog("option", "title", ldata[6]);
-    $('#comments').html("");
-    $('#bowner').button("disable");
-    $('#bstatus').button("disable");
-    $('#bremote').button("disable");
-    $('#bcomment').button("disable");
+    renderSectorCard();
+    renderSectorHistory();
 }
 
 function updatePieceStyle(e, redraw) {
@@ -1674,8 +1725,10 @@ function updatePieceStyle(e, redraw) {
 
     // set Opacity and stroke for selected
     var selected = e == selectedFeature;
-    e.style.fillOpacity = selected ? "0.8" : "0.5";
-    e.style.strokeWidth = selected ? "3" : "1";
+    e.style.fillOpacity = selected ? '0.78' : '0.52';
+    e.style.strokeColor = selected ? '#364bff' : '#202a3d';
+    e.style.strokeWidth = selected ? '3' : '1';
+    e.style.graphicZIndex = selected ? 10 : 1;
 
     if(redraw) {
         kmllayer.redraw(true);
@@ -1691,14 +1744,209 @@ function updateAllPieceStyles() {
 }
 
 function SetStyle() {
-    $('head>link.ui-theme').remove();
-    var link = $('<link href="/css/' + $('#sstyle').val() + '/jquery-ui-1.8.11.custom.css" type="text/css" media="screen, projection" rel="Stylesheet" class="ui-theme" />');
-    var linkpatch = $('<link rel="stylesheet" href="/css/jquery-theme-patch.css" class="ui-theme" type="text/css" media="screen, projection" />');
-    $('head').append(link);
-    $('head').append(linkpatch);
+    // Themes were coupled to the removed floating-window interface.
 }
 
 $(document).ready(function () {
+    // The workspace layout intentionally uses only jQuery and native controls.
+    PieHub.init({
+        pieid: parseInt(window.location.pathname.split('pie/')[1]),
+        hub_url: config_get('hub_url', '/hub'),
+        poll_callback: Dispatch
+    });
+    PieHub.poll();
+    Enter();
+
+    const options = {
+        controls: [
+            new OpenLayers.Control.Navigation(),
+            new OpenLayers.Control.ScaleLine(),
+            new OpenLayers.Control.Permalink(),
+            new OpenLayers.Control.Attribution()
+        ],
+        projection: new OpenLayers.Projection('EPSG:900913'),
+        displayProjection: new OpenLayers.Projection('EPSG:4326'),
+        units: 'm',
+        numZoomLevels: 18,
+        maxResolution: 156543.0339,
+        maxExtent: new OpenLayers.Bounds(-20037508, -20037508, 20037508, 20037508.34)
+    };
+    olmap = new OpenLayers.Map(document.getElementById('olmap'), options);
+    const mapnik = new OpenLayers.Layer.OSM();
+    const pieId = window.location.pathname.split('pie/')[1];
+    const kmlFormat = new OpenLayers.Format.KML({
+        extractStyles: true,
+        extractAttributes: true,
+        maxDepth: 0
+    });
+    const kmlProtocol = new OpenLayers.Protocol.HTTP({
+        url: `/kml/${pieId}.kml`,
+        format: kmlFormat
+    });
+
+    kmllayer = new OpenLayers.Layer.Vector('Pie', {
+        strategies: [new OpenLayers.Strategy.Fixed()],
+        protocol: kmlProtocol,
+        projection: 'EPSG:4326'
+    });
+    olmap.addLayers([mapnik, kmllayer]);
+    selectCtrl = new OpenLayers.Control.SelectFeature(kmllayer, {
+        clickout: true,
+        onSelect: onSelectPiece,
+        onUnselect: onUnselectPiece
+    });
+    selectCtrl.handlers.feature.stopDown = false;
+    olmap.addControl(selectCtrl);
+    selectCtrl.activate();
+    kmllayer.events.register('loadend', this, function() {
+        olmap.zoomToExtent(kmllayer.getDataExtent());
+        olmap.zoomOut();
+        updateAllPieceStyles();
+    });
+
+    $('#bzoomp').click(() => {
+        olmap.zoomIn();
+    });
+    $('#bzoomm').click(() => {
+        olmap.zoomOut();
+    });
+    $('#bfit').click(() => {
+        const extent = kmllayer.getDataExtent();
+
+        if (extent) {
+            olmap.zoomToExtent(extent);
+        }
+    });
+    $('#sector-search').keydown(function(e) {
+        if (e.keyCode === 13) {
+            SelectPiece($(this).val().replace(/[^0-9]/g, ''));
+            return false;
+        }
+    });
+    $(document).keydown(function(e) {
+        if (e.keyCode === 191 && !$(e.target).is('input, textarea')) {
+            e.preventDefault();
+            $('#sector-search').focus();
+        }
+
+        if (e.keyCode === 27) {
+            $('#map-popover').attr('hidden', 'hidden');
+            $('#sector-sidebar').removeClass('sector-sidebar_open');
+        }
+    });
+    $('#sector-card').delegate('[data-progress]', 'click', function() {
+        selectedProgress = parseInt($(this).attr('data-progress'), 10);
+        renderSectorCard('Готовность изменена. Сохраните, чтобы применить.');
+    }).delegate('#sector-primary', 'click', function() {
+        if (!selectedFeature) {
+            return;
+        }
+
+        if (!selectedFeature.attributes.owner) {
+            TakePiece();
+        } else if (selectedFeature.attributes.owner === me.nick) {
+            SetStatus();
+        } else {
+            ClaimPiece();
+        }
+    }).delegate('#sector-release', 'click', () => {
+        if (selectedFeature && window.confirm('Освободить этот сектор?')) {
+            RefusePiece();
+        }
+    }).delegate('#sector-josm', 'click', () => {
+        OpenViaRemote('josm');
+    }).delegate('#sector-osm', 'click', () => {
+        OpenViaRemote('potlatch2');
+    });
+    $('#show-full-history').click(function() {
+        $(this).data('expanded', !$(this).data('expanded'));
+        renderSectorHistory();
+    });
+    $('#chat-toggle').click(function() {
+        const closed = $('#dchat').toggleClass('project-chat_collapsed').hasClass('project-chat_collapsed');
+        $(this).attr('aria-expanded', !closed);
+        localStorage.mapcraftChatCollapsed = closed ? '1' : '';
+
+        if (!closed) {
+            chatUnread = 0;
+            updateUnread();
+            ScrollDown();
+        }
+    });
+
+    if (localStorage.mapcraftChatCollapsed === '1') {
+        $('#chat-toggle').click();
+    }
+
+    const savedChatHeight = parseInt(localStorage.mapcraftChatHeight, 10);
+
+    if (savedChatHeight >= 160) {
+        $('#dchat').css('height', `${savedChatHeight}px`);
+    }
+
+    $(document).mouseup(() => {
+        if (!$('#dchat').hasClass('project-chat_collapsed')) {
+            localStorage.mapcraftChatHeight = $('#dchat').height();
+        }
+    });
+    $('#pac_form').submit(Send);
+    $('#pac_text').keydown(function(e) {
+        if (e.keyCode === 13 && !e.shiftKey) {
+            e.preventDefault();
+            Send();
+        }
+    });
+    $('#bsettings').click(() => {
+        const checked = showOwned ? ' checked' : '';
+        $('#map-popover')
+            .html(`<label><input id="toggle-owned" type="checkbox"${checked}> Показывать занятые сектора</label>`)
+            .removeAttr('hidden');
+    });
+    $('#bfilters').click(() => {
+        $('#map-popover')
+            .html(`
+                <label><input id="filter-free" type="checkbox"> Только свободные</label>
+                <label><input id="filter-mine" type="checkbox"> Только мои</label>
+                <label><input id="filter-ready" type="checkbox"> Скрыть готовые</label>`)
+            .removeAttr('hidden');
+    });
+    $('#blayers').click(() => {
+        $('#map-popover')
+            .html('<label><input id="toggle-layer" type="checkbox" checked> Секторы</label>')
+            .removeAttr('hidden');
+    });
+    $('#map-popover').delegate('#toggle-layer', 'change', function() {
+        kmllayer.setVisibility($(this).is(':checked'));
+    }).delegate('#toggle-owned', 'change', function() {
+        showOwned = $(this).is(':checked');
+        updateAllPieceStyles();
+    }).delegate('#filter-free, #filter-mine, #filter-ready', 'change', () => {
+        const free = $('#filter-free').is(':checked');
+        const mine = $('#filter-mine').is(':checked');
+        const ready = $('#filter-ready').is(':checked');
+
+        for (const feature of kmllayer.features) {
+            const hidden = (free && feature.attributes.owner)
+                || (mine && feature.attributes.owner !== me.nick)
+                || (ready && parseInt(feature.attributes.description, 10) === 9);
+
+            feature.style.display = hidden ? 'none' : '';
+        }
+
+        kmllayer.redraw();
+    });
+    $('#reconnect').click(() => {
+        PieHub.poll();
+    });
+    $(window).resize(() => {
+        olmap.updateSize();
+    });
+    renderSectorCard();
+});
+
+/*
+ * Legacy jquery-ui initialization retained for historical reference only.
+ * The redesigned client above is the only active startup path.
     Progress.draw();
 
     // Инициализация клиента хаба
@@ -1918,4 +2166,4 @@ $(document).ready(function () {
     InfoDialog.init();
     AdminDialog.init();
     LoadSettings();
-});
+*/

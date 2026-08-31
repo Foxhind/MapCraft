@@ -1,268 +1,77 @@
 <!doctype html>
-<!--[if lt IE 7 ]> <html lang="en" class="no-js ie6"> <![endif]-->
-<!--[if IE 7 ]>    <html lang="en" class="no-js ie7"> <![endif]-->
-<!--[if IE 8 ]>    <html lang="en" class="no-js ie8"> <![endif]-->
-<!--[if IE 9 ]>    <html lang="en" class="no-js ie9"> <![endif]-->
-<!--[if (gt IE 9)|!(IE)]><!-->
-<html lang="en"> <!--<![endif]-->
+<html lang="ru">
 <head>
-	<meta charset="UTF-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-	<title>MapCraft Dev</title>
-	<meta name="description" content="Massively mapping service">
-	<meta name="author" content="Hind">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<link rel="stylesheet" href="/css/style.css" type="text/css" media="screen, projection" />
-    <link rel="stylesheet" href="/css/smoothness/jquery-ui-1.8.11.custom.css" class="ui-theme" type="text/css" media="screen, projection" />
-    <link rel="stylesheet" href="/css/jquery-theme-patch.css" class="ui-theme" type="text/css" media="screen, projection" />
-	<!-- <script type="text/javascript" src="http://openlayers.org/api/OpenLayers.js"></script>
-	<script type="text/javascript" src="http://code.jquery.com/jquery-1.5.1.min.js"></script> -->
-	<script type="text/javascript" src="/openlayers/OpenLayers.js"></script>
-	<script type="text/javascript" src="/js/jquery-1.5.1.min.js"></script>
-	<script type="text/javascript" src="/js/raphael-min.js"></script>
-	<script type="text/javascript" src="/js/underscore-min.js"></script>
-	<script type="text/javascript" src="/js/jquery-ui-1.8.11.custom.min.js"></script>
-	<script type="text/javascript" src="/js/config.js"></script>
-	<script type="text/javascript" src="/js/hub.js"></script>
-	<script type="text/javascript" src="/js/lang/en.js"></script>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MapCraft</title>
+    <link rel="stylesheet" href="/css/style.css" type="text/css" media="screen, projection">
+    <script type="text/javascript" src="/openlayers/OpenLayers.js"></script>
+    <script type="text/javascript" src="/js/jquery-1.5.1.min.js"></script>
+    <script type="text/javascript" src="/js/raphael-min.js"></script>
+    <script type="text/javascript" src="/js/underscore-min.js"></script>
+    <script type="text/javascript" src="/js/config.js"></script>
+    <script type="text/javascript" src="/js/hub.js"></script>
+    <script type="text/javascript" src="/js/lang/ru.js"></script>
 </head>
 <body>
-<div id="olmap">
-</div>
-<div id="dchat">
-<table cellpadding="2"><tbody>
-<tr id="chatline"><td colspan="3">
-<div id="chat"><table><tbody><tr><td class="nick"></td><td class="msg"></td><td></td></tr></tbody></table></div>
-</td></tr>
-<tr id="inputline"><td style="width: 100px;"><div id="pac_nick"></div></td><td></td><td><form id="pac_form"><input id="pac_text" type="text" maxlength="1024"></form></td></tr></tbody></table>
-</div>
-<div id="duserlist">
-  <div id="userlist">
-	<div id="userlist-table"></div>
-	<span id="anonscounter"></span>
-  </div>
-</div>
-<div id="dnick">
-<div id="question"></div>
-<span id="lnick">New nick:</span><br />
-<form id="nick_form"><input type="text" id="newnick"></form>
-</div>
-<div id="dprop">
-<table><tbody>
-<tr class="property"><td id="lowner">Owner:</td><td><button id="bowner"></button></td></tr>
-<tr class="property"><td id="lreadiness">Readiness:</td><td><button id="bstatus">0/9</button></td></tr>
-<tr class="property"><td id="lcomments" colspan="2">Comments:</td><td></td></tr>
-<tr class="maxima"><td colspan="2"><div id='comments'></div></td><td></td></tr>
-<tr><td colspan="2"><form id='comment_form'><textarea id='comment_text' rows='3' placeholder='Your comment'></textarea></form></td><td></td></tr>
-<tr><td><button id="bremote"></button><button id="bpotlatch"></button></td><td><button id="bcomment"></button></td></tr>
-</tbody></table>
-</div>
-<div id="dstatus" title="Status changing">
-<div id="question"></div>
-	New status:&nbsp;<span id="newstatus"></span>&nbsp;
-	<span id="vcolor">██</span>&nbsp;
-	<span class='comment' id='statuscomment'></span><br />
-	<div id="sstatus"></div>
-</div>
+<aside id="sector-sidebar" class="sector-sidebar" aria-label="Управление сектором">
+    <nav class="breadcrumbs" aria-label="Хлебные крошки">
+        <a href="/" class="breadcrumbs__home" aria-label="Главная">⌂ <span>Главная</span></a>
+        <span aria-hidden="true">/</span>
+        <span id="project-title">Карта</span>
+    </nav>
+    <label class="sector-search" for="sector-search">
+        <span aria-hidden="true">⌕</span>
+        <input id="sector-search" class="sector-search__input" type="search" placeholder="Найти сектор" autocomplete="off">
+        <kbd class="sector-search__shortcut">/</kbd>
+    </label>
+    <section id="sector-card" class="sector-card sector-card_empty" aria-live="polite">
+        <p class="sector-card__empty-state">Выберите сектор на карте или найдите его по номеру.</p>
+    </section>
+    <section id="sector-history" class="sector-history" aria-live="polite">
+        <h2>История сектора</h2>
+        <div id="comments" class="sector-history__entries"><p class="sector-history__empty">История появится после выбора сектора.</p></div>
+        <button id="show-full-history" class="sector-history__show-more" type="button" hidden>Показать всю историю</button>
+    </section>
+    <footer class="connection-status"><span class="connection-status__indicator"></span><span id="connection-label" class="connection-status__label">Подключено</span><button id="reconnect" class="connection-status__retry" type="button" hidden>Повторить</button></footer>
+</aside>
 
-<div id="dtake" title="Taking">
-<div id="question"></div>
-<span id="ltake">Are you sure you want to take this slice?</span><br />
-</div>
-<div id="dclaim" title="Putting claim">
-<div id="exclamation"></div>
-<span id="lclaim">This slice has an owner already!<br />Put to the vote the transfer for you?</span>
-</div>
-<div id="drefuse" title="Freeing">
-<div id="question"></div>
-<span id="lrefuse">Are you sure you want to abandon the slice?</span><br />
-</div>
+<main id="map-area" class="map-workspace">
+    <div id="olmap" class="map-workspace__canvas" aria-label="Карта секторов"></div>
+    <div class="map-controls map-controls_position_left" aria-label="Масштаб карты">
+        <button id="bzoomp" class="map-controls__button" type="button" aria-label="Приблизить">+</button>
+        <button id="bzoomm" class="map-controls__button" type="button" aria-label="Отдалить">−</button>
+        <button id="bfit" class="map-controls__button" type="button" aria-label="Показать весь проект">⌗</button>
+    </div>
+    <div class="map-controls map-controls_position_right" aria-label="Инструменты карты">
+        <button id="blayers" class="map-controls__button" type="button">▱ <span>Слои</span></button>
+        <button id="bfilters" class="map-controls__button" type="button">⌁ <span>Фильтры</span></button>
+        <button id="bsettings" class="map-controls__button" type="button">⚙ <span>Настройки</span></button>
+        <button id="bonline" class="map-controls__button online-summary" type="button"><span class="online-summary__avatars">● ● ●</span> <span id="online-count">0 онлайн</span></button>
+    </div>
+    <div id="map-popover" class="map-popover" hidden></div>
 
+    <section id="dchat" class="project-chat project-chat_open" aria-label="Общий чат">
+        <button id="chat-toggle" class="project-chat__header" type="button" aria-expanded="true">
+            <span>Общий чат</span><span id="chat-unread" class="project-chat__unread-count" hidden>0</span><span class="project-chat__connection">●</span><span class="project-chat__chevron">⌄</span>
+        </button>
+        <div id="chat-body" class="project-chat__body">
+            <aside id="duserlist" class="project-chat__members" aria-label="Участники"><div id="userlist-table"></div><span id="anonscounter"></span></aside>
+            <div class="project-chat__feed">
+                <div id="chat" class="project-chat__messages"><table><tbody></tbody></table></div>
+                <form id="pac_form" class="project-chat__composer">
+                    <button id="pac_nick" class="project-chat__user-button" type="button" title="Профиль">?</button>
+                    <label class="project-chat__attachment" aria-label="Прикрепить файл">⌕<input type="file" disabled></label>
+                    <textarea id="pac_text" rows="1" maxlength="1024" placeholder="Написать сообщение…"></textarea>
+                    <button id="send-message" class="project-chat__send" type="submit">Отправить</button>
+                </form>
+            </div>
+        </div>
+    </section>
+</main>
 
-<div class="dialog" id="dsettings">
-
-<h4>Common</h4>
-<table style="width: 100%">
-<tr class="property"><td id="ltheme">Theme:</td><td>
-<select id="sstyle">
-<option value="mapcraft">mapcraft</option>
-<option value="cupertino">cupertino</option>
-<option value="redmond">redmond</option>
-<option value="smoothness" selected>smoothness</option>
-<option value="ui-lightness">ui-lightness</option>
-</select>
-</td></tr>
-<tr class="property"><td id="llang">Language:</td><td>
-<select id="slang">
-<option value="de">Deutsch</option>
-<option value="en" selected>English</option>
-<option value="es">Español</option>
-<option value="fr">Français</option>
-<option value="it">Italiano</option>
-<option value="jp">日本語</option>
-<option value="pl">Polski</option>
-<option value="ru">Русский</option>
-<option value="sk">Slovenčina</option>
-<option value="uk">Українська</option>
-</select>
-</td></tr>
-<tr class="property"><td><label id="lprogress_bar" for="sprogress_bar">Progress bar:</label></td><td>
-<input type="checkbox" id="sprogress_bar">
-</td></tr>
-</table>
-
-<h4>Cake settings</h4>
-<table style="width: 100%">
-<tr class="property">
-	<td><label id="lpiece_label" for="spiece_label">Draw in piece:</label></td>
-	<td><select id="spiece_label">
-		<option value="none" selected>nothing</option>
-		<option value="owner">owner</option>
-		<option value="index">index</option>
-	</select></td>
-</tr>
-<tr class="property">
-	<td><label id="lpiece_color" for="spiece_color">Colorize piece by:</label></td>
-	<td><select id="spiece_color">
-		<option value="none">none</option>
-		<option value="state" selected>state</option>
-		<option value="busy">busy/free</option>
-		<option value="owner">owner</option>
-	</select></td>
-</tr>
-<tr class="property"><td><label id="lshow_owned" for="sshow_owned">Show owned slices:</label></td><td>
-<input type="checkbox" id="sshow_owned" checked>
-</td></tr>
-</table>
-
-<h4>Chat settings</h4>
-<table style="width: 100%">
-<tr class="property">
-	<td><label id="lchat_show_info" for="schat_show_info">Show info messages in chat:</label></td>
-	<td><input type="checkbox" id="schat_show_info" checked></td>
-</tr>
-</table>
-</div>
-
-<div class="dialog" id="dadmin" style="width: 100%">
-	<h4>Admin mode</h4>
-	<p>
-		In this mode you will be able to free or change progress state for any slice even reserved by others.
-	</p>
-	<div id="dadmin-free-buttons">
-		<button id="dadmin-am-toggle">Turn on Admin Mode</button>
-	</div>
-	<h4>Mass progress change</h4>
-	<p>
-		All slices with status out of range [<span id='dadmin-range-help'>0 - 9</span>]
-		will be updated to have status equal to nearest border.
-	</p>
-	<button id="dadmin-mass-apply">Apply</button>
-	<div id='dadmin-mass-slider'></div>
-	<h4>Mass free</h4>
-	<p>
-		This tool can be used to free all currently reserved slices.
-	</p>
-	<div id="dadmin-free-buttons">
-		<button id="dadmin-free-completed">Free completed</button>
-		<button id="dadmin-free-all">Free all</button>
-	</div>
-</div>
-
-<div class="dialog" id="dinfo" style="width: 100%">
-	<div id="dinfo-pie-actions"></div>
-	<h3 id='dinfo-name'>Pie name</h3>
-
-	<h4>Description</h4>
-	<p id="dinfo-description">Description here</p>
-
-	<h4>Useful links</h4>
-	<table id="dinfo-links">
-		<tr>
-			<td class="tbl-prop">wms</td>
-			<td class="tbl-value" id="wms_link"></td>
-			<td class="tbl-actions" id="wms_action"></td>
-		</tr><tr>
-			<td class="tbl-prop">http</td>
-			<td class="tbl-value" id="log_link"></td>
-			<td class="tbl-actions"></td>
-		</tr>
-	</table>
-
-	<h4>Status descriptions</h4>
-	<table id="dinfo-statuses"></table>
-
-	<h4>Details</h4>
-	<table id="dinfo-details"></table>
-</div>
-
-<div class="dialog enter-submit" id="dinfo-link-editor">
-	<table style="width: 100%">
-		<tr>
-			<td class="tbl-prop">Name</td>
-			<td class="tbl-value"><input type="text" id="dinfo-link-name"  style='width: 90%'/></td>
-		</tr><tr>
-			<td class="tbl-prop">Reference</td>
-			<td class="tbl-value"><input type="text" id="dinfo-link-ref"  style='width: 90%'/></td>
-		</tr>
-	</table>
-</div>
-
-<div class="dialog enter-submit" id="dinfo-name-editor">
-	<table style="width: 100%">
-		<tr>
-			<td class="tbl-prop">Name</td>
-			<td class="tbl-value"><input type="text" style='width: 90%'/></td>
-		</tr>
-	</table>
-</div>
-
-<div class="dialog" id="dinfo-description-editor">
-	Description:<br/>
-	<textarea style='width: 98%; height: 90%'></textarea>
-</div>
-
-<div class="dialog enter-submit" id="dinfo-status-editor">
-	<table style="width: 100%">
-		<tr>
-			<td class="tbl-prop">Name</td>
-			<td class="tbl-value"><input type="text" style='width: 90%'/></td>
-		</tr>
-	</table>
-</div>
-
-
-<table id="panel">
-<tr>
-<td><button id="bzoomp">+</button></td>
-<td><button id="bzoomm">&minus;</button></td>
-<td><input type="checkbox" id="bpie" checked /><label for="bpie"></label></td>
-<td><button id="bsettings"></button></td>
-<td><button id="binfo">Info</button></td>
-<td><button id="badmin" style="display: none">Admin</button></td>
-<td><div id="vis">
-<input type="radio" id="rfull" name="vis" checked /><label for="rfull"> </label>
-<input type="radio" id="rtrans" name="vis" /><label for="rtrans"> </label>
-<input type="radio" id="rnone" name="vis" /><label for="rnone"> </label>
-</div></td>
-<td><div id="progress_bar"></div></td>
-</tr>
-</table>
-
-<div id="dialog-body"></div>
-
-<!-- !!! Tempaltes !!! -->
-
-<script type="text/template" id="dinfo-row-template">
-  <tr class="user-data">
-  	<td class="tbl-prop"><%= prop %></td>
-  	<td class="tbl-value"><%= value %></td>
-  	<td class="tbl-actions"></td>
-  </tr>
-</script>
-
-<!-- !!! Main scrpt !!! -->
+<div id="dialog-body" class="native-dialog" hidden role="dialog" aria-modal="true"></div>
 <script type="text/javascript" src="/js/main.js"></script>
-
 </body>
 </html>
