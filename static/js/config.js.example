@@ -2,6 +2,7 @@ MapCraft = {};
 
 MapCraft.config = {
     hub_url: "/hub",
+    mapbox_access_token: 'pk.eyJ1IjoiZm94aGluZCIsImEiOiIwdUlld2RzIn0.OeC1ZQJN0YdY9ApNl-FcTw',
     // hub_url: "http://localhost:8080/hub",    // local CORS     \
     // hub_url: "http://example.com:8080/hub",  // external CORS  - do not forget to set 'origin' in the hub config
 }

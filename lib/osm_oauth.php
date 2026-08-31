@@ -72,6 +72,11 @@ function osm_oauth_fetch_user_details($access_token) {
 
     $status = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
     curl_close($curl);
+
+    return osm_oauth_decode_user_details_response($status, $body);
+}
+
+function osm_oauth_decode_user_details_response($status, $body) {
     if ($status < 200 || $status >= 300) {
         throw new RuntimeException('OpenStreetMap rejected the user-details request.');
     }
@@ -87,9 +92,20 @@ function osm_oauth_fetch_user_details($access_token) {
         throw new RuntimeException('OpenStreetMap user details are incomplete.');
     }
 
+    $avatar_url = '';
+    if (isset($xml->user->img['href'])) {
+        $candidate = trim((string) $xml->user->img['href']);
+        $scheme = parse_url($candidate, PHP_URL_SCHEME);
+
+        if (filter_var($candidate, FILTER_VALIDATE_URL) && in_array($scheme, array('http', 'https'), true)) {
+            $avatar_url = $candidate;
+        }
+    }
+
     return array(
         'id' => $id,
         'display_name' => $display_name,
+        'avatar_url' => $avatar_url,
     );
 }
 ?>

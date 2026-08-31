@@ -30,3 +30,16 @@ var ldata = [
 "Pokaż pseudonimy:",
 "Pokaż posiadane kawałki:"
 ];
+
+if (typeof trans === 'undefined') {
+    var trans = [];
+}
+
+trans.push(
+    'About pie',
+    'O torcie',
+    'Pie information',
+    'Informacje o torcie',
+    'Loading pie information…',
+    'Ładowanie informacji o torcie…'
+);

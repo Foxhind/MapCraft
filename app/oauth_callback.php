@@ -42,17 +42,29 @@ try {
 
     $_SESSION['osm_id'] = $user_details['id'];
     $_SESSION['osm_user'] = $user_details['display_name'];
+    $_SESSION['osm_avatar_url'] = $user_details['avatar_url'];
 
-    $pg_osm_user = pg_escape_string($_SESSION['osm_user']);
-    $result = pg_query($connection, 'SELECT id FROM users WHERE nick=\'' . $pg_osm_user . '\'');
+    $result = pg_query_params($connection, 'SELECT id FROM users WHERE nick = $1', array($_SESSION['osm_user']));
     if (pg_num_rows($result) > 0) {
         $_SESSION['user_id'] = pg_fetch_result($result, 0, 0);
-    } else {
-        $_SESSION['user_id'] = pg_fetch_result(
-            pg_query($connection, 'INSERT INTO users VALUES(\'' . $pg_osm_user . '\', DEFAULT, DEFAULT) RETURNING id'),
-            0,
-            0
+        $updated = pg_query_params(
+            $connection,
+            'UPDATE users SET avatar_url = $1 WHERE id = $2',
+            array($user_details['avatar_url'], $_SESSION['user_id'])
         );
+        if (!$updated) {
+            throw new RuntimeException('Unable to store the OpenStreetMap avatar URL.');
+        }
+    } else {
+        $created = pg_query_params(
+            $connection,
+            'INSERT INTO users (nick, avatar_url) VALUES ($1, $2) RETURNING id',
+            array($_SESSION['osm_user'], $user_details['avatar_url'])
+        );
+        if (!$created) {
+            throw new RuntimeException('Unable to create the OpenStreetMap user.');
+        }
+        $_SESSION['user_id'] = pg_fetch_result($created, 0, 0);
     }
 
     header('Location: /app/auth.php?action=success');

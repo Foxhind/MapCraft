@@ -28,3 +28,16 @@ var ldata = [
 "ニックネーム",
 "担当中のピース"
 ];
+
+if (typeof trans === 'undefined') {
+    var trans = [];
+}
+
+trans.push(
+    'About pie',
+    'ケーキについて',
+    'Pie information',
+    'ケーキの情報',
+    'Loading pie information…',
+    'ケーキの情報を読み込んでいます…'
+);

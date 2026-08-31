@@ -32,7 +32,7 @@ function _update_users_claims($res, $from, $to_all) {
     // Buffer array
     $users = array();
 
-    $result = pg_query($connection, 'SELECT pieces.id, pieces.index, users.nick, users.color FROM pieces JOIN users ON users.id = pieces.owner WHERE pie = '.$from->pieid . ' ORDER BY pieces.index');
+    $result = pg_query($connection, 'SELECT pieces.id, pieces.index, users.nick, users.color, users.avatar_url FROM pieces JOIN users ON users.id = pieces.owner WHERE pie = '.$from->pieid . ' ORDER BY pieces.index');
     $piece_ids = pg_fetch_all_columns($result, 0);
 
     // Users who has pieces
@@ -40,12 +40,12 @@ function _update_users_claims($res, $from, $to_all) {
         if (isset($users[$row['nick']]))
             $users[$row['nick']]['owns'][] = $row['index'];
         else
-            $users[$row['nick']] = array('owns' => array($row['index']), 'color' => array($row['color']), 'online' => false);
+            $users[$row['nick']] = array('owns' => array($row['index']), 'color' => array($row['color']), 'avatar_url' => $row['avatar_url'], 'online' => false);
     }
 
 
     if (count($piece_ids) != 0) {
-        $result = pg_query($connection, 'SELECT claims.id, users.nick, users.color, pieces.index, score FROM claims JOIN pieces on claims.piece = pieces.id JOIN users ON users.id = claims.author WHERE piece IN ('.implode(',', $piece_ids).')');
+        $result = pg_query($connection, 'SELECT claims.id, users.nick, users.color, users.avatar_url, pieces.index, score FROM claims JOIN pieces on claims.piece = pieces.id JOIN users ON users.id = claims.author WHERE piece IN ('.implode(',', $piece_ids).')');
         while ($row = pg_fetch_assoc($result)) {
             $claim_list[1][] = array(   'claim_id' => $row['id'],
                                         'piece_index' => $row['index'],
@@ -53,16 +53,16 @@ function _update_users_claims($res, $from, $to_all) {
                                         'owner' => $row['nick'] );
             // Users who has claims
             if (!isset($users[$row['nick']]))
-                $users[$row['nick']] = array('owns' => array(),'color' => array($row['color']), 'online' => false);
+                $users[$row['nick']] = array('owns' => array(),'color' => array($row['color']), 'avatar_url' => $row['avatar_url'], 'online' => false);
         }
     }
 
     // Adding all online users:  chat_members JOIN users
-    $result = pg_query($connection, 'SELECT users.id, users.nick, users.color FROM chat_members LEFT JOIN users ON users.id = member WHERE pie = '.$from->pieid);
+    $result = pg_query($connection, 'SELECT users.id, users.nick, users.color, users.avatar_url FROM chat_members LEFT JOIN users ON users.id = member WHERE pie = '.$from->pieid);
     while ($row = pg_fetch_assoc($result)) {
         // If new user -> set it fully
         if (!isset($users[$row['nick']])) {
-            $users[$row['nick']] = array('owns' => array(),'color' => array($row['color']));
+            $users[$row['nick']] = array('owns' => array(),'color' => array($row['color']), 'avatar_url' => $row['avatar_url']);
         }
         $users[$row['nick']]['online'] = true;
     }
@@ -71,6 +71,7 @@ function _update_users_claims($res, $from, $to_all) {
     foreach ($users as $user_nick => $attrs) {
         $user_list[1][] = array('user_nick' => $user_nick,
                                 'color' => $attrs['color'],
+                                'avatar_url' => $attrs['avatar_url'],
                                 'reserved' => $attrs['owns'],
                                 'online' => $attrs['online']);
     }

@@ -5,27 +5,30 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MapCraft</title>
-    <link rel="stylesheet" href="/css/style.css" type="text/css" media="screen, projection">
-    <script type="text/javascript" src="/openlayers/OpenLayers.js"></script>
+    <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v3.28.1/mapbox-gl.css" type="text/css">
+    <link rel="stylesheet" href="/css/style.css?v=23" type="text/css" media="screen, projection">
+    <script type="text/javascript" src="https://api.mapbox.com/mapbox-gl-js/v3.28.1/mapbox-gl.js"></script>
     <script type="text/javascript" src="/js/jquery-1.5.1.min.js"></script>
     <script type="text/javascript" src="/js/raphael-min.js"></script>
     <script type="text/javascript" src="/js/underscore-min.js"></script>
     <script type="text/javascript" src="/js/config.js"></script>
     <script type="text/javascript" src="/js/hub.js"></script>
-    <script type="text/javascript" src="/js/lang/ru.js"></script>
+    <script type="text/javascript" src="/js/lang/ru.js?v=2"></script>
 </head>
 <body>
 <aside id="sector-sidebar" class="sector-sidebar" aria-label="Управление сектором">
+    <button id="sector-sidebar-toggle" class="sector-sidebar__toggle" type="button" aria-label="Свернуть панель" title="Свернуть панель" aria-expanded="true"><svg class="sector-sidebar__toggle-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"></rect><path d="M9.5 4v16"></path></svg></button>
     <nav class="breadcrumbs" aria-label="Хлебные крошки">
-        <a href="/" class="breadcrumbs__home" aria-label="Главная">⌂ <span>Главная</span></a>
+        <a href="/list" class="breadcrumbs__home" aria-label="Главная"><svg class="breadcrumbs__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8v9H3zM9 21v-6h6v6"/></svg><span>Главная</span></a>
         <span aria-hidden="true">/</span>
         <span id="project-title">Карта</span>
     </nav>
     <label class="sector-search" for="sector-search">
-        <span aria-hidden="true">⌕</span>
+        <svg class="sector-search__icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"></circle><path d="m16 16 4 4"></path></svg>
         <input id="sector-search" class="sector-search__input" type="search" placeholder="Найти сектор" autocomplete="off">
         <kbd class="sector-search__shortcut">/</kbd>
     </label>
+    <h2 class="sector-sidebar__section-title">Выбранный сектор</h2>
     <section id="sector-card" class="sector-card sector-card_empty" aria-live="polite">
         <p class="sector-card__empty-state">Выберите сектор на карте или найдите его по номеру.</p>
     </section>
@@ -38,23 +41,23 @@
 </aside>
 
 <main id="map-area" class="map-workspace">
-    <div id="olmap" class="map-workspace__canvas" aria-label="Карта секторов"></div>
+    <div id="mapbox-map" class="map-workspace__canvas" aria-label="Карта секторов"></div>
     <div class="map-controls map-controls_position_left" aria-label="Масштаб карты">
         <button id="bzoomp" class="map-controls__button" type="button" aria-label="Приблизить">+</button>
         <button id="bzoomm" class="map-controls__button" type="button" aria-label="Отдалить">−</button>
-        <button id="bfit" class="map-controls__button" type="button" aria-label="Показать весь проект">⌗</button>
+        <button id="bfit" class="map-controls__button" type="button" aria-label="Показать весь проект"><svg class="map-controls__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
     </div>
     <div class="map-controls map-controls_position_right" aria-label="Инструменты карты">
-        <button id="blayers" class="map-controls__button" type="button">▱ <span>Слои</span></button>
-        <button id="bfilters" class="map-controls__button" type="button">⌁ <span>Фильтры</span></button>
-        <button id="bsettings" class="map-controls__button" type="button">⚙ <span>Настройки</span></button>
-        <button id="bonline" class="map-controls__button online-summary" type="button"><span class="online-summary__avatars">● ● ●</span> <span id="online-count">0 онлайн</span></button>
+        <button id="bfilters" class="map-controls__button" type="button"><svg class="map-controls__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6 7v5l-4 2v-7z"/></svg><span>Фильтры</span></button>
+        <button id="bsettings" class="map-controls__button" type="button"><svg class="map-controls__icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.1 2.1-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5v.2h-3v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1-2.1-2.1.1-.1A1.7 1.7 0 0 0 7 15a1.7 1.7 0 0 0-1.5-1H5.3v-3h.2A1.7 1.7 0 0 0 7 10a1.7 1.7 0 0 0-.3-1.9l-.1-.1 2.1-2.1.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.5v-.2h3v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1 2.1 2.1-.1.1A1.7 1.7 0 0 0 19.4 10a1.7 1.7 0 0 0 1.5 1h.2v3h-.2a1.7 1.7 0 0 0-1.5 1Z"/></svg><span>Настройки</span></button>
+        <button id="binfo" class="map-controls__button" type="button"><svg class="map-controls__icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 10v6M12 7.5v.1"/></svg><span>О пироге</span></button>
+        <button id="bonline" class="map-controls__button online-summary" type="button"><span id="online-summary-avatars" class="online-summary__avatars" aria-hidden="true"></span><span id="online-count">0 онлайн</span></button>
     </div>
     <div id="map-popover" class="map-popover" hidden></div>
 
     <section id="dchat" class="project-chat project-chat_open" aria-label="Общий чат">
         <button id="chat-toggle" class="project-chat__header" type="button" aria-expanded="true">
-            <span>Общий чат</span><span id="chat-unread" class="project-chat__unread-count" hidden>0</span><span class="project-chat__connection">●</span><span class="project-chat__chevron">⌄</span>
+            <span>Общий чат</span><span id="chat-unread" class="project-chat__unread-count" hidden>0</span><span class="project-chat__connection">●</span><svg class="project-chat__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
         </button>
         <div id="chat-body" class="project-chat__body">
             <aside id="duserlist" class="project-chat__members" aria-label="Участники"><div id="userlist-table"></div><span id="anonscounter"></span></aside>
@@ -62,7 +65,6 @@
                 <div id="chat" class="project-chat__messages"><table><tbody></tbody></table></div>
                 <form id="pac_form" class="project-chat__composer">
                     <button id="pac_nick" class="project-chat__user-button" type="button" title="Профиль">?</button>
-                    <label class="project-chat__attachment" aria-label="Прикрепить файл">⌕<input type="file" disabled></label>
                     <textarea id="pac_text" rows="1" maxlength="1024" placeholder="Написать сообщение…"></textarea>
                     <button id="send-message" class="project-chat__send" type="submit">Отправить</button>
                 </form>
@@ -72,6 +74,6 @@
 </main>
 
 <div id="dialog-body" class="native-dialog" hidden role="dialog" aria-modal="true"></div>
-<script type="text/javascript" src="/js/main.js"></script>
+<script type="text/javascript" src="/js/main.js?v=20"></script>
 </body>
 </html>

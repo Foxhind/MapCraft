@@ -245,7 +245,8 @@ ALTER TABLE mapcraft.susers OWNER TO mapcrafter;
 CREATE TABLE users (
     nick character varying(255) NOT NULL,
     id integer DEFAULT nextval('susers'::regclass) NOT NULL,
-    color character varying(6) DEFAULT '000000'::character varying NOT NULL
+    color character varying(6) DEFAULT '000000'::character varying NOT NULL,
+    avatar_url character varying(2048)
 );
 
 
@@ -512,4 +513,3 @@ GRANT ALL ON SCHEMA mapcraft TO PUBLIC;
 --
 -- PostgreSQL database dump complete
 --
-

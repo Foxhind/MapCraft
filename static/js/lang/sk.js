@@ -44,3 +44,12 @@ var trans = [
 
 for ( i = 0; i < 10 ; i++ )
     trans.push('New state: ' + i + '/9', 'Nový stav: ' + i + '/9');
+
+trans.push(
+    'About pie',
+    'O koláči',
+    'Pie information',
+    'Informácie o koláči',
+    'Loading pie information…',
+    'Načítavajú sa informácie o koláči…'
+);

@@ -30,3 +30,16 @@ var ldata = [
 "Voir les Contributeurs :",
 "Voir les secteurs attribués :"
 ];
+
+if (typeof trans === 'undefined') {
+    var trans = [];
+}
+
+trans.push(
+    'About pie',
+    'À propos du diagramme',
+    'Pie information',
+    'Informations sur le diagramme',
+    'Loading pie information…',
+    'Chargement des informations du diagramme…'
+);

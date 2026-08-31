@@ -4,18 +4,43 @@
  * To Public License, Version 2, as published by Sam Hocevar. See
  * http://sam.zoy.org/wtfpl/COPYING for more details. */
 
-var olmap;
-var kmllayer;
+var mapboxMap;
+var mapboxMapLoaded = false;
+var mapboxKmlUrl = null;
+var activePieId = null;
+var kmllayer = {
+    features: [],
+    visible: true,
+    getFeaturesByAttribute: function(attrName, attrValue, strict) {
+        return this.features.filter(function(feature) {
+            if (!feature || !feature.attributes || typeof feature.attributes[attrName] === 'undefined') {
+                return false;
+            }
+
+            if (typeof attrValue === 'undefined') {
+                return true;
+            }
+
+            return strict ? feature.attributes[attrName] === attrValue : feature.attributes[attrName] == attrValue;
+        });
+    },
+    redraw: function() {
+        redrawMapboxSectors();
+    },
+    setVisibility: function(visible) {
+        this.visible = visible;
+        setMapboxSectorVisibility(visible);
+    }
+};
 
 var selectedFeature;
-var selectCtrl;
 const stateColors = ['#d94b4b', '#e75a45', '#ef7045', '#f38c45', '#f4aa49', '#f3c956', '#dfd55b', '#b9cf62', '#72b764', '#4ba85c'];
 var supported_langs = ['de', 'en', 'es', 'fr', 'it', 'jp', 'pl', 'ru', 'sk', 'uk'];
 var users = [];
 var claims = [];
 var pieceLabel = 'none';
 var pieceColor = 'state';
-var showOwned;
+var showOwned = true;
 var chatShowInfo = true;
 var chatScrollPosition = -1;
 let selectedProgress = null;
@@ -99,11 +124,49 @@ function escapeHtml(value) {
         .replace(/'/g, '&#39;');
 }
 
+function findUserByNick(nick) {
+    for (let index = 0; index < users.length; index++) {
+        if (users[index]['user_nick'] === nick) {
+            return users[index];
+        }
+    }
+
+    return null;
+}
+
+function avatarImageMarkup(avatarUrl, className) {
+    if (typeof avatarUrl !== 'string' || avatarUrl === '') {
+        return '';
+    }
+
+    return `<img class="${className}" src="${escapeHtml(avatarUrl)}" alt="">`;
+}
+
+function bindAvatarFallback($container) {
+    $container.find('img').one('error', function() {
+        $(this).remove();
+    });
+}
+
+function refreshChatAvatars() {
+    const $messageAvatars = $('.project-chat__message-avatar');
+
+    $messageAvatars.each(function() {
+        const $avatar = $(this);
+        const user = findUserByNick($avatar.attr('data-user-nick'));
+        const avatarImage = avatarImageMarkup(user ? user['avatar_url'] : '', 'project-chat__message-avatar-image');
+
+        $avatar.find('.project-chat__message-avatar-image').remove();
+        $avatar.append(avatarImage);
+    });
+
+    bindAvatarFallback($messageAvatars);
+}
+
 function sectorStage(state) {
     state = parseInt(state, 10);
     if (state === 0) return 'Не начат';
-    if (state < 6) return 'В работе';
-    if (state < 9) return 'На проверке';
+    if (state < 9) return 'В работе';
     return 'Готов';
 }
 
@@ -140,7 +203,13 @@ function renderSectorHistory() {
     }
 
     $comments.html(html);
-    $('#show-full-history').toggle(entries.length < sectorHistory.length || expanded);
+    const showFullHistory = entries.length < sectorHistory.length || expanded;
+
+    if (showFullHistory) {
+        $('#show-full-history').removeAttr('hidden');
+    } else {
+        $('#show-full-history').attr('hidden', 'hidden');
+    }
 }
 
 function renderSectorCard(message, isError) {
@@ -155,7 +224,7 @@ function renderSectorCard(message, isError) {
     const state = parseInt(attrs.description, 10) || 0;
     const owner = attrs.owner || '';
     const ownedByMe = owner && me && owner === me.nick;
-    const primary = !owner ? 'Зарезервировать' : (ownedByMe ? 'Сохранить готовность' : 'Подать заявку');
+    const primary = !owner ? 'Зарезервировать' : (ownedByMe ? (state === 8 ? 'Завершить этап' : 'Сохранить готовность') : 'Подать заявку');
 
     if (selectedProgress === null) {
         selectedProgress = state;
@@ -166,7 +235,7 @@ function renderSectorCard(message, isError) {
         const checkedState = progress === selectedProgress ? 'true' : 'false';
         return `<button class="progress-selector__option${selectedClass}" type="button" data-progress="${progress}" aria-label="Готовность ${progress} из 9" aria-checked="${checkedState}" style="background-color:${color}">${progress}</button>`;
     }).join('');
-    const releaseAction = ownedByMe ? '<button type="button" id="sector-release">Освободить</button>' : '';
+    const releaseAction = ownedByMe ? '<button type="button" id="sector-release"><svg class="sector-card__action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8c.8-3.1 3.1-5 7-5s6.2 1.9 7 5M4 4v4h4"/></svg>Освободить</button>' : '';
     const saveStateClass = isError ? ' sector-card__save-state_error' : '';
     const saveStateMessage = escapeHtml(message || 'Данные синхронизированы');
     const html = `
@@ -177,44 +246,53 @@ function renderSectorCard(message, isError) {
         <div class="sector-card__actions">
             <button type="button" class="sector-card__primary-action" id="sector-primary">${primary}</button>
             ${releaseAction}
-            <button type="button" id="sector-josm">Открыть в JOSM</button>
-            <button type="button" id="sector-osm">Открыть в OSM</button>
+            <button type="button" id="sector-josm"><svg class="sector-card__action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M19 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h6"/></svg>Открыть в JOSM</button>
         </div>
         <div class="sector-card__save-state${saveStateClass}">${saveStateMessage}</div>`;
 
-    $card.removeClass('sector-card_empty').html(html);
+    $card
+        .removeClass('sector-card_empty')
+        .html(html);
 }
 
 function updateUnread() {
-    $('#chat-unread').text(chatUnread).toggle(chatUnread > 0);
+    const $unread = $('#chat-unread');
+
+    if (chatUnread > 0) {
+        $unread.text(chatUnread).removeAttr('hidden');
+    } else {
+        $unread.attr('hidden', 'hidden');
+    }
+}
+
+function renderOnlineSummary() {
+    const onlineUsers = users.filter(function(user) {
+        return user['online'];
+    });
+    const avatars = onlineUsers.slice(0, 4).map(function(user) {
+        const avatarImage = avatarImageMarkup(user['avatar_url'], 'online-summary__avatar-image');
+        const avatarInitial = escapeHtml(user['user_nick'].charAt(0).toUpperCase());
+
+        return `<span class="online-summary__avatar" title="${escapeHtml(user['user_nick'])}">${avatarInitial}${avatarImage}</span>`;
+    }).join('');
+
+    const $onlineAvatars = $('#online-summary-avatars');
+    $onlineAvatars.html(avatars || '<span class="online-summary__avatar online-summary__avatar_empty"></span>');
+    bindAvatarFallback($onlineAvatars);
+    $('#online-count').text(onlineUsers.length + ' онлайн');
 }
 
 function AdminConfirm(text, confirm_cb) {
-    $('#dialog-body')
-        .html('<div id="exclamation"></div>')
-        .append('<span>' + text + '</span>')
-        .dialog({
-            autoOpen: true,
-            resizable: false,
-            modal: true,
-            dialogClass: 'admin-confirm',
-            //height: 150,
-            title: "Confirm admin action",
+    var body = '<p class="admin-confirm__text">' + escapeDialogHtml(text) + '</p>';
+    var footer = `
+        <button class="native-dialog__button" type="button" data-dialog-close>Отмена</button>
+        <button id="confirm-admin-action" class="native-dialog__button native-dialog__button_primary" type="button">Продолжить</button>`;
 
-            buttons: [
-                {
-                    text: 'Proceed',
-                    click: function() {
-                        confirm_cb();
-                        $(this).dialog('close');
-                    }
-                },{
-                    text: 'Cancel',
-                    click: function() {
-                        $(this).dialog('close');
-                    }
-                }
-            ]});
+    openNativeDialog('admin-confirm', 'Подтвердите действие', body, footer, null);
+    $('#confirm-admin-action').click(function() {
+        closeNativeDialog();
+        confirm_cb();
+    });
 }
 
 var Progress = {
@@ -283,9 +361,15 @@ var Chat = {
         }
 
         var authorColor = ownerColor(author);
-        // Append to the end and scroll
-        var history_class = is_history ? 'history' : '';
-        var entry = $("<tr><td class='nick project-chat__author' style='color: " + authorColor + "'>" + author + "</td><td class='message project-chat__text'>" + message + "</td><td class='time project-chat__time'>" + ts + "</td></tr>");
+        var authorInitial = escapeHtml(author.charAt(0).toUpperCase());
+        var authorData = findUserByNick(author);
+        var authorAvatar = avatarImageMarkup(authorData ? authorData['avatar_url'] : '', 'project-chat__message-avatar-image');
+        var entry = $(
+            '<tr>'
+            + '<td class="project-chat__avatar-cell"><span class="project-chat__message-avatar" data-user-nick="' + escapeHtml(author) + '" style="background-color: ' + authorColor + '">' + authorInitial + authorAvatar + '</span></td>'
+            + '<td class="project-chat__content"><div class="project-chat__meta"><span class="nick project-chat__author">' + escapeHtml(author) + '</span><span class="time project-chat__time">' + escapeHtml(ts) + '</span></div><div class="message project-chat__text">' + message + '</div></td>'
+            + '</tr>'
+        );
 
         entry.addClass('chat-' + type);
         entry.addClass('project-chat__message');
@@ -293,6 +377,8 @@ var Chat = {
         if (is_history) entry.addClass('history project-chat__message_history');
         if (!chatShowInfo && type === 'info') entry.addClass('hidden project-chat__message_hidden');
         if (toMe) entry.addClass('tome project-chat__message_to-me');
+
+        bindAvatarFallback(entry);
 
         var atEnd = this.isAtEnd();
         this.chatEl().append(entry);
@@ -359,6 +445,10 @@ var CakeSettings = {
 
         window.document.title = data['name'] + ' - MapCraft Dev';
         $('#project-title').text(data['name']);
+
+        if ($('#dialog-body').hasClass('project-info')) {
+            showProjectInfoDialog();
+        }
     },
     reset: function() {
         this.init(this.orig);
@@ -919,6 +1009,354 @@ function config_get(key, defval) {
     return MapCraft.config[key];
 }
 
+const mapboxAccessToken = config_get('mapbox_access_token', 'pk.eyJ1IjoiZm94aGluZCIsImEiOiIwdUlld2RzIn0.OeC1ZQJN0YdY9ApNl-FcTw');
+const mapboxSourceId = 'mapcraft-sectors';
+const mapboxFillLayerId = 'mapcraft-sectors-fill';
+const mapboxLineLayerId = 'mapcraft-sectors-line';
+const mapboxLabelLayerId = 'mapcraft-sectors-label';
+const mapboxSectorLayerIds = [mapboxFillLayerId, mapboxLineLayerId, mapboxLabelLayerId];
+
+function getKmlElementText(placemark, elementName) {
+    const elements = placemark.getElementsByTagName('*');
+
+    for (let index = 0; index < elements.length; index++) {
+        if (elements[index].localName === elementName) {
+            return elements[index].textContent.trim();
+        }
+    }
+
+    return '';
+}
+
+function parseKmlCoordinates(value) {
+    return value.trim().split(/\s+/).map(function(rawCoordinate) {
+        const coordinate = rawCoordinate.split(',');
+        const longitude = parseFloat(coordinate[0]);
+        const latitude = parseFloat(coordinate[1]);
+
+        if (!Number.isFinite(longitude) || !Number.isFinite(latitude)) {
+            return null;
+        }
+
+        return [longitude, latitude];
+    }).filter(function(coordinate) {
+        return coordinate !== null;
+    });
+}
+
+function parseKmlGeometry(placemark) {
+    const polygons = placemark.getElementsByTagNameNS('*', 'Polygon');
+    const geometries = [];
+
+    for (let index = 0; index < polygons.length; index++) {
+        const coordinates = getKmlElementText(polygons[index], 'coordinates');
+        const ring = parseKmlCoordinates(coordinates);
+
+        if (ring.length >= 3) {
+            geometries.push([ring]);
+        }
+    }
+
+    if (geometries.length === 0) {
+        return null;
+    }
+
+    if (geometries.length === 1) {
+        return {
+            type: 'Polygon',
+            coordinates: geometries[0]
+        };
+    }
+
+    return {
+        type: 'MultiPolygon',
+        coordinates: geometries
+    };
+}
+
+function parseKmlFeatures(kmlText) {
+    const document = new DOMParser().parseFromString(kmlText, 'application/xml');
+
+    if (document.getElementsByTagName('parsererror').length > 0) {
+        throw new Error('Unable to parse sectors KML');
+    }
+
+    const placemarks = document.getElementsByTagNameNS('*', 'Placemark');
+    const features = [];
+
+    for (let index = 0; index < placemarks.length; index++) {
+        const geometry = parseKmlGeometry(placemarks[index]);
+        const name = getKmlElementText(placemarks[index], 'name');
+
+        if (!geometry || !name) {
+            continue;
+        }
+
+        features.push({
+            attributes: {
+                name,
+                description: getKmlElementText(placemarks[index], 'description'),
+                owner: getKmlElementText(placemarks[index], 'owner')
+            },
+            geometry,
+            style: {}
+        });
+    }
+
+    return features;
+}
+
+function getFeatureBounds(feature) {
+    if (!feature || !feature.geometry || typeof mapboxgl === 'undefined') {
+        return null;
+    }
+
+    const bounds = new mapboxgl.LngLatBounds();
+    const extendBounds = function(coordinates) {
+        if (!Array.isArray(coordinates)) {
+            return;
+        }
+
+        if (typeof coordinates[0] === 'number') {
+            bounds.extend(coordinates);
+            return;
+        }
+
+        coordinates.forEach(extendBounds);
+    };
+
+    extendBounds(feature.geometry.coordinates);
+
+    return bounds.isEmpty() ? null : bounds;
+}
+
+function fitMapboxToFeatures(features) {
+    if (!mapboxMapLoaded || !features.length) {
+        return;
+    }
+
+    const bounds = new mapboxgl.LngLatBounds();
+
+    features.forEach(function(feature) {
+        const featureBounds = getFeatureBounds(feature);
+
+        if (featureBounds) {
+            bounds.extend(featureBounds.getSouthWest());
+            bounds.extend(featureBounds.getNorthEast());
+        }
+    });
+
+    if (!bounds.isEmpty()) {
+        mapboxMap.fitBounds(bounds, {
+            padding: 48,
+            duration: 0
+        });
+    }
+}
+
+function fitMapboxToFeature(feature) {
+    const bounds = getFeatureBounds(feature);
+
+    if (mapboxMapLoaded && bounds) {
+        mapboxMap.fitBounds(bounds, {
+            padding: 48,
+            duration: 0
+        });
+    }
+}
+
+function mapboxFeatureProperties(feature) {
+    return {
+        name: String(feature.attributes.name),
+        description: String(feature.attributes.description || ''),
+        owner: String(feature.attributes.owner || ''),
+        label: feature.style.label || '',
+        labelColor: feature.style.fontColor || '#17213a',
+        labelOutlineColor: feature.style.labelOutlineColor || '#ffffff',
+        labelOutlineWidth: Number(feature.style.labelOutlineWidth || 0),
+        fillColor: feature.style.fillColor || 'rgba(255,255,255,0)',
+        fillOpacity: Number(feature.style.fillOpacity || 0),
+        strokeColor: feature.style.strokeColor || '#202a3d',
+        strokeWidth: Number(feature.style.strokeWidth || 1),
+        visible: feature.style.display !== 'none'
+    };
+}
+
+function getMapboxSectorData() {
+    return {
+        type: 'FeatureCollection',
+        features: kmllayer.features.map(function(feature) {
+            return {
+                type: 'Feature',
+                id: String(feature.attributes.name),
+                properties: mapboxFeatureProperties(feature),
+                geometry: feature.geometry
+            };
+        })
+    };
+}
+
+function redrawMapboxSectors() {
+    if (!mapboxMapLoaded) {
+        return;
+    }
+
+    const source = mapboxMap.getSource(mapboxSourceId);
+
+    if (source) {
+        source.setData(getMapboxSectorData());
+    }
+}
+
+function setMapboxSectorVisibility(visible) {
+    if (!mapboxMapLoaded) {
+        return;
+    }
+
+    mapboxSectorLayerIds.forEach(function(layerId) {
+        mapboxMap.setLayoutProperty(layerId, 'visibility', visible ? 'visible' : 'none');
+    });
+}
+
+function loadMapboxKml(url, fitToSectors) {
+    mapboxKmlUrl = url || mapboxKmlUrl;
+
+    if (!mapboxMapLoaded || !mapboxKmlUrl) {
+        return;
+    }
+
+    $.ajax({
+        url: mapboxKmlUrl,
+        dataType: 'text',
+        cache: false
+    }).done(function(kmlText) {
+        const selectedName = selectedFeature ? selectedFeature.attributes.name : '';
+
+        kmllayer.features = parseKmlFeatures(kmlText);
+        selectedFeature = null;
+        selectedProgress = null;
+        updateAllPieceStyles();
+
+        if (fitToSectors) {
+            fitMapboxToFeatures(kmllayer.features);
+        }
+
+        if (selectedName) {
+            SelectPiece(selectedName);
+        } else {
+            selectPieceFromURL();
+        }
+    }).fail(function(request) {
+        console.error('Unable to load sectors KML:', request.status, mapboxKmlUrl);
+    });
+}
+
+function resolveMapboxSectorFeature(mapFeature) {
+    if (!mapFeature || !mapFeature.properties) {
+        return null;
+    }
+
+    const pieces = kmllayer.getFeaturesByAttribute('name', mapFeature.properties.name);
+
+    return pieces.length ? pieces[0] : null;
+}
+
+function initializeMapbox(pieId) {
+    if (typeof mapboxgl === 'undefined') {
+        $('#connection-label').text('Не удалось загрузить карту');
+        return;
+    }
+
+    mapboxgl.accessToken = mapboxAccessToken;
+    mapboxMap = new mapboxgl.Map({
+        container: 'mapbox-map',
+        style: 'mapbox://styles/foxhind/cmth5jayz005y01s5amnggcns',
+        center: [0, 0],
+        zoom: 2,
+        projection: 'mercator',
+        attributionControl: true
+    });
+
+    mapboxMap.on('load', function() {
+        mapboxMapLoaded = true;
+        mapboxMap.addSource(mapboxSourceId, {
+            type: 'geojson',
+            data: getMapboxSectorData()
+        });
+        mapboxMap.addLayer({
+            id: mapboxFillLayerId,
+            type: 'fill',
+            source: mapboxSourceId,
+            filter: ['!=', ['get', 'visible'], false],
+            paint: {
+                'fill-color': ['get', 'fillColor'],
+                'fill-opacity': ['get', 'fillOpacity']
+            }
+        });
+        mapboxMap.addLayer({
+            id: mapboxLineLayerId,
+            type: 'line',
+            source: mapboxSourceId,
+            filter: ['!=', ['get', 'visible'], false],
+            paint: {
+                'line-color': ['get', 'strokeColor'],
+                'line-width': ['get', 'strokeWidth']
+            }
+        });
+        mapboxMap.addLayer({
+            id: mapboxLabelLayerId,
+            type: 'symbol',
+            source: mapboxSourceId,
+            filter: ['all', ['!=', ['get', 'visible'], false], ['!=', ['get', 'label'], '']],
+            layout: {
+                'text-field': ['get', 'label'],
+                'text-size': 11
+            },
+            paint: {
+                'text-color': ['get', 'labelColor'],
+                'text-halo-color': ['get', 'labelOutlineColor'],
+                'text-halo-width': ['get', 'labelOutlineWidth']
+            }
+        });
+        setMapboxSectorVisibility(kmllayer.visible);
+
+        if (pieId !== null) {
+            loadMapboxKml('/kml/' + pieId + '.kml', true);
+        }
+    });
+
+    mapboxMap.on('click', function(event) {
+        dismissTransientUi();
+
+        if (!mapboxMapLoaded) {
+            return;
+        }
+
+        const mapFeatures = mapboxMap.queryRenderedFeatures(event.point, {
+            layers: [mapboxFillLayerId]
+        });
+        const feature = resolveMapboxSectorFeature(mapFeatures[0]);
+
+        if (feature) {
+            SelectPiece(feature.attributes.name);
+        } else if (selectedFeature) {
+            onUnselectPiece(selectedFeature);
+        }
+    });
+
+    mapboxMap.on('mousemove', function(event) {
+        if (!mapboxMapLoaded) {
+            return;
+        }
+
+        const mapFeatures = mapboxMap.queryRenderedFeatures(event.point, {
+            layers: [mapboxFillLayerId]
+        });
+
+        mapboxMap.getCanvas().style.cursor = mapFeatures.length ? 'pointer' : '';
+    });
+}
+
 var TextReplacer = {
     shortcuts: {
         c: 'http://www.openstreetmap.org/browse/changeset/%s',
@@ -1134,10 +1572,7 @@ In.piece_progress = function(data) {
 };
 
 In.refresh_pie_data = function (data) {
-    if (typeof(data['url']) == 'string')
-        kmllayer.addOptions({protocol: new OpenLayers.Protocol.HTTP({url: data['url'], format: new OpenLayers.Format.KML({extractStyles: true, extractAttributes: true, maxDepth: 0})})});
-    kmllayer.refresh(true);
-    kmllayer.redraw(true);
+    loadMapboxKml(typeof data['url'] === 'string' ? data['url'] : null, false);
 };
 
 In.reload = function (data) {
@@ -1430,48 +1865,26 @@ function ApplySettings() {
 }
 
 function LoadLanguage() {
-    $.get("/js/lang/" + $('#slang').val() + ".js", {}, function() {
+    $.get('/js/lang/' + $('#slang').val() + '.js?v=2', {}, function() {
         LoadTransData();
+        updateInterfaceTranslations();
         $('#pac_text').attr('placeholder', ldata[23] || 'Написать сообщение…');
         renderSectorCard();
     });
 }
 
-OpenLayers.Layer.Vector.prototype.getFeaturesByAttribute = function getFeaturesByAttribute(attrName, attrValue, strict) {
-    var i,
-        feature,
-        doStrictComparison = !!(typeof strict !== 'undefined'),
-        useAttrValue = !!(typeof attrValue !== 'undefined'),
-        len = this.features.length,
-        foundFeatures = [];
-    for( i = 0; i < len; i++ ) {
-        feature = this.features[i];
-        if(feature && feature.attributes && typeof feature.attributes[attrName] !== 'undefined'){
-            if (useAttrValue) {
-                if (doStrictComparison) {
-                    if ( feature.attributes[attrName] === attrValue) {
-                        foundFeatures.push(feature);
-                    }
-                } else {
-                    if ( feature.attributes[attrName] == attrValue) {
-                        foundFeatures.push(feature);
-                    }
-                }
-            } else {
-                foundFeatures.push(feature);
-            }
-        }
-    }
-    return foundFeatures;
-};
-
 function SelectPiece(num) {
-    if (selectedFeature != null)
-        selectCtrl.unselect(selectedFeature);
+    const pieces = kmllayer.getFeaturesByAttribute('name', num);
 
-    pieces = kmllayer.getFeaturesByAttribute('name', num);
-    if (pieces.length > 0)
-        selectCtrl.select(pieces[0]);
+    if (!pieces.length || pieces[0] === selectedFeature) {
+        return;
+    }
+
+    if (selectedFeature) {
+        onUnselectPiece(selectedFeature);
+    }
+
+    onSelectPiece(pieces[0]);
 }
 
 function selectPieceFromURL() {
@@ -1483,8 +1896,7 @@ function selectPieceFromURL() {
 
     SelectPiece(hash);
     if (selectedFeature !== null) {
-        olmap.zoomToExtent(selectedFeature.geometry.getBounds());
-        olmap.zoomOut();
+        fitMapboxToFeature(selectedFeature);
     }
 }
 
@@ -1492,19 +1904,21 @@ function OpenViaRemote(method) {
     if (method === null) {
         method = 'josm';
     }
-    if (selectedFeature != null)
-    {
-        var from = new OpenLayers.Projection("EPSG:900913");
-        var to = new OpenLayers.Projection("EPSG:4326");
-        var bounds = selectedFeature.geometry.getBounds().toArray();
-        var p1 = (new OpenLayers.LonLat(bounds[0], bounds[1])).transform(from, to);
-        var p2 = (new OpenLayers.LonLat(bounds[2], bounds[3])).transform(from, to);
+    if (selectedFeature != null) {
+        const bounds = getFeatureBounds(selectedFeature);
+
+        if (!bounds) {
+            return;
+        }
+
+        const p1 = bounds.getSouthWest();
+        const p2 = bounds.getNorthEast();
 
         if (method === 'josm') {
-            RemoteControlJosm("load_and_zoom?left=" + p1.lon + "&right=" + p2.lon + "&top=" + p2.lat + "&bottom=" + p1.lat);
+            RemoteControlJosm('load_and_zoom?left=' + p1.lng + '&right=' + p2.lng + '&top=' + p2.lat + '&bottom=' + p1.lat);
         }
         if (method === 'potlatch2') {
-            RemoteControlPotlatch('http://www.openstreetmap.org/?lat=' + ((p1.lat + p2.lat) /2)+'&lon=' + ((p1.lon + p2.lon)/2) + '&zoom=19&layers=M');
+            RemoteControlPotlatch('http://www.openstreetmap.org/?lat=' + ((p1.lat + p2.lat) / 2) + '&lon=' + ((p1.lng + p2.lng) / 2) + '&zoom=19&layers=M');
         }
     }
 }
@@ -1538,13 +1952,13 @@ function SetNick() {
 
 function RedrawUsersList() {
     var nicks = [];
-    newhtml = "<table><tr><td id='lname'>" + ldata[18] + "</td><td id='lpieces'>" + ldata[19] + "</td><td id='lclaims'>" + ldata[20] + "</td></tr>";
+    var newhtml = '<ul class="project-chat__member-list">';
     for (var u = 0; u < users.length; u++) {
         nicks.push(users[u]['user_nick']);
-        var sreserved = "";
-        var sclaims = "";
+        var sreserved = '';
+        var sclaims = '';
         for (var i = 0; i < users[u]['reserved'].length; i++)
-            sreserved += ("<span class='num project-chat__sector-link'>" + users[u]['reserved'][i] + "</span> ");
+            sreserved += ('<span class="project-chat__sector-link">' + users[u]['reserved'][i] + '</span> ');
         var userclaims = [];
         for (i = 0; i < claims.length; i++) {
             if (claims[i]['owner'] == users[u]['user_nick'])
@@ -1552,46 +1966,56 @@ function RedrawUsersList() {
         }
         for (i = 0; i < userclaims.length; i++) {
             if (me.nick == users[u]['user_nick'])
-                sclaims += ("<span class='claim ui-state-default project-chat__claim'><span class='num project-chat__sector-link'>" + userclaims[i]['piece_index'] + "</span>&nbsp;[" + userclaims[i]['vote_balance'] + "&nbsp;<div title='Снять заявку' class='close'></div>]</span> ");
+                sclaims += ('<span class="project-chat__claim"><span class="project-chat__sector-link">' + userclaims[i]['piece_index'] + '</span> [' + userclaims[i]['vote_balance'] + '<button type="button" title="Снять заявку" class="project-chat__claim-action project-chat__claim-action_remove">×</button>]</span> ');
             else
-                sclaims += ("<span class='claim ui-state-default project-chat__claim'><span class='num project-chat__sector-link'>" + userclaims[i]['piece_index'] + "</span>&nbsp;[<div title='За' class='up'></div>&nbsp;" + userclaims[i]['vote_balance'] + "&nbsp;<div title='Против' class='down'></div>]</span><br />");
+                sclaims += ('<span class="project-chat__claim"><span class="project-chat__sector-link">' + userclaims[i]['piece_index'] + '</span> [<button type="button" title="За" class="project-chat__claim-action project-chat__claim-action_up">+</button>' + userclaims[i]['vote_balance'] + '<button type="button" title="Против" class="project-chat__claim-action project-chat__claim-action_down">−</button>]</span>');
         }
-        newhtml += ("<tr><td class='nick project-chat__member-name'>" + (users[u]['online'] ? "<img src='/img/onl.png'>&nbsp;" : "") + "<span class='nickname'>" + users[u]['user_nick'] + "</span></td><td class='msg project-chat__member-sectors'>" + sreserved + "</td><td>" + sclaims + "</td></tr>");
+        var onlineClass = users[u]['online'] ? ' project-chat__member-status_online' : '';
+        var avatar = escapeHtml(users[u]['user_nick'].charAt(0).toUpperCase());
+        var avatarImage = avatarImageMarkup(users[u]['avatar_url'], 'project-chat__member-avatar-image');
+        newhtml += ('<li class="project-chat__member-row"><span class="project-chat__member-avatar" style="background-color: ' + ownerColor(users[u]['user_nick']) + '">' + avatar + avatarImage + '</span><button type="button" class="project-chat__member-name">' + escapeHtml(users[u]['user_nick']) + '</button><span class="project-chat__member-status' + onlineClass + '"></span><span class="project-chat__member-sectors">' + (sreserved || sclaims) + '</span></li>');
     }
-    newhtml += "</table>";
-    $('#userlist-table').html(newhtml);
-    $('.nickname').click( function() { $('#pac_text').val($('#pac_text').val() + $(this).text() + ': '); $("#pac_text").focus(); } );
-    $('.up').click( function() {
-        var piece_index = $(this).parent().find('span.num').text();
-        var user_nick = $(this).parent().parent().parent().find('span.nickname').text();
+    newhtml += '</ul>';
+    var $userList = $('#userlist-table');
+    $userList.html(newhtml);
+    bindAvatarFallback($userList);
+    refreshChatAvatars();
+    renderOnlineSummary();
+    $('.project-chat__member-name').click( function() { $('#pac_text').val($('#pac_text').val() + $(this).text() + ': '); $("#pac_text").focus(); } );
+    $('.project-chat__claim-action_up').click( function() {
+        var piece_index = $(this).closest('.project-chat__claim').find('.project-chat__sector-link').text();
+        var user_nick = $(this).closest('.project-chat__member-row').find('.project-chat__member-name').text();
         for (var i = 0; i < claims.length; i++) {
             if (claims[i]['owner'] == user_nick && claims[i]['piece_index'] == piece_index) {
                 Vote(claims[i]['claim_id'], 1);
                 break;
             }
         }
-        $(this).remove(); } );
-    $('.down').click( function() {
-        var piece_index = $(this).parent().find('span.num').text();
-        var user_nick = $(this).parent().parent().parent().find('span.nickname').text();
+        $(this).remove();
+    });
+    $('.project-chat__claim-action_down').click( function() {
+        var piece_index = $(this).closest('.project-chat__claim').find('.project-chat__sector-link').text();
+        var user_nick = $(this).closest('.project-chat__member-row').find('.project-chat__member-name').text();
         for (var i = 0; i < claims.length; i++) {
             if (claims[i]['owner'] == user_nick && claims[i]['piece_index'] == piece_index) {
                 Vote(claims[i]['claim_id'], -1);
                 break;
             }
         }
-        $(this).remove(); } );
-    $('.close').click( function() {
-        var piece_index = $(this).parent().find('span.num').text();
-        var user_nick = $(this).parent().parent().parent().find('span.nickname').text();
+        $(this).remove();
+    });
+    $('.project-chat__claim-action_remove').click( function() {
+        var piece_index = $(this).closest('.project-chat__claim').find('.project-chat__sector-link').text();
+        var user_nick = $(this).closest('.project-chat__member-row').find('.project-chat__member-name').text();
         for (var i = 0; i < claims.length; i++) {
             if (claims[i]['owner'] == user_nick && claims[i]['piece_index'] == piece_index) {
                 CloseClaim(claims[i]['claim_id']);
                 break;
             }
         }
-        $(this).remove(); } );
-    $('.num').click( function() { SelectPiece($(this).text()); } );
+        $(this).remove();
+    });
+    $('.project-chat__sector-link').click( function() { SelectPiece($(this).text()); } );
 }
 
 function Debug(data) {
@@ -1698,7 +2122,10 @@ function updatePieceStyle(e, redraw) {
     var index = e.attributes.name;
 
     // Set label
-    if (pieceLabel == 'owner' && owner) {
+    var selected = e == selectedFeature;
+    if (selected) {
+        e.style.label = index + ' · ' + state + '/9';
+    } else if (pieceLabel == 'owner' && owner) {
         e.style.label = owner;
     } else if (pieceLabel == 'index') {
         e.style.label = index;
@@ -1706,6 +2133,9 @@ function updatePieceStyle(e, redraw) {
         e.style.label = null;
     }
     e.style.fontSize = 11;
+    e.style.fontColor = '#17213a';
+    e.style.labelOutlineColor = '#ffffff';
+    e.style.labelOutlineWidth = 4;
 
     // Set color
     var fillColor, hue, sat, light;
@@ -1724,7 +2154,6 @@ function updatePieceStyle(e, redraw) {
     e.style.fillColor = fillColor;
 
     // set Opacity and stroke for selected
-    var selected = e == selectedFeature;
     e.style.fillOpacity = selected ? '0.78' : '0.52';
     e.style.strokeColor = selected ? '#364bff' : '#202a3d';
     e.style.strokeWidth = selected ? '3' : '1';
@@ -1747,75 +2176,363 @@ function SetStyle() {
     // Themes were coupled to the removed floating-window interface.
 }
 
+function updateSectorSidebarToggle() {
+    var $sidebar = $('#sector-sidebar');
+    var collapsed = $sidebar.hasClass('sector-sidebar_collapsed');
+    var label = collapsed ? 'Развернуть панель' : 'Свернуть панель';
+
+    $('#sector-sidebar-toggle')
+        .attr('aria-expanded', !collapsed)
+        .attr('aria-label', label)
+        .attr('title', label);
+}
+
+function setSectorSidebarCollapsed(collapsed, shouldPersist) {
+    $('#sector-sidebar').toggleClass('sector-sidebar_collapsed', collapsed);
+    updateSectorSidebarToggle();
+
+    if (shouldPersist) {
+        try {
+            localStorage.mapcraftSectorSidebarCollapsed = collapsed ? '1' : '';
+        } catch (e) {
+        }
+    }
+
+    window.setTimeout(function() {
+        if (mapboxMap) {
+            mapboxMap.resize();
+        }
+    }, 220);
+}
+
+function initializeSectorSidebarToggle() {
+    var collapsed = false;
+
+    try {
+        collapsed = localStorage.mapcraftSectorSidebarCollapsed === '1';
+    } catch (e) {
+    }
+
+    if (window.innerWidth < 1024) {
+        collapsed = false;
+    }
+
+    setSectorSidebarCollapsed(collapsed, false);
+    $('#sector-sidebar-toggle').click(function() {
+        setSectorSidebarCollapsed(!$('#sector-sidebar').hasClass('sector-sidebar_collapsed'), true);
+    });
+
+    $(window).resize(function() {
+        if (window.innerWidth < 1024) {
+            setSectorSidebarCollapsed(false, false);
+            return;
+        }
+
+        try {
+            collapsed = localStorage.mapcraftSectorSidebarCollapsed === '1';
+        } catch (e) {
+            collapsed = false;
+        }
+        setSectorSidebarCollapsed(collapsed, false);
+    });
+}
+
+function escapeDialogHtml(value) {
+    if (value === undefined || value === null) {
+        return '';
+    }
+
+    return $('<div>').text(String(value)).html();
+}
+
+function updateInterfaceTranslations() {
+    $('#binfo span').text(t('About pie'));
+}
+
+function pieInformationTitle() {
+    return t('Pie information');
+}
+
+function pieInformationLoadingText() {
+    return t('Loading pie information…');
+}
+
+function closeNativeDialog() {
+    var opener = $('#dialog-body').data('opener');
+
+    $('#dialog-body')
+        .attr('hidden', 'hidden')
+        .removeClass('project-info project-settings')
+        .removeData('opener')
+        .empty();
+
+    if (opener && opener.length) {
+        opener.focus();
+    }
+}
+
+function closeMapPopover() {
+    $('#map-popover').attr('hidden', 'hidden');
+}
+
+function dismissTransientUi(target) {
+    var $target = target ? $(target) : $();
+    var clickedMapPopover = $target.closest('#map-popover, #bfilters').length > 0;
+    var clickedDialog = $target.closest('#dialog-body, #bsettings, #binfo').length > 0;
+
+    if (!clickedMapPopover) {
+        closeMapPopover();
+    }
+
+    if (!clickedDialog && !$('#dialog-body').is('[hidden]')) {
+        closeNativeDialog();
+    }
+}
+
+function openNativeDialog(dialogClass, title, body, footer, opener) {
+    var footerMarkup = footer
+        ? '<footer class="native-dialog__footer">' + footer + '</footer>'
+        : '';
+
+    $('#map-popover').attr('hidden', 'hidden');
+    $('#dialog-body')
+        .attr('class', 'native-dialog ' + dialogClass)
+        .data('opener', opener)
+        .html(`
+            <header class="native-dialog__header">
+                <h2 class="native-dialog__title">${escapeDialogHtml(title)}</h2>
+                <button class="native-dialog__close" type="button" aria-label="Закрыть" data-dialog-close>&times;</button>
+            </header>
+            <div class="native-dialog__body">${body}</div>
+            ${footerMarkup}`)
+        .removeAttr('hidden');
+}
+
+function loadWorkspaceSettings() {
+    if (['none', 'index', 'owner'].indexOf(localStorage.piece_label) !== -1) {
+        pieceLabel = localStorage.piece_label;
+    }
+
+    if (['none', 'state', 'busy', 'owner'].indexOf(localStorage.piece_color) !== -1) {
+        pieceColor = localStorage.piece_color;
+    }
+
+    showOwned = localStorage.show_owned !== '';
+    chatShowInfo = localStorage.chat_show_info !== '';
+}
+
+function applyWorkspaceSettings() {
+    pieceLabel = $('#setting-piece-label').val();
+    pieceColor = $('#setting-piece-color').val();
+    showOwned = $('#setting-show-owned').is(':checked');
+    chatShowInfo = $('#setting-chat-show-info').is(':checked');
+
+    localStorage.piece_label = pieceLabel;
+    localStorage.piece_color = pieceColor;
+    localStorage.show_owned = showOwned ? 'show' : '';
+    localStorage.chat_show_info = chatShowInfo ? 'show' : '';
+
+    updateAllPieceStyles();
+    Chat.updateStyle();
+    closeNativeDialog();
+}
+
+function showProjectSettingsDialog() {
+    var body = `
+        <form id="project-settings-form" class="project-settings">
+            <section class="project-settings__group" aria-labelledby="project-settings-sector-heading">
+                <h3 id="project-settings-sector-heading" class="project-settings__heading">Секторы</h3>
+                <label class="project-settings__field">
+                    <span>Надписи на секторах</span>
+                    <select id="setting-piece-label">
+                        <option value="none"${pieceLabel === 'none' ? ' selected' : ''}>Не показывать</option>
+                        <option value="index"${pieceLabel === 'index' ? ' selected' : ''}>Номер сектора</option>
+                        <option value="owner"${pieceLabel === 'owner' ? ' selected' : ''}>Участник</option>
+                    </select>
+                </label>
+                <label class="project-settings__field">
+                    <span>Раскрашивать по</span>
+                    <select id="setting-piece-color">
+                        <option value="state"${pieceColor === 'state' ? ' selected' : ''}>Готовности</option>
+                        <option value="busy"${pieceColor === 'busy' ? ' selected' : ''}>Занятости</option>
+                        <option value="owner"${pieceColor === 'owner' ? ' selected' : ''}>Участнику</option>
+                        <option value="none"${pieceColor === 'none' ? ' selected' : ''}>Не раскрашивать</option>
+                    </select>
+                </label>
+                <label class="project-settings__field">
+                    <span>Показывать занятые сектора</span>
+                    <input id="setting-show-owned" type="checkbox"${showOwned ? ' checked' : ''}>
+                </label>
+            </section>
+            <section class="project-settings__group" aria-labelledby="project-settings-chat-heading">
+                <h3 id="project-settings-chat-heading" class="project-settings__heading">Чат</h3>
+                <label class="project-settings__field">
+                    <span>Показывать системные сообщения</span>
+                    <input id="setting-chat-show-info" type="checkbox"${chatShowInfo ? ' checked' : ''}>
+                </label>
+            </section>
+        </form>`;
+    var footer = `
+        <button class="native-dialog__button" type="button" data-dialog-close>Отмена</button>
+        <button id="save-project-settings" class="native-dialog__button native-dialog__button_primary" type="button">Сохранить</button>`;
+
+    openNativeDialog('project-settings', 'Настройки', body, footer, $('#bsettings'));
+    $('#save-project-settings').click(function() {
+        applyWorkspaceSettings();
+    });
+}
+
+function projectLinkMarkup(link) {
+    var reference = link && link.ref ? String(link.ref) : '';
+    var name = link && link.name ? String(link.name) : reference;
+    var protocolMatch = reference.match(/^([a-z][a-z0-9+.-]*):/i);
+    var allowedProtocols = ['http', 'https', 'irc', 'tms', 'wms'];
+    var protocol = protocolMatch ? protocolMatch[1].toLowerCase() : '';
+
+    if (!reference) {
+        return '';
+    }
+
+    if (allowedProtocols.indexOf(protocol) === -1) {
+        return '<span>' + escapeDialogHtml(name) + '</span>';
+    }
+
+    return '<a class="project-info__link" href="' + escapeDialogHtml(reference)
+        + '" target="_blank" rel="noopener noreferrer">' + escapeDialogHtml(name) + '</a>';
+}
+
+function formatProjectDate(value) {
+    var date = new Date(value);
+
+    if (!value || Number.isNaN(date.getTime())) {
+        return '—';
+    }
+
+    return date.toLocaleString('ru-RU');
+}
+
+function getProjectServiceLinks() {
+    if (activePieId === null) {
+        return [];
+    }
+
+    var origin = window.location.protocol + '//' + window.location.host;
+
+    return [
+        {
+            name: 'WMS-слой для редакторов',
+            ref: origin + '/wms/' + activePieId + '?SRS={proj}&WIDTH={width}&height={height}&BBOX={bbox}'
+        },
+        {
+            name: 'Журнал чата проекта',
+            ref: origin + '/log/' + activePieId
+        }
+    ];
+}
+
+function showProjectInfoDialog() {
+    var data = CakeSettings.data || {};
+    var projectLinks = Array.isArray(data.links) ? data.links : [];
+    var statusDescriptions = Array.isArray(data.statuses) ? data.statuses : [];
+    var linksMarkup = projectLinks.map(projectLinkMarkup).filter(Boolean).map(function(link) {
+        return '<li>' + link + '</li>';
+    }).join('');
+    var serviceLinksMarkup = getProjectServiceLinks().map(projectLinkMarkup).filter(Boolean).map(function(link) {
+        return '<li>' + link + '</li>';
+    }).join('');
+    var statusesMarkup = statusDescriptions.map(function(status, index) {
+        if (!status) {
+            return '';
+        }
+
+        return '<li class="project-info__status"><span class="project-info__status-key">'
+            + index + '/9</span><span>' + escapeDialogHtml(status) + '</span></li>';
+    }).filter(Boolean).join('');
+
+    if (!data.name) {
+        openNativeDialog(
+            'project-info',
+            pieInformationTitle(),
+            '<p class="project-info__empty">' + escapeDialogHtml(pieInformationLoadingText()) + '</p>',
+            '<button class="native-dialog__button" type="button" data-dialog-close>Закрыть</button>',
+            $('#binfo')
+        );
+        return;
+    }
+
+    var body = `
+        <article class="project-info">
+            <h3 class="project-info__name">${escapeDialogHtml(data.name)}</h3>
+            <section class="project-info__section">
+                <h4 class="project-info__heading">Описание</h4>
+                <p class="project-info__description">${escapeDialogHtml(data.description || 'Описание не добавлено.')}</p>
+            </section>
+            <section class="project-info__section">
+                <h4 class="project-info__heading">Полезные ссылки</h4>
+                ${linksMarkup ? '<ul class="project-info__list">' + linksMarkup + '</ul>' : '<p class="project-info__empty">Ссылок пока нет.</p>'}
+            </section>
+            <section class="project-info__section">
+                <h4 class="project-info__heading">Доступ к данным</h4>
+                <ul class="project-info__list">${serviceLinksMarkup}</ul>
+            </section>
+            <section class="project-info__section">
+                <h4 class="project-info__heading">Описание готовности</h4>
+                ${statusesMarkup ? '<ul class="project-info__statuses">' + statusesMarkup + '</ul>' : '<p class="project-info__empty">Описание этапов не добавлено.</p>'}
+            </section>
+            <section class="project-info__section">
+                <h4 class="project-info__heading">Детали</h4>
+                <dl class="project-info__facts">
+                    <dt class="project-info__fact-key">Автор</dt><dd class="project-info__fact-value">${escapeDialogHtml(data.author || '—')}</dd>
+                    <dt class="project-info__fact-key">Создан</dt><dd class="project-info__fact-value">${escapeDialogHtml(formatProjectDate(data.created_at))}</dd>
+                    <dt class="project-info__fact-key">Видимость</dt><dd class="project-info__fact-value">${data.visible ? 'Открытый проект' : 'Скрытый проект'}</dd>
+                    <dt class="project-info__fact-key">Секторов</dt><dd class="project-info__fact-value">${escapeDialogHtml(data.pieces_count || 0)}</dd>
+                </dl>
+            </section>
+        </article>`;
+
+    openNativeDialog(
+        'project-info',
+        pieInformationTitle(),
+        body,
+        '<button class="native-dialog__button" type="button" data-dialog-close>Закрыть</button>',
+        $('#binfo')
+    );
+}
+
 $(document).ready(function () {
     // The workspace layout intentionally uses only jQuery and native controls.
-    PieHub.init({
-        pieid: parseInt(window.location.pathname.split('pie/')[1]),
-        hub_url: config_get('hub_url', '/hub'),
-        poll_callback: Dispatch
-    });
-    PieHub.poll();
-    Enter();
+    const pieMatch = window.location.pathname.match(/\/pie\/(\d+)/);
+    const pieId = pieMatch ? parseInt(pieMatch[1], 10) : null;
 
-    const options = {
-        controls: [
-            new OpenLayers.Control.Navigation(),
-            new OpenLayers.Control.ScaleLine(),
-            new OpenLayers.Control.Permalink(),
-            new OpenLayers.Control.Attribution()
-        ],
-        projection: new OpenLayers.Projection('EPSG:900913'),
-        displayProjection: new OpenLayers.Projection('EPSG:4326'),
-        units: 'm',
-        numZoomLevels: 18,
-        maxResolution: 156543.0339,
-        maxExtent: new OpenLayers.Bounds(-20037508, -20037508, 20037508, 20037508.34)
-    };
-    olmap = new OpenLayers.Map(document.getElementById('olmap'), options);
-    const mapnik = new OpenLayers.Layer.OSM();
-    const pieId = window.location.pathname.split('pie/')[1];
-    const kmlFormat = new OpenLayers.Format.KML({
-        extractStyles: true,
-        extractAttributes: true,
-        maxDepth: 0
-    });
-    const kmlProtocol = new OpenLayers.Protocol.HTTP({
-        url: `/kml/${pieId}.kml`,
-        format: kmlFormat
-    });
+    activePieId = pieId;
+    LoadTransData();
+    updateInterfaceTranslations();
+    loadWorkspaceSettings();
+    initializeSectorSidebarToggle();
 
-    kmllayer = new OpenLayers.Layer.Vector('Pie', {
-        strategies: [new OpenLayers.Strategy.Fixed()],
-        protocol: kmlProtocol,
-        projection: 'EPSG:4326'
-    });
-    olmap.addLayers([mapnik, kmllayer]);
-    selectCtrl = new OpenLayers.Control.SelectFeature(kmllayer, {
-        clickout: true,
-        onSelect: onSelectPiece,
-        onUnselect: onUnselectPiece
-    });
-    selectCtrl.handlers.feature.stopDown = false;
-    olmap.addControl(selectCtrl);
-    selectCtrl.activate();
-    kmllayer.events.register('loadend', this, function() {
-        olmap.zoomToExtent(kmllayer.getDataExtent());
-        olmap.zoomOut();
-        updateAllPieceStyles();
-    });
+    if (pieId !== null) {
+        PieHub.init({
+            pieid: pieId,
+            hub_url: config_get('hub_url', '/hub'),
+            poll_callback: Dispatch
+        });
+        PieHub.poll();
+        Enter();
+    } else {
+        $('#connection-label').text('Откройте карту проекта');
+        $('#reconnect').attr('hidden', 'hidden');
+    }
+
+    initializeMapbox(pieId);
 
     $('#bzoomp').click(() => {
-        olmap.zoomIn();
+        mapboxMap.zoomIn();
     });
     $('#bzoomm').click(() => {
-        olmap.zoomOut();
+        mapboxMap.zoomOut();
     });
     $('#bfit').click(() => {
-        const extent = kmllayer.getDataExtent();
-
-        if (extent) {
-            olmap.zoomToExtent(extent);
-        }
+        fitMapboxToFeatures(kmllayer.features);
     });
     $('#sector-search').keydown(function(e) {
         if (e.keyCode === 13) {
@@ -1830,7 +2547,12 @@ $(document).ready(function () {
         }
 
         if (e.keyCode === 27) {
-            $('#map-popover').attr('hidden', 'hidden');
+            if (!$('#dialog-body').is('[hidden]')) {
+                closeNativeDialog();
+                return;
+            }
+
+            closeMapPopover();
             $('#sector-sidebar').removeClass('sector-sidebar_open');
         }
     });
@@ -1896,11 +2618,13 @@ $(document).ready(function () {
             Send();
         }
     });
-    $('#bsettings').click(() => {
-        const checked = showOwned ? ' checked' : '';
-        $('#map-popover')
-            .html(`<label><input id="toggle-owned" type="checkbox"${checked}> Показывать занятые сектора</label>`)
-            .removeAttr('hidden');
+    $('#bsettings').click(showProjectSettingsDialog);
+    $('#binfo').click(showProjectInfoDialog);
+    $('#dialog-body').delegate('[data-dialog-close]', 'click', function() {
+        closeNativeDialog();
+    });
+    $(document).click(function(e) {
+        dismissTransientUi(e.target);
     });
     $('#bfilters').click(() => {
         $('#map-popover')
@@ -1910,17 +2634,7 @@ $(document).ready(function () {
                 <label><input id="filter-ready" type="checkbox"> Скрыть готовые</label>`)
             .removeAttr('hidden');
     });
-    $('#blayers').click(() => {
-        $('#map-popover')
-            .html('<label><input id="toggle-layer" type="checkbox" checked> Секторы</label>')
-            .removeAttr('hidden');
-    });
-    $('#map-popover').delegate('#toggle-layer', 'change', function() {
-        kmllayer.setVisibility($(this).is(':checked'));
-    }).delegate('#toggle-owned', 'change', function() {
-        showOwned = $(this).is(':checked');
-        updateAllPieceStyles();
-    }).delegate('#filter-free, #filter-mine, #filter-ready', 'change', () => {
+    $('#map-popover').delegate('#filter-free, #filter-mine, #filter-ready', 'change', () => {
         const free = $('#filter-free').is(':checked');
         const mine = $('#filter-mine').is(':checked');
         const ready = $('#filter-ready').is(':checked');
@@ -1939,8 +2653,11 @@ $(document).ready(function () {
         PieHub.poll();
     });
     $(window).resize(() => {
-        olmap.updateSize();
+        if (mapboxMap) {
+            mapboxMap.resize();
+        }
     });
+    renderOnlineSummary();
     renderSectorCard();
 });
 

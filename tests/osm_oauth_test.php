@@ -31,5 +31,19 @@ try {
 } catch (RuntimeException $exception) {
 }
 
+$user = osm_oauth_decode_user_details_response(
+    200,
+    '<osm><user id="42" display_name="mapper"><img href="https://www.openstreetmap.org/avatar.jpg" /></user></osm>'
+);
+assert_same('42', $user['id'], 'User-details response must expose the OSM id.');
+assert_same('mapper', $user['display_name'], 'User-details response must expose the OSM display name.');
+assert_same('https://www.openstreetmap.org/avatar.jpg', $user['avatar_url'], 'User-details response must expose the avatar URL.');
+
+$userWithoutAvatar = osm_oauth_decode_user_details_response(
+    200,
+    '<osm><user id="42" display_name="mapper" /></osm>'
+);
+assert_same('', $userWithoutAvatar['avatar_url'], 'Missing avatar image must produce an empty URL.');
+
 echo "OSM OAuth tests passed.\n";
 ?>

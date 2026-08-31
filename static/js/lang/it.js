@@ -30,3 +30,16 @@ var ldata = [
 "Mostra nomi utente:",
 "Mostra fette possedute:"
 ];
+
+if (typeof trans === 'undefined') {
+    var trans = [];
+}
+
+trans.push(
+    'About pie',
+    'Informazioni sulla torta',
+    'Pie information',
+    'Informazioni sulla torta',
+    'Loading pie information…',
+    'Caricamento delle informazioni sulla torta…'
+);

@@ -30,3 +30,16 @@ var ldata = [
 "Show nicks:",
 "Show owned slices:"
 ];
+
+if (typeof trans === 'undefined') {
+    var trans = [];
+}
+
+trans.push(
+    'About pie',
+    'About the pie',
+    'Pie information',
+    'Pie information',
+    'Loading pie information…',
+    'Loading pie information…'
+);

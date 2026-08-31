@@ -30,3 +30,16 @@ var ldata = [
 "Zeige Nicknamen:",
 "Zeige beanspruchte Stücke:"
 ];
+
+if (typeof trans === 'undefined') {
+    var trans = [];
+}
+
+trans.push(
+    'About pie',
+    'Über den Kuchen',
+    'Pie information',
+    'Informationen zum Kuchen',
+    'Loading pie information…',
+    'Kucheninformationen werden geladen…'
+);

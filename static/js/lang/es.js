@@ -30,3 +30,16 @@ var ldata = [
 "Mostrar nicks:",
 "Mostrar los propietarios de las rebanadas:"
 ];
+
+if (typeof trans === 'undefined') {
+    var trans = [];
+}
+
+trans.push(
+    'About pie',
+    'Acerca del pastel',
+    'Pie information',
+    'Información del pastel',
+    'Loading pie information…',
+    'Cargando información del pastel…'
+);

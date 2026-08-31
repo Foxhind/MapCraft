@@ -14,7 +14,7 @@ if (isset($_POST['nick'])) {
     if (pg_num_rows($result) > 0)
         $_SESSION['user_id'] = pg_fetch_result($result, 0 ,0);
     else
-        $_SESSION['user_id'] = pg_fetch_result(pg_query($connection, 'INSERT INTO users VALUES(\''.$pg_osm_user.'\', DEFAULT, DEFAULT) RETURNING id'), 0 ,0);
+        $_SESSION['user_id'] = pg_fetch_result(pg_query($connection, 'INSERT INTO users (nick) VALUES(\''.$pg_osm_user.'\') RETURNING id'), 0 ,0);
 
     Header("Location: /app/auth.php?action=success");
     exit();

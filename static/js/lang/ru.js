@@ -47,3 +47,12 @@ var trans = [
 
 for ( i = 0; i < 10 ; i++ )
     trans.push('New state: ' + i + '/9', 'Новый статус: ' + i + '/9');
+
+trans.push(
+    'About pie',
+    'О пироге',
+    'Pie information',
+    'Информация о пироге',
+    'Loading pie information…',
+    'Загружаем информацию о пироге…'
+);

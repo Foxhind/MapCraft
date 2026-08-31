@@ -167,6 +167,7 @@ function _add_chat_member($res, $from, $user_id) {
     if ($is_new) {
         $user = _get_user_info($user_id);
         $res->to_pie($from, array( 'user_update', array('current_nick' => $user['nick'],
+                                                        'avatar_url' => $user['avatar_url'],
                                                         'online' => true) ));
     }
 
