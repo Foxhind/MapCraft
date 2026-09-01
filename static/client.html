@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MapCraft</title>
     <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v3.28.1/mapbox-gl.css" type="text/css">
-    <link rel="stylesheet" href="/css/style.css?v=24" type="text/css" media="screen, projection">
+    <link rel="stylesheet" href="/css/style.css?v=25" type="text/css" media="screen, projection">
     <script type="text/javascript" src="https://api.mapbox.com/mapbox-gl-js/v3.28.1/mapbox-gl.js"></script>
     <script type="text/javascript" src="/js/jquery-1.5.1.min.js"></script>
     <script type="text/javascript" src="/js/raphael-min.js"></script>
@@ -17,30 +17,34 @@
 </head>
 <body>
 <aside id="sector-sidebar" class="sector-sidebar" aria-label="Управление сектором">
-    <button id="sector-sidebar-toggle" class="sector-sidebar__toggle" type="button" aria-label="Свернуть панель" title="Свернуть панель" aria-expanded="true"><svg class="sector-sidebar__toggle-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"></rect><path d="M9.5 4v16"></path></svg></button>
-    <nav class="breadcrumbs" aria-label="Хлебные крошки">
-        <a href="/list" class="breadcrumbs__home" aria-label="Главная"><svg class="breadcrumbs__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8v9H3zM9 21v-6h6v6"/></svg><span>Главная</span></a>
-        <span aria-hidden="true">/</span>
-        <span id="project-title">Карта</span>
-    </nav>
-    <label class="sector-search" for="sector-search">
-        <svg class="sector-search__icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"></circle><path d="m16 16 4 4"></path></svg>
-        <input id="sector-search" class="sector-search__input" type="search" placeholder="Найти сектор" autocomplete="off">
-        <kbd class="sector-search__shortcut">/</kbd>
-    </label>
-    <h2 class="sector-sidebar__section-title">Выбранный сектор</h2>
-    <section id="sector-card" class="sector-card sector-card_empty" aria-live="polite">
-        <p class="sector-card__empty-state">Выберите сектор на карте или найдите его по номеру.</p>
-    </section>
-    <section id="sector-history" class="sector-history" aria-live="polite">
-        <h2>История сектора</h2>
-        <div id="comments" class="sector-history__entries"><p class="sector-history__empty">История появится после выбора сектора.</p></div>
-        <button id="show-full-history" class="sector-history__show-more" type="button" hidden>Показать всю историю</button>
-    </section>
-    <form id="sector-comment-form" class="sector-comment">
-        <textarea id="comment_text" class="sector-comment__input" rows="2" maxlength="1024" placeholder="Выберите сектор, чтобы добавить комментарий" disabled></textarea>
-        <button id="send-sector-comment" class="sector-comment__submit" type="submit" disabled>Добавить комментарий</button>
-    </form>
+    <div class="sector-sidebar__header">
+        <button id="sector-sidebar-toggle" class="sector-sidebar__toggle" type="button" aria-label="Свернуть панель" title="Свернуть панель" aria-expanded="true"><svg class="sector-sidebar__toggle-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"></rect><path d="M9.5 4v16"></path></svg></button>
+        <nav class="breadcrumbs" aria-label="Хлебные крошки">
+            <a href="/list" class="breadcrumbs__home" aria-label="Главная"><svg class="breadcrumbs__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8v9H3zM9 21v-6h6v6"/></svg><span>Главная</span></a>
+            <span aria-hidden="true">/</span>
+            <span id="project-title">Карта</span>
+        </nav>
+        <label class="sector-search" for="sector-search">
+            <svg class="sector-search__icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"></circle><path d="m16 16 4 4"></path></svg>
+            <input id="sector-search" class="sector-search__input" type="search" placeholder="Найти сектор" autocomplete="off">
+            <kbd class="sector-search__shortcut">/</kbd>
+        </label>
+    </div>
+    <div class="sector-sidebar__content">
+        <h2 class="sector-sidebar__section-title">Выбранный сектор</h2>
+        <section id="sector-card" class="sector-card sector-card_empty" aria-live="polite">
+            <p class="sector-card__empty-state">Выберите сектор на карте или найдите его по номеру.</p>
+        </section>
+        <section id="sector-history" class="sector-history" aria-live="polite">
+            <h2>История сектора</h2>
+            <div id="comments" class="sector-history__entries"><p class="sector-history__empty">История появится после выбора сектора.</p></div>
+            <button id="show-full-history" class="sector-history__show-more" type="button" hidden>Показать всю историю</button>
+        </section>
+        <form id="sector-comment-form" class="sector-comment">
+            <textarea id="comment_text" class="sector-comment__input" rows="2" maxlength="1024" placeholder="Выберите сектор, чтобы добавить комментарий" disabled></textarea>
+            <button id="send-sector-comment" class="sector-comment__submit" type="submit" disabled>Добавить комментарий</button>
+        </form>
+    </div>
 </aside>
 
 <main id="map-area" class="map-workspace">
@@ -77,6 +81,6 @@
 </main>
 
 <div id="dialog-body" class="native-dialog" hidden role="dialog" aria-modal="true"></div>
-<script type="text/javascript" src="/js/main.js?v=21"></script>
+<script type="text/javascript" src="/js/main.js?v=22"></script>
 </body>
 </html>

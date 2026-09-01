@@ -2264,6 +2264,18 @@ function updateSectorSidebarToggle() {
         .attr('title', label);
 }
 
+function updateMapViewportForChat() {
+    var chatHeight = $('#dchat').outerHeight();
+
+    $('#mapbox-map').css('bottom', chatHeight + 'px');
+
+    if (mapboxMap) {
+        window.setTimeout(function() {
+            mapboxMap.resize();
+        }, 260);
+    }
+}
+
 function setSectorSidebarCollapsed(collapsed, shouldPersist) {
     $('#sector-sidebar').toggleClass('sector-sidebar_collapsed', collapsed);
     updateSectorSidebarToggle();
@@ -2673,6 +2685,7 @@ $(document).ready(function () {
         const closed = $('#dchat').toggleClass('project-chat_collapsed').hasClass('project-chat_collapsed');
         $(this).attr('aria-expanded', !closed);
         localStorage.mapcraftChatCollapsed = closed ? '1' : '';
+        updateMapViewportForChat();
 
         if (!closed) {
             chatUnread = 0;
@@ -2691,9 +2704,12 @@ $(document).ready(function () {
         $('#dchat').css('height', `${savedChatHeight}px`);
     }
 
+    updateMapViewportForChat();
+
     $(document).mouseup(() => {
         if (!$('#dchat').hasClass('project-chat_collapsed')) {
             localStorage.mapcraftChatHeight = $('#dchat').height();
+            updateMapViewportForChat();
         }
     });
     $('#pac_form').submit(Send);
